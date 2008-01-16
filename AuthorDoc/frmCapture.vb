@@ -33,25 +33,24 @@ Friend Class frmCapture
 		
 		TimerDelay.Enabled = False
 		If optWindow.Checked Then
-			pictCapture.Image = CaptureActiveWindow()
+            'pictCapture.Image = CaptureActiveWindow()
 		Else
-			pictCapture.Image = CaptureScreen()
+            'pictCapture.Image = CaptureScreen()
 		End If
 		If Len(Filename) < 1 Then
-			'UPGRADE_WARNING: CommonDialog variable was not upgraded Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="671167DC-EA81-475D-B690-7A40C7BF4A23"'
-			With frmMain.cdlg
-				.Title = "Save As..."
-				.ShowDialog()
-				Filename = .FileName
-			End With
-		End If
+            Using lCdlg As New SaveFileDialog
+                lCdlg.Title = "Save As..."
+                lCdlg.ShowDialog()
+                Filename = lCdlg.FileName
+            End Using
+        End If
 		If Len(Filename) > 0 Then
 			If LCase(VB.Right(Filename, 4)) = ".bmp" Then
 				'UPGRADE_WARNING: SavePicture was upgraded to System.Drawing.Image.Save and has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
 				pictCapture.Image.Save(Filename)
 				frmSample.SetImage(Filename)
 			Else
-				tempFilename = GetTmpPath & FilenameOnly(Filename) & ".bmp"
+                tempFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(Filename) & ".bmp")
 				'UPGRADE_WARNING: SavePicture was upgraded to System.Drawing.Image.Save and has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
 				pictCapture.Image.Save(tempFilename)
 				frmSample.SetImage(tempFilename)

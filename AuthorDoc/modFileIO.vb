@@ -31,23 +31,13 @@ Module modFileIO
 	
 	Sub FindNconvert()
 		NconvertPath = GetSetting("Nconvert", "Paths", "ExePath", "")
-		If NconvertPath = "" Then GoTo OpenDialog
-		'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		If Len(Dir(NconvertPath)) = 0 Then GoTo OpenDialog
-		Exit Sub
-OpenDialog: 
-		'UPGRADE_WARNING: CommonDialog variable was not upgraded Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="671167DC-EA81-475D-B690-7A40C7BF4A23"'
-		With frmSample.cdlg
-			.Title = "Find Nconvert.exe to perform conversion"
-			.FileName = "Nconvert.exe"
-			.ShowDialog()
-			NconvertPath = .FileName
-		End With
-		'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		If Len(Dir(NconvertPath)) > 0 Then
-			SaveSetting("Nconvert", "Paths", "ExePath", NconvertPath)
-		End If
-	End Sub
+        If Not IO.File.Exists(NconvertPath) Then
+            NconvertPath = FindFile("Find Nconvert.exe to perform conversion", "Nconvert.exe")
+            If IO.File.Exists(NconvertPath) Then
+                SaveSetting("Nconvert", "Paths", "ExePath", NconvertPath)
+            End If
+        End If
+    End Sub
 	
 	Sub OpenProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
 		Dim f As Short 'file handle
@@ -67,40 +57,51 @@ OpenDialog:
 		f = FreeFile()
 		frmMain.Cursor = System.Windows.Forms.Cursors.WaitCursor
 		t.Visible = False
-		'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		If Len(Dir(filename)) = 0 Then
-			If MsgBox("File not found. Create new project file '" & filename & "'?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-				'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-				GoSub SetProjectName
-				FileOpen(f, filename, OpenMode.Output)
-				FileClose(f)
-			End If
-		Else
-			'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-			GoSub SetProjectName
-			FileOpen(f, filename, OpenMode.Input)
-			While Not EOF(f) ' Loop until end of file.
-				buf = LineInput(f)
-				ThisName = LTrim(buf)
-				If ThisName <> "" Then
-					SectionLevel = (Len(buf) - Len(ThisName)) / 2 + 1 '2 spaces indentation per level
-					ThisName = RTrim(ThisName)
-					key = ThisName
-					SectionName(SectionLevel) = ThisName
-					If SectionLevel = 1 Then
-						nod = t.Nodes.Add("N" & BaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
-					Else
-						For lvl = SectionLevel - 1 To 1 Step -1
-							key = SectionName(lvl) & "\" & key
-						Next lvl
-						On Error GoTo skip
-						nod = t.Nodes.Add("N" & Left(key, Len(key) - Len(ThisName) - 1), ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
-						If Not nod.Parent.Expanded Then nod.Parent.Expanded = True
-					End If
-				End If
-			End While
-			FileClose(f)
-		End If
+        If Not IO.File.Exists(filename) Then
+            If MsgBox("File not found. Create new project file '" & filename & "'?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+
+                ProjectFileName = filename
+                BaseName = FilenameOnly(filename)
+                t.Nodes.Clear()
+                t.Nodes.Add(, , "N" & BaseName, BaseName)
+                t.Nodes(1).Expanded = True
+
+                FileOpen(f, filename, OpenMode.Output)
+                FileClose(f)
+            End If
+        Else
+            'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+
+            ProjectFileName = filename
+            BaseName = FilenameOnly(filename)
+            t.Nodes.Clear()
+            t.Nodes.Add(, , "N" & BaseName, BaseName)
+            t.Nodes(1).Expanded = True
+
+            FileOpen(f, filename, OpenMode.Input)
+            While Not EOF(f) ' Loop until end of file.
+                buf = LineInput(f)
+                ThisName = LTrim(buf)
+                If ThisName <> "" Then
+                    SectionLevel = (Len(buf) - Len(ThisName)) / 2 + 1 '2 spaces indentation per level
+                    ThisName = RTrim(ThisName)
+                    key = ThisName
+                    SectionName(SectionLevel) = ThisName
+                    If SectionLevel = 1 Then
+                        nod = t.Nodes.Add("N" & BaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
+                    Else
+                        For lvl = SectionLevel - 1 To 1 Step -1
+                            key = SectionName(lvl) & "\" & key
+                        Next lvl
+                        On Error GoTo skip
+                        nod = t.Nodes.Add("N" & Left(key, Len(key) - Len(ThisName) - 1), ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
+                        If Not nod.Parent.Expanded Then nod.Parent.Expanded = True
+                    End If
+                End If
+            End While
+            FileClose(f)
+        End If
 		t.Visible = True
 		frmMain.Cursor = System.Windows.Forms.Cursors.Default
 		If t.Nodes.Count > 0 Then t.Nodes(1).EnsureVisible()
@@ -113,15 +114,7 @@ OpenError:
 skip: 
 		Debug.Print("Duplicate key in tree: " & key)
 		Resume Next
-SetProjectName: 
-		ProjectFileName = filename
-		BaseName = FilenameOnly(filename)
-		t.Nodes.Clear()
-		t.Nodes.Add( ,  , "N" & BaseName, BaseName)
-		t.Nodes(1).Expanded = True
-		'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		Return 
-	End Sub
+    End Sub
 	
 	Public Sub SaveProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
 		Dim outfile As Short 'file handle
