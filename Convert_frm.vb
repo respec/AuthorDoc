@@ -28,12 +28,12 @@ Friend Class frmConvert
 		If chkID.CheckState = 1 Then id = True Else id = False
 		If ProjectCheck.CheckState = 1 Then makeProject = True Else makeProject = False
 		
-		SaveSetting(My.Application.Info.Title, SectionConvert, "Contents", CStr(contents))
-		SaveSetting(My.Application.Info.Title, SectionConvert, "Timestamps", CStr(timestamps))
-		SaveSetting(My.Application.Info.Title, SectionConvert, "UpNext", CStr(UpNext))
-		SaveSetting(My.Application.Info.Title, SectionConvert, "ID", CStr(id))
-		SaveSetting(My.Application.Info.Title, SectionConvert, "Project", CStr(makeProject))
-		SaveSetting(My.Application.Info.Title, SectionConvert, "TargetFormat", CStr(TargetFormat))
+        SaveSetting(AppName, SectionConvert, "Contents", CStr(contents))
+        SaveSetting(AppName, SectionConvert, "Timestamps", CStr(timestamps))
+        SaveSetting(AppName, SectionConvert, "UpNext", CStr(UpNext))
+        SaveSetting(AppName, SectionConvert, "ID", CStr(id))
+        SaveSetting(AppName, SectionConvert, "Project", CStr(makeProject))
+        SaveSetting(AppName, SectionConvert, "TargetFormat", CStr(TargetFormat))
 		Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
 		
 		If Index = 1 Then 'Preview
@@ -61,36 +61,36 @@ Friend Class frmConvert
 		SetUnInitialized()
 		Text1.Text = ""
 		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionConvert, "TargetFormat", CStr(modConvert.outputType.tPRINT))
+        setting = GetSetting(AppName, SectionConvert, "TargetFormat", CStr(modConvert.outputType.tPRINT))
 		If IsNumeric(setting) Then
 			optTargetFormat(setting).Checked = True
 			'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
 			optTargetFormat_CheckedChanged(optTargetFormat.Item(CInt(setting)), New System.EventArgs())
 		End If
-		Select Case GetSetting(My.Application.Info.Title, SectionConvert, "Contents", CStr(0))
-			Case CStr(True) : ContentsCheck.CheckState = System.Windows.Forms.CheckState.Checked
-			Case CStr(False) : ContentsCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
-		End Select
+        Select Case GetSetting(AppName, SectionConvert, "Contents", CStr(0))
+            Case CStr(True) : ContentsCheck.CheckState = System.Windows.Forms.CheckState.Checked
+            Case CStr(False) : ContentsCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
+        End Select
 		
-		Select Case GetSetting(My.Application.Info.Title, SectionConvert, "Timestamps", CStr(0))
-			Case CStr(True) : TimestampCheck.CheckState = System.Windows.Forms.CheckState.Checked
-			Case CStr(False) : TimestampCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
-		End Select
+        Select Case GetSetting(AppName, SectionConvert, "Timestamps", CStr(0))
+            Case CStr(True) : TimestampCheck.CheckState = System.Windows.Forms.CheckState.Checked
+            Case CStr(False) : TimestampCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
+        End Select
 		
-		Select Case GetSetting(My.Application.Info.Title, SectionConvert, "UpNext", CStr(0))
-			Case CStr(True) : UpNextCheck.CheckState = System.Windows.Forms.CheckState.Checked
-			Case CStr(False) : UpNextCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
-		End Select
+        Select Case GetSetting(AppName, SectionConvert, "UpNext", CStr(0))
+            Case CStr(True) : UpNextCheck.CheckState = System.Windows.Forms.CheckState.Checked
+            Case CStr(False) : UpNextCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
+        End Select
 		
-		Select Case GetSetting(My.Application.Info.Title, SectionConvert, "ID", CStr(0))
-			Case CStr(True) : chkID.CheckState = System.Windows.Forms.CheckState.Checked
-			Case CStr(False) : chkID.CheckState = System.Windows.Forms.CheckState.Unchecked
-		End Select
+        Select Case GetSetting(AppName, SectionConvert, "ID", CStr(0))
+            Case CStr(True) : chkID.CheckState = System.Windows.Forms.CheckState.Checked
+            Case CStr(False) : chkID.CheckState = System.Windows.Forms.CheckState.Unchecked
+        End Select
 		
-		Select Case GetSetting(My.Application.Info.Title, SectionConvert, "Project", CStr(0))
-			Case CStr(True) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Checked
-			Case CStr(False) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
-		End Select
+        Select Case GetSetting(AppName, SectionConvert, "Project", CStr(0))
+            Case CStr(True) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Checked
+            Case CStr(False) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
+        End Select
 		
 	End Sub
 	

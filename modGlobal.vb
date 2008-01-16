@@ -2,7 +2,9 @@ Option Strict Off
 Option Explicit On
 Module modGlobal
 	'Copyright 2000 by AQUA TERRA Consultants
-	
+
+    Public AppName As String = "AuthorDoc"
+
 	Public Const SourceExtension As String = ".txt"
 	
 	'Variables mostly for conversion

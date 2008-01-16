@@ -7,15 +7,15 @@ Imports atcUtility
 Friend Class frmMain
 	Inherits System.Windows.Forms.Form
 	'Copyright 2000 by AQUA TERRA Consultants
-	
-	Dim path As String
+
+    Dim path As String
 	Dim CurrentFileContents As String 'What was last saved or retrieved from CurrentFilename
-	Dim Undos() As String
-	Dim UndoCursor() As Integer
+    Dim MaxUndo As Integer = 10
+    Dim Undos(MaxUndo) As String
+    Dim UndoCursor(MaxUndo) As Integer
 	Dim UndoPos As Integer
 	Dim UndosAvail As Integer
-	Dim MaxUndo As Integer
-	Dim Undoing As Boolean
+    Dim Undoing As Boolean
 	Dim Changed As Boolean 'True if txtMain.Text has been edited
 	Dim ProjectChanged As Boolean
 	Dim ViewFormatting As Boolean
@@ -69,7 +69,7 @@ Friend Class frmMain
 				SearchFor = UnEscape(txtFind.Text)
 				selStart = txtMain.SelectionStart
 				searchPos = txtMain.SelectionStart + txtMain.SelectionLength
-				searchPos = txtMain.Find(SearchFor, searchPos)
+                searchPos = txtMain.Find(SearchFor, searchPos, RichTextBoxFinds.None)
 				startNodeIndex = tree1.SelectedItem.Index
 				If searchPos < 0 And Finding Then
 					If QuerySave <> MsgBoxResult.Cancel Then
@@ -105,20 +105,20 @@ NextNode:
 			If ch = "\" Then
 				chpos = chpos + 1
 				If chpos > lastchpos Then
-					retval = retval & ch
-				Else
-					ch = Mid(Source, chpos, 1)
-					Select Case LCase(ch)
-						Case "c" : retval = retval & vbCrLf
-						Case "n" : retval = retval & vbLf
-						Case "r" : retval = retval & vbCr
-						Case "t" : retval = retval & vbTab
-						Case "\" : retval = retval & ch
-						Case Else : retval = retval & "^" & ch
-					End Select
-				End If
-			Else
-				retval = retval & ch
+                    retval &= ch
+                Else
+                    ch = Mid(Source, chpos, 1)
+                    Select Case LCase(ch)
+                        Case "c" : retval &= vbCrLf
+                        Case "n" : retval &= vbLf
+                        Case "r" : retval &= vbCr
+                        Case "t" : retval &= vbTab
+                        Case "\" : retval &= ch
+                        Case Else : retval &= "^" & ch
+                    End Select
+                End If
+            Else
+                retval &= ch
 			End If
 			chpos = chpos + 1
 		End While
@@ -166,152 +166,128 @@ NextReplace:
 				End If
 			End If
 		End If
-	End Sub
-	
-	Private Sub frmMain_Load(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Load
-		Dim setting As Object
-		Dim rf As Integer
-		MaxUndo = 10
-		ReDim Undos(MaxUndo)
-		ReDim UndoCursor(MaxUndo)
-		CaptureNew = "Capture New Image"
-		CaptureReplace = "Capture Replacement Image"
-		BrowseImage = "Use Other Image (File)"
-		ViewImage = "View image"
-		SelectLink = "Link to Page (select)"
-		DeleteTag = "Delete"
-		mnuContext(0).Text = DeleteTag
-		txtMain.Text = ""
-		
-		'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-		App.HelpFile = GetSetting(My.Application.Info.Title, "Files", "Help", My.Application.Info.DirectoryPath & "\AuthorDoc.chm")
-		BaseName = GetSetting(My.Application.Info.Title, "Defaults", "BaseName", "")
-		path = GetSetting(My.Application.Info.Title, "Defaults", "Path", CurDir())
-		ViewFormatting = CBool(GetSetting(My.Application.Info.Title, "Defaults", "ViewFormatting", CStr(True)))
-		FormatWhileTyping = CBool(GetSetting(My.Application.Info.Title, "Defaults", "FormatWhileTyping", CStr(False)))
-		mnuAutoParagraph.Checked = CBool(GetSetting(My.Application.Info.Title, "Defaults", "AutoParagraph", CStr(False)))
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, "Defaults", "FindTimeout", CStr(2))
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		If IsNumeric(setting) Then FindTimeout = setting
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionMainWin, "Width")
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		If IsNumeric(setting) Then Width = VB6.TwipsToPixelsX(setting)
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionMainWin, "Height")
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		If IsNumeric(setting) Then Height = VB6.TwipsToPixelsY(setting)
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionMainWin, "Left")
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		If IsNumeric(setting) Then Left = VB6.TwipsToPixelsX(setting)
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionMainWin, "Top")
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		If IsNumeric(setting) Then Top = VB6.TwipsToPixelsY(setting)
-		'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		setting = GetSetting(My.Application.Info.Title, SectionMainWin, "TreeWidth")
-		If IsNumeric(setting) Then
-			'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-			sash.Left = VB6.TwipsToPixelsX(setting)
-			SashDragging = True
-			sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
-			SashDragging = False
-		End If
-		For rf = MaxRecentFiles To 1 Step -1
-			'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-			setting = GetSetting(My.Application.Info.Title, SectionRecentFiles, CStr(rf), "")
-			'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-			If setting <> "" Then AddRecentFile(CStr(setting))
-		Next rf
-		
-		mnuFormatting.Checked = ViewFormatting
-		mnuFormatWhileTyping.Checked = FormatWhileTyping
-		cdlgOpen.FileName = path & "\" & BaseName & SourceExtension
-		cdlgSave.FileName = path & "\" & BaseName & SourceExtension
-		cdlgImageOpen.FileName = path
-		'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		If Dir(path & "\") <> "" Then ChDir(path)
-		'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		If Len(Dir(cdlgOpen.FileName)) > 0 Then
-			Me.Show()
-			Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
-			OpenProject((cdlgOpen.FileName), tree1)
-			If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
-			Me.Cursor = System.Windows.Forms.Cursors.Default
-		End If
-	End Sub
+    End Sub
+
+    Private Sub frmMain_Load(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Load
+        Dim setting As Object
+        Dim rf As Integer
+        CaptureNew = "Capture New Image"
+        CaptureReplace = "Capture Replacement Image"
+        BrowseImage = "Use Other Image (File)"
+        ViewImage = "View image"
+        SelectLink = "Link to Page (select)"
+        DeleteTag = "Delete"
+        mnuContext(0).Text = DeleteTag
+        txtMain.Text = ""
+
+        'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+        'App.HelpFile = GetSetting(AppName, "Files", "Help", My.Application.Info.DirectoryPath & "\AuthorDoc.chm")
+        BaseName = GetSetting(AppName, "Defaults", "BaseName", "")
+        path = GetSetting(AppName, "Defaults", "Path", CurDir())
+        ViewFormatting = CBool(GetSetting(AppName, "Defaults", "ViewFormatting", CStr(True)))
+        FormatWhileTyping = CBool(GetSetting(AppName, "Defaults", "FormatWhileTyping", CStr(False)))
+        mnuAutoParagraph.Checked = CBool(GetSetting(AppName, "Defaults", "AutoParagraph", CStr(False)))
+        setting = GetSetting(AppName, "Defaults", "FindTimeout", CStr(2))
+        If IsNumeric(setting) Then FindTimeout = setting
+        setting = GetSetting(AppName, SectionMainWin, "Width")
+        If IsNumeric(setting) Then Width = VB6.TwipsToPixelsX(setting)
+        setting = GetSetting(AppName, SectionMainWin, "Height")
+        If IsNumeric(setting) Then Height = VB6.TwipsToPixelsY(setting)
+        setting = GetSetting(AppName, SectionMainWin, "Left")
+        If IsNumeric(setting) Then Left = VB6.TwipsToPixelsX(setting)
+        setting = GetSetting(AppName, SectionMainWin, "Top")
+        If IsNumeric(setting) Then Top = VB6.TwipsToPixelsY(setting)
+        setting = GetSetting(AppName, SectionMainWin, "TreeWidth")
+        If IsNumeric(setting) Then
+            sash.Left = VB6.TwipsToPixelsX(setting)
+            SashDragging = True
+            sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
+            SashDragging = False
+        End If
+        For rf = MaxRecentFiles To 1 Step -1
+            setting = GetSetting(AppName, SectionRecentFiles, CStr(rf), "")
+            If setting <> "" Then AddRecentFile(CStr(setting))
+        Next rf
+
+        mnuFormatting.Checked = ViewFormatting
+        mnuFormatWhileTyping.Checked = FormatWhileTyping
+        cdlgOpen.FileName = path & "\" & BaseName & SourceExtension
+        cdlgSave.FileName = path & "\" & BaseName & SourceExtension
+        cdlgImageOpen.FileName = path
+        If IO.Directory.Exists(path) Then ChDir(path)
+        If IO.File.Exists(cdlgOpen.FileName) Then
+            Me.Show()
+            Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
+            OpenProject((cdlgOpen.FileName), tree1)
+            If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+            Me.Cursor = System.Windows.Forms.Cursors.Default
+        End If
+    End Sub
 	
 	'UPGRADE_WARNING: Event frmMain.Resize may fire when form is initialized. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="88B12AE1-6DE0-48A0-86F1-60C0686C026A"'
 	Private Sub frmMain_Resize(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Resize
 		Dim newWidth As Integer
 		If VB6.PixelsToTwipsY(Height) > 800 Then sash.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(Height) - 753) 'menu height
 		tree1.Height = sash.Height
-		If fraFind.Visible Then
-			txtMain.Top = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(fraFind.Top) + VB6.PixelsToTwipsY(fraFind.Height))
-		Else
-			txtMain.Top = fraFind.Top
-		End If
-		If VB6.PixelsToTwipsY(sash.Height) > VB6.PixelsToTwipsY(txtMain.Top) Then txtMain.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(sash.Height) - VB6.PixelsToTwipsY(txtMain.Top))
+        'If fraFind.Visible Then
+        '	txtMain.Top = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(fraFind.Top) + VB6.PixelsToTwipsY(fraFind.Height))
+        'Else
+        '	txtMain.Top = fraFind.Top
+        'End If
+        'If VB6.PixelsToTwipsY(sash.Height) > VB6.PixelsToTwipsY(txtMain.Top) Then txtMain.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(sash.Height) - VB6.PixelsToTwipsY(txtMain.Top))
 		
 		txtMain.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(sash.Left) + VB6.PixelsToTwipsX(sash.Width))
-		fraFind.Left = txtMain.Left
+        'fraFind.Left = txtMain.Left
 		newWidth = VB6.PixelsToTwipsX(Width) - VB6.PixelsToTwipsX(txtMain.Left) - 100
 		If newWidth > 0 Then
 			txtMain.Width = VB6.TwipsToPixelsX(newWidth)
-			If fraFind.Visible Then
-				fraFind.Width = VB6.TwipsToPixelsX(newWidth)
-				If (newWidth - 324 - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width)) > 100 Then
-					txtFind.Width = VB6.TwipsToPixelsX((newWidth - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width) - 324) / 2)
-					cmdReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(txtFind.Left) + VB6.PixelsToTwipsX(txtFind.Width) + 108)
-					txtReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(cmdReplace.Left) + VB6.PixelsToTwipsX(cmdReplace.Width) + 108)
-					txtReplace.Width = txtFind.Width
-				End If
-			End If
+            'If fraFind.Visible Then
+            '	fraFind.Width = VB6.TwipsToPixelsX(newWidth)
+            '	If (newWidth - 324 - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width)) > 100 Then
+            '		txtFind.Width = VB6.TwipsToPixelsX((newWidth - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width) - 324) / 2)
+            '		cmdReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(txtFind.Left) + VB6.PixelsToTwipsX(txtFind.Width) + 108)
+            '		txtReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(cmdReplace.Left) + VB6.PixelsToTwipsX(cmdReplace.Width) + 108)
+            '		txtReplace.Width = txtFind.Width
+            '	End If
+            'End If
 		End If
 	End Sub
 	
-	Private Sub frmMain_FormClosed(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.FormClosedEventArgs) Handles Me.FormClosed
-		Dim rf As Integer
-		Dim frm As Object
-		If QuerySave = MsgBoxResult.Cancel Then
-			'UPGRADE_ISSUE: Event parameter Cancel was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="FB723E3C-1C06-4D2B-B083-E6CD0D334DA8"'
-			Cancel = 1
-		ElseIf QuerySaveProject = MsgBoxResult.Cancel Then 
-			'UPGRADE_ISSUE: Event parameter Cancel was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="FB723E3C-1C06-4D2B-B083-E6CD0D334DA8"'
-			Cancel = 1
-		Else
-			'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-			SaveSetting(My.Application.Info.Title, "Files", "Help", App.HelpFile)
-			
-			SaveSetting(My.Application.Info.Title, "Defaults", "BaseName", BaseName)
-			SaveSetting(My.Application.Info.Title, "Defaults", "Path", path)
-			SaveSetting(My.Application.Info.Title, "Defaults", "FindTimeout", CStr(FindTimeout))
-			SaveSetting(My.Application.Info.Title, "Defaults", "ViewFormatting", CStr(ViewFormatting))
-			SaveSetting(My.Application.Info.Title, "Defaults", "FormatWhileTyping", CStr(FormatWhileTyping))
-			SaveSetting(My.Application.Info.Title, "Defaults", "AutoParagraph", CStr(mnuAutoParagraph.Checked))
-			
-			SaveSetting(My.Application.Info.Title, SectionMainWin, "Width", CStr(VB6.PixelsToTwipsX(Width)))
-			SaveSetting(My.Application.Info.Title, SectionMainWin, "Height", CStr(VB6.PixelsToTwipsY(Height)))
-			SaveSetting(My.Application.Info.Title, SectionMainWin, "Left", CStr(VB6.PixelsToTwipsX(Left)))
-			SaveSetting(My.Application.Info.Title, SectionMainWin, "Top", CStr(VB6.PixelsToTwipsY(Top)))
-			SaveSetting(My.Application.Info.Title, SectionMainWin, "TreeWidth", CStr(VB6.PixelsToTwipsX(sash.Left)))
-			For rf = mnuRecent.Count - 1 To 1 Step -1
-				SaveSetting(My.Application.Info.Title, SectionRecentFiles, CStr(rf), mnuRecent(rf).Tag)
-			Next rf
-			While GetSetting(My.Application.Info.Title, SectionRecentFiles, CStr(rf)) <> ""
-				SaveSetting(My.Application.Info.Title, SectionRecentFiles, CStr(rf), "")
-				rf = rf + 1
-			End While
-			
-			For	Each frm In My.Application.OpenForms
-				'UPGRADE_ISSUE: Unload frm was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="875EBAD7-D704-4539-9969-BC7DBDAA62A2"'
-				Unload(frm)
-			Next frm
-			End
-		End If
-	End Sub
+    Private Sub frmMain_FormClosing(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+        If QuerySave() = MsgBoxResult.Cancel Then
+            e.Cancel = True
+        ElseIf QuerySaveProject() = MsgBoxResult.Cancel Then
+            e.Cancel = True
+        Else
+            'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+            'SaveSetting(AppName, "Files", "Help", App.HelpFile)
+
+            SaveSetting(AppName, "Defaults", "BaseName", BaseName)
+            SaveSetting(AppName, "Defaults", "Path", path)
+            SaveSetting(AppName, "Defaults", "FindTimeout", CStr(FindTimeout))
+            SaveSetting(AppName, "Defaults", "ViewFormatting", CStr(ViewFormatting))
+            SaveSetting(AppName, "Defaults", "FormatWhileTyping", CStr(FormatWhileTyping))
+            SaveSetting(AppName, "Defaults", "AutoParagraph", CStr(mnuAutoParagraph.Checked))
+
+            SaveSetting(AppName, SectionMainWin, "Width", CStr(VB6.PixelsToTwipsX(Width)))
+            SaveSetting(AppName, SectionMainWin, "Height", CStr(VB6.PixelsToTwipsY(Height)))
+            SaveSetting(AppName, SectionMainWin, "Left", CStr(VB6.PixelsToTwipsX(Left)))
+            SaveSetting(AppName, SectionMainWin, "Top", CStr(VB6.PixelsToTwipsY(Top)))
+            SaveSetting(AppName, SectionMainWin, "TreeWidth", CStr(VB6.PixelsToTwipsX(sash.Left)))
+            Dim rf As Integer
+            For rf = mnuRecent.Count - 1 To 1 Step -1
+                SaveSetting(AppName, SectionRecentFiles, CStr(rf), mnuRecent(rf).Tag)
+            Next rf
+            While GetSetting(AppName, SectionRecentFiles, CStr(rf)) <> ""
+                SaveSetting(AppName, SectionRecentFiles, CStr(rf), "")
+                rf += 1
+            End While
+
+            For Each lOpenForm As Form In My.Application.OpenForms
+                If Not lOpenForm Is Me Then lOpenForm.Close()
+            Next
+        End If
+    End Sub
 	
 	Private Sub fraFind_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles fraFind.MouseDown
 		Dim Button As Short = eventArgs.Button \ &H100000
@@ -361,8 +337,7 @@ NextReplace:
             Case ViewImage
                 filename = ReplaceString(SubTagValue("src"), "/", "\")
                 filename = IO.Path.GetDirectoryName(path & "\" & NodeFile) & "\" & filename
-                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-                If Len(Dir(filename)) > 0 Then OpenFile(filename)
+                If IO.File.Exists(filename) Then OpenFile(filename)
             Case DeleteTag
                 If closeTagPos > openTagPos + 4 Then txtMain.Text = VB.Left(txtMain.Text, openTagPos - 1) & Mid(txtMain.Text, closeTagPos + 1)
             Case SelectLink
@@ -402,7 +377,7 @@ NextReplace:
     End Sub
 
     Public Sub mnuExit_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuExit.Click
-        frmMain_FormClosed(Me, New System.Windows.Forms.FormClosedEventArgs(0, FormAction.Closed))
+        Close()
     End Sub
 
     Public Sub mnuFind_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuFind.Click
@@ -474,24 +449,24 @@ NextReplace:
     End Sub
 
     Public Sub mnuHelpContents_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuHelpContents.Click
-        Dim newHelpfile As String
-        'UPGRADE_ISSUE: MSComDlg.CommonDialog control cdlg was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E047632-2D91-44D6-B2A3-0801707AF686"'
-        'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-        newHelpfile = OpenFile(App.HelpFile, cdlg)
-        'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-        If newHelpfile <> App.HelpFile Then
-            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-            If Len(Dir(newHelpfile)) > 0 Then
-                'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-                App.HelpFile = newHelpfile
-                'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
-                SaveSetting(My.Application.Info.Title, "Files", "Help", App.HelpFile)
-            End If
-        End If
+        'Dim newHelpfile As String
+        ''UPGRADE_ISSUE: MSComDlg.CommonDialog control cdlg was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E047632-2D91-44D6-B2A3-0801707AF686"'
+        ''UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+        'newHelpfile = OpenFile(App.HelpFile, cdlg)
+        ''UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+        'If newHelpfile <> App.HelpFile Then
+        '    'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+        '    If IO.File.Exists(newHelpfile) Then
+        '        'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+        '        App.HelpFile = newHelpfile
+        '        'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
+        '        SaveSetting(AppName, "Files", "Help", App.HelpFile)
+        '    End If
+        'End If
     End Sub
 
     Public Sub mnuHelpWebsite_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuHelpWebsite.Click
-        modWin32Api.ShellExecute(Me.Handle.ToInt32, "Open", "http://hspf.com/pub/authordoc", CStr(0), CStr(0), 0)
+        ShellExecute(Me.Handle.ToInt32, "Open", "http://hspf.com/pub/authordoc", CStr(0), CStr(0), 0)
     End Sub
 
     Public Sub mnuLinkSection_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuLinkSection.Click
@@ -515,8 +490,7 @@ NextReplace:
         If Len(cdlgOpen.FileName) > 0 Then
             path = IO.Path.GetDirectoryName((cdlgOpen.FileName))
             ChDir(path)
-            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-            If Len(Dir(path, FileAttribute.Directory)) < 1 Then MkDir(path)
+            If Not IO.Directory.Exists(path) Then MkDir(path)
             f = FreeFile()
             FileOpen(f, cdlgOpen.FileName, OpenMode.Output)
             FileClose(f)
@@ -702,11 +676,11 @@ ErrNew:
     End Sub
 
     Private Sub testTextImage()
-        Dim formatTxt As String
-        Dim FormatStart, FormatEnd As Integer
-        FormatStart = InStr(txtMain.Text, Asterisks80)
-        FormatEnd = InStrRev(txtMain.Text, Asterisks80)
-        If FormatEnd > FormatStart Then CardImage(Mid(txtMain.Text, FormatStart, FormatEnd - FormatStart))
+        '    Dim formatTxt As String
+        '    Dim FormatStart, FormatEnd As Integer
+        '    FormatStart = InStr(txtMain.Text, Asterisks80)
+        '    FormatEnd = InStrRev(txtMain.Text, Asterisks80)
+        '    If FormatEnd > FormatStart Then CardImage(Mid(txtMain.Text, FormatStart, FormatEnd - FormatStart))
     End Sub
 
     Public Sub mnuTextImage_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuTextImage.Click
@@ -843,16 +817,16 @@ ErrNew:
     Private Sub tree1_AfterLabelEdit(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_AfterLabelEditEvent) Handles tree1.AfterLabelEdit
         Dim OldFilePath As String
         With tree1.SelectedItem
-            OldFilePath = path & "\" & Mid(.key, 2) & SourceExtension
+            OldFilePath = path & "\" & Mid(.Key, 2) & SourceExtension
             'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
             If Len(Dir(OldFilePath)) > 0 Then
-                Select Case MsgBox("Rename file '" & OldFilePath & "' to '" & eventArgs.NewString & "?", MsgBoxStyle.YesNoCancel)
-                    Case MsgBoxResult.No : .Text = eventArgs.NewString : .key = "N" & .fullpath
-                    Case MsgBoxResult.Yes : .Text = eventArgs.NewString : .key = "N" & .fullpath
+                Select Case MsgBox("Rename file '" & OldFilePath & "' to '" & eventArgs.newString & "?", MsgBoxStyle.YesNoCancel)
+                    Case MsgBoxResult.No : .Text = eventArgs.newString : .Key = "N" & .FullPath
+                    Case MsgBoxResult.Yes : .Text = eventArgs.newString : .Key = "N" & .FullPath
                         'Name OldFilePath As path & "\" & .fullpath & SourceExtension
                         Rename(OldFilePath, IO.Path.GetDirectoryName(OldFilePath) & "\" & .Text & SourceExtension)
                     Case MsgBoxResult.Cancel
-                        eventArgs.Cancel = True
+                        eventArgs.cancel = True
                 End Select
             End If
         End With
@@ -860,7 +834,7 @@ ErrNew:
 
     Private Sub tree1_KeyDownEvent(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_KeyDownEvent) Handles tree1.KeyDownEvent
         Dim nod As ComctlLib.Node
-        Select Case eventArgs.KeyCode
+        Select Case eventArgs.keyCode
             Case System.Windows.Forms.Keys.Delete : tree1.Nodes.Remove(tree1.SelectedItem.Index)
                 'Case vbKeyInsert:
                 '  Set nod = tree1.Nodes.add(tree1.SelectedItem, tvwPrevious, "NewFile", "NewFile")
@@ -883,21 +857,21 @@ ErrNew:
             inClick = True
             If NodeLinking > 0 Then
                 fullpath = "c:\" & IO.Path.GetDirectoryName(NodeFile(NodeLinking))
-                filename = HTMLRelativeFilename("c:\" & Mid(eventArgs.Node.key, 2), fullpath)
+                filename = HTMLRelativeFilename("c:\" & Mid(eventArgs.node.Key, 2), fullpath)
                 EditSubTag("href", filename)
                 DelaySetNode(NodeLinking)
                 NodeLinking = 0
                 Me.Cursor = System.Windows.Forms.Cursors.Default
             Else
-                filename = Mid(eventArgs.Node.key, 2)
-                If QuerySave = MsgBoxResult.Cancel Then 'Should move focus back to old node here
+                filename = Mid(eventArgs.node.Key, 2)
+                If QuerySave() = MsgBoxResult.Cancel Then 'Should move focus back to old node here
                     DelaySetNode(1)
                 Else
                     LoadTextboxFromFile(path, filename, SourceExtension, txtMain)
                     If tree1.SelectedItem Is Nothing Then
-                        tree1.SelectedItem = eventArgs.Node
-                    ElseIf tree1.SelectedItem.Index <> eventArgs.Node.Index Then
-                        tree1.SelectedItem = eventArgs.Node
+                        tree1.SelectedItem = eventArgs.node
+                    ElseIf tree1.SelectedItem.Index <> eventArgs.node.Index Then
+                        tree1.SelectedItem = eventArgs.node
                     End If
                 End If
             End If
@@ -1202,212 +1176,212 @@ endsub:
                         If VB.Left(filename, 1) = "\" Then
                             PathName = path & filename
                         Else
-                            PathName = IO.Path.GetDirectoryName(path & "\" & NodeFile) & "\" & filename
-						End If
-						If FileExists(PathName) Then
-							frmSample.SetText(PathName)
-						ElseIf FileExists(PathName & SourceExtension) Then 
-							frmSample.SetText(PathName & SourceExtension)
-						End If
-					End If
-			End Select
-			'If txtMainButton = vbRightButton Then PopupMenu mnuContextTop
-		End If
-	End Sub
-	
-	Private Sub txtMain_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles txtMain.KeyPress
-		Dim KeyAscii As Short = Asc(eventArgs.KeyChar)
-		Dim oldStart As Integer
-		Select Case KeyAscii
-			Case 26 'Control-Z = undo
-				If UndosAvail > 0 Then
-					Undoing = True
-					UndoPos = UndoPos - 1
-					If UndoPos < 0 Then UndoPos = MaxUndo
-					txtMain.Text = Undos(UndoPos)
-					txtMain.SelectionStart = UndoCursor(UndoPos)
-					UndosAvail = UndosAvail - 1
-					Undoing = False
-				End If
-			Case 13
-				If mnuAutoParagraph.Checked Then
-					oldStart = txtMain.SelectionStart
-					txtMain.Text = VB.Left(txtMain.Text, oldStart) & "<p>" & Mid(txtMain.Text, oldStart + 1)
-					txtMain.SelectionStart = oldStart + 3
-				End If
-		End Select
-		eventArgs.KeyChar = Chr(KeyAscii)
-		If KeyAscii = 0 Then
-			eventArgs.Handled = True
-		End If
-	End Sub
-	
-	Private Sub txtMain_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles txtMain.MouseDown
-		Dim Button As Short = eventArgs.Button \ &H100000
-		Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
-		Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-		Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-		'txtMainButton = Button
-	End Sub
-	
-	'Search in string txt for a tag that encloses start character position
-	'Sets tagName to lowercase of first word in tag
-	'Sets openTagPos, closeTagPos to string index of < and > of tag in txt
-	Private Sub GetCurrentTag() 'txt$, start&, tagName$, openTagPos&, closeTagPos&)
-		Dim txt As String
-		Dim start As Integer
-		txt = txtMain.Text
-		start = txtMain.SelectionStart
-		If start < 1 Then Exit Sub
-		openTagPos = InStrRev(txt, "<", start)
-		If openTagPos > 0 Then
-			closeTagPos = InStrRev(txt, ">", start)
-			If closeTagPos < openTagPos Then 'we are in a tag
-				closeTagPos = InStr(start, txt, ">")
-			End If
-		End If
-		Dim endNamePos As Integer
-		If openTagPos > 0 And openTagPos <= start And closeTagPos >= start Then
-			endNamePos = InStr(openTagPos, txt, " ")
-			If endNamePos = 0 Or endNamePos > closeTagPos Then endNamePos = closeTagPos
-			tagName = LCase(Mid(txt, openTagPos + 1, endNamePos - openTagPos - 1))
-		Else
-			openTagPos = 0
-			closeTagPos = 0
-			tagName = ""
-		End If
-	End Sub
-	
-	'Uses current tag delimited by openTagPos and closeTagPos
-	'Sets subtagName$, value$
-	'QuotedStringFromTag( st, v, 1 ) when the current tag is <img src="foo.png">
-	'will result in st="src", v="foo.png"
-	'Private Sub QuotedStringFromTag(subtagName$, value$, Optional stringNum& = 1)
-	'  Dim valueStart&, valueEnd&, subtagStart&, num&
-	'  Dim txt$
-	'  txt = txtMain.Text
-	'
-	'  valueStart = InStr(openTagPos, txt, """") + 1
-	'  num = 1
-	'  While num < stringNum And valueStart > 0
-	'    valueStart = InStr(valueStart, txt, """") + 1 'find close quote
-	'    If valueStart > 0 Then
-	'      valueStart = InStr(valueStart, txt, """") + 1 'find next open quote
-	'    End If
-	'    num = num + 1
-	'  Wend
-	'  valueEnd = InStr(valueStart, txt, """")
-	'  If valueStart > 0 And valueEnd > valueStart And valueEnd < closeTagPos Then
-	'    value = Mid(txt, valueStart, valueEnd - valueStart)
-	'    subtagStart = InStrRev(txt, " ", valueStart)
-	'    If subtagStart < openTagPos Then subtagStart = openTagPos
-	'    subtagName = Mid(txt, subtagStart + 1, valueStart - subtagStart - 3)
-	'  Else
-	'    subtagName = ""
-	'    value = ""
-	'  End If
-	'
-	'End Sub
-	
-	'Uses current tag delimited by openTagPos and closeTagPos
-	'If subtagName does not exist in the current tag, "" is returned.
-	'SubTagValue( "src" ) when the current tag is <img src="foo.png">
-	'will return foo.png
-	Private Function SubTagValue(ByRef subtagName As String) As String
-		Dim subtagStart, valueStart, valueEnd, selStart As Integer
-		Dim retval As String
-		'UPGRADE_NOTE: tag was upgraded to tag_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-		Dim txt, tag_Renamed As String
-		txt = txtMain.Text
-		selStart = txtMain.SelectionStart
-		tag_Renamed = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
-		subtagStart = InStr(1, tag_Renamed, LCase(subtagName))
-		If subtagStart = 0 Then
-			retval = ""
-		Else
-			valueStart = subtagStart + Len(subtagName) + 1
-			If Mid(tag_Renamed, valueStart, 1) = """" Then
-				valueStart = valueStart + 1
-				valueEnd = InStr(valueStart, tag_Renamed, """")
-			Else
-				valueEnd = InStr(valueStart + 1, tag_Renamed, " ")
-				If valueEnd = 0 Then valueEnd = Len(tag_Renamed)
-			End If
-			If valueEnd > valueStart Then retval = Mid(tag_Renamed, valueStart, valueEnd - valueStart)
-		End If
-		SubTagValue = retval
-	End Function
-	
-	'Uses current tag delimited by openTagPos and closeTagPos
-	'Modifies txtMain.Text, replacing current value of subtagName with NewValue
-	'If subtagName does not exist in the current tag, it is added at the end
-	'EditSubTag( "src", "bar.gif" ) when the current tag is <img src="foo.png">
-	'will result in <img src="bar.gif">
-	Private Sub EditSubTag(ByRef subtagName As String, ByRef newValue As String)
-		Dim valueEnd, valueStart, subtagStart As Integer
-		'UPGRADE_NOTE: tag was upgraded to tag_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-		Dim txt, tag_Renamed As String
-		txt = txtMain.Text
-		tag_Renamed = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
-		subtagStart = InStr(1, tag_Renamed, LCase(subtagName))
-		If subtagStart = 0 Then
-			txtMain.Text = VB.Left(txt, closeTagPos - 1) & " " & LCase(subtagName) & "=" & newValue & Mid(txt, closeTagPos)
-		Else
-			'subtagStart = subtagStart + openTagPos
-			valueStart = subtagStart + Len(subtagName) + 1
-			If Mid(tag_Renamed, valueStart, 1) = """" Then
-				valueEnd = InStr(valueStart + 1, tag_Renamed, """")
-			Else
-				valueEnd = InStr(valueStart + 1, tag_Renamed, " ")
-				If valueEnd = 0 Then valueEnd = Len(tag_Renamed)
-			End If
-			txtMain.Text = VB.Left(txt, openTagPos + valueStart - 1) & newValue & Mid(txt, openTagPos + valueEnd - 1)
-			closeTagPos = InStr(openTagPos + 1, txtMain.Text, ">")
-		End If
-		txtMain.SelectionStart = openTagPos + 1
-		txtMain_Click(txtMain, New System.EventArgs())
-		txtMain.SelectionStart = closeTagPos + 1
-	End Sub
-	
-	Private Sub AddContextMenuItem(ByRef newItem As String)
-		Dim mnuItem As Integer
-		mnuItem = mnuContext.Count
-		mnuContext.Load(mnuItem)
-		mnuContext(mnuItem).Text = newItem
-	End Sub
-	
-	Private Sub txtMain_SelectionChanged(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtMain.SelectionChanged
-		Dim lastSelStart As Integer
-		If txtMain.SelectionStart <> lastSelStart Then
-			
-			lastSelStart = txtMain.SelectionStart
-		End If
-	End Sub
-	
-	Private Sub AddRecentFile(ByRef FilePath As String)
-		Dim rf, rfMove As Integer
-		Dim newPath As String
-		Dim match As Boolean
-		rf = 0
-		While Not match And rf <= mnuRecent.Count - 2
-			rf = rf + 1
-			If UCase(mnuRecent(rf).Tag) = UCase(FilePath) Then match = True
-		End While
-		If match Then 'move file to top of list
-			For rfMove = rf To 2 Step -1
-				mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
-				mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
-			Next rfMove
-		Else 'Add file to list
-			mnuRecent(0).Visible = True
-			If mnuRecent.Count <= MaxRecentFiles Then mnuRecent.Load(mnuRecent.Count)
-			For rfMove = mnuRecent.Count - 1 To 2 Step -1
-				mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
-				mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
-			Next rfMove
-		End If
-		mnuRecent(1).Visible = True
-		mnuRecent(1).Tag = FilePath
-		mnuRecent(1).Text = "&1 " & FilenameOnly(mnuRecent(rfMove).Tag)
-	End Sub
+                            PathName = IO.Path.GetDirectoryName(path & "\" & NodeFile()) & "\" & filename
+                        End If
+                        If IO.File.Exists(PathName) Then
+                            frmSample.SetText(PathName)
+                        ElseIf IO.File.Exists(PathName & SourceExtension) Then
+                            frmSample.SetText(PathName & SourceExtension)
+                        End If
+                    End If
+            End Select
+            'If txtMainButton = vbRightButton Then PopupMenu mnuContextTop
+        End If
+    End Sub
+
+    Private Sub txtMain_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles txtMain.KeyPress
+        Dim KeyAscii As Short = Asc(eventArgs.KeyChar)
+        Dim oldStart As Integer
+        Select Case KeyAscii
+            Case 26 'Control-Z = undo
+                If UndosAvail > 0 Then
+                    Undoing = True
+                    UndoPos = UndoPos - 1
+                    If UndoPos < 0 Then UndoPos = MaxUndo
+                    txtMain.Text = Undos(UndoPos)
+                    txtMain.SelectionStart = UndoCursor(UndoPos)
+                    UndosAvail = UndosAvail - 1
+                    Undoing = False
+                End If
+            Case 13
+                If mnuAutoParagraph.Checked Then
+                    oldStart = txtMain.SelectionStart
+                    txtMain.Text = VB.Left(txtMain.Text, oldStart) & "<p>" & Mid(txtMain.Text, oldStart + 1)
+                    txtMain.SelectionStart = oldStart + 3
+                End If
+        End Select
+        eventArgs.KeyChar = Chr(KeyAscii)
+        If KeyAscii = 0 Then
+            eventArgs.Handled = True
+        End If
+    End Sub
+
+    Private Sub txtMain_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles txtMain.MouseDown
+        Dim Button As Short = eventArgs.Button \ &H100000
+        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
+        Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
+        'txtMainButton = Button
+    End Sub
+
+    'Search in string txt for a tag that encloses start character position
+    'Sets tagName to lowercase of first word in tag
+    'Sets openTagPos, closeTagPos to string index of < and > of tag in txt
+    Private Sub GetCurrentTag() 'txt$, start&, tagName$, openTagPos&, closeTagPos&)
+        Dim txt As String
+        Dim start As Integer
+        txt = txtMain.Text
+        start = txtMain.SelectionStart
+        If start < 1 Then Exit Sub
+        openTagPos = InStrRev(txt, "<", start)
+        If openTagPos > 0 Then
+            closeTagPos = InStrRev(txt, ">", start)
+            If closeTagPos < openTagPos Then 'we are in a tag
+                closeTagPos = InStr(start, txt, ">")
+            End If
+        End If
+        Dim endNamePos As Integer
+        If openTagPos > 0 And openTagPos <= start And closeTagPos >= start Then
+            endNamePos = InStr(openTagPos, txt, " ")
+            If endNamePos = 0 Or endNamePos > closeTagPos Then endNamePos = closeTagPos
+            tagName = LCase(Mid(txt, openTagPos + 1, endNamePos - openTagPos - 1))
+        Else
+            openTagPos = 0
+            closeTagPos = 0
+            tagName = ""
+        End If
+    End Sub
+
+    'Uses current tag delimited by openTagPos and closeTagPos
+    'Sets subtagName$, value$
+    'QuotedStringFromTag( st, v, 1 ) when the current tag is <img src="foo.png">
+    'will result in st="src", v="foo.png"
+    'Private Sub QuotedStringFromTag(subtagName$, value$, Optional stringNum& = 1)
+    '  Dim valueStart&, valueEnd&, subtagStart&, num&
+    '  Dim txt$
+    '  txt = txtMain.Text
+    '
+    '  valueStart = InStr(openTagPos, txt, """") + 1
+    '  num = 1
+    '  While num < stringNum And valueStart > 0
+    '    valueStart = InStr(valueStart, txt, """") + 1 'find close quote
+    '    If valueStart > 0 Then
+    '      valueStart = InStr(valueStart, txt, """") + 1 'find next open quote
+    '    End If
+    '    num = num + 1
+    '  Wend
+    '  valueEnd = InStr(valueStart, txt, """")
+    '  If valueStart > 0 And valueEnd > valueStart And valueEnd < closeTagPos Then
+    '    value = Mid(txt, valueStart, valueEnd - valueStart)
+    '    subtagStart = InStrRev(txt, " ", valueStart)
+    '    If subtagStart < openTagPos Then subtagStart = openTagPos
+    '    subtagName = Mid(txt, subtagStart + 1, valueStart - subtagStart - 3)
+    '  Else
+    '    subtagName = ""
+    '    value = ""
+    '  End If
+    '
+    'End Sub
+
+    'Uses current tag delimited by openTagPos and closeTagPos
+    'If subtagName does not exist in the current tag, "" is returned.
+    'SubTagValue( "src" ) when the current tag is <img src="foo.png">
+    'will return foo.png
+    Private Function SubTagValue(ByRef subtagName As String) As String
+        Dim subtagStart, valueStart, valueEnd, selStart As Integer
+        Dim retval As String
+        'UPGRADE_NOTE: tag was upgraded to tag_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
+        Dim txt, tag_Renamed As String
+        txt = txtMain.Text
+        selStart = txtMain.SelectionStart
+        tag_Renamed = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
+        subtagStart = InStr(1, tag_Renamed, LCase(subtagName))
+        If subtagStart = 0 Then
+            retval = ""
+        Else
+            valueStart = subtagStart + Len(subtagName) + 1
+            If Mid(tag_Renamed, valueStart, 1) = """" Then
+                valueStart = valueStart + 1
+                valueEnd = InStr(valueStart, tag_Renamed, """")
+            Else
+                valueEnd = InStr(valueStart + 1, tag_Renamed, " ")
+                If valueEnd = 0 Then valueEnd = Len(tag_Renamed)
+            End If
+            If valueEnd > valueStart Then retval = Mid(tag_Renamed, valueStart, valueEnd - valueStart)
+        End If
+        SubTagValue = retval
+    End Function
+
+    'Uses current tag delimited by openTagPos and closeTagPos
+    'Modifies txtMain.Text, replacing current value of subtagName with NewValue
+    'If subtagName does not exist in the current tag, it is added at the end
+    'EditSubTag( "src", "bar.gif" ) when the current tag is <img src="foo.png">
+    'will result in <img src="bar.gif">
+    Private Sub EditSubTag(ByRef subtagName As String, ByRef newValue As String)
+        Dim valueEnd, valueStart, subtagStart As Integer
+        'UPGRADE_NOTE: tag was upgraded to tag_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
+        Dim txt, tag_Renamed As String
+        txt = txtMain.Text
+        tag_Renamed = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
+        subtagStart = InStr(1, tag_Renamed, LCase(subtagName))
+        If subtagStart = 0 Then
+            txtMain.Text = VB.Left(txt, closeTagPos - 1) & " " & LCase(subtagName) & "=" & newValue & Mid(txt, closeTagPos)
+        Else
+            'subtagStart = subtagStart + openTagPos
+            valueStart = subtagStart + Len(subtagName) + 1
+            If Mid(tag_Renamed, valueStart, 1) = """" Then
+                valueEnd = InStr(valueStart + 1, tag_Renamed, """")
+            Else
+                valueEnd = InStr(valueStart + 1, tag_Renamed, " ")
+                If valueEnd = 0 Then valueEnd = Len(tag_Renamed)
+            End If
+            txtMain.Text = VB.Left(txt, openTagPos + valueStart - 1) & newValue & Mid(txt, openTagPos + valueEnd - 1)
+            closeTagPos = InStr(openTagPos + 1, txtMain.Text, ">")
+        End If
+        txtMain.SelectionStart = openTagPos + 1
+        txtMain_Click(txtMain, New System.EventArgs())
+        txtMain.SelectionStart = closeTagPos + 1
+    End Sub
+
+    Private Sub AddContextMenuItem(ByRef newItem As String)
+        Dim mnuItem As Integer
+        mnuItem = mnuContext.Count
+        mnuContext.Load(mnuItem)
+        mnuContext(mnuItem).Text = newItem
+    End Sub
+
+    Private Sub txtMain_SelectionChanged(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtMain.SelectionChanged
+        Dim lastSelStart As Integer
+        If txtMain.SelectionStart <> lastSelStart Then
+
+            lastSelStart = txtMain.SelectionStart
+        End If
+    End Sub
+
+    Private Sub AddRecentFile(ByRef FilePath As String)
+        'Dim rf, rfMove As Integer
+        'Dim newPath As String
+        'Dim match As Boolean
+        'rf = 0
+        'While Not match And rf <= mnuRecent.Count - 2
+        '    rf = rf + 1
+        '    If UCase(mnuRecent(rf).Tag) = UCase(FilePath) Then match = True
+        'End While
+        'If match Then 'move file to top of list
+        '    For rfMove = rf To 2 Step -1
+        '        mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
+        '        mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
+        '    Next rfMove
+        'Else 'Add file to list
+        '    mnuRecent(0).Visible = True
+        '    If mnuRecent.Count <= MaxRecentFiles Then mnuRecent.Load(mnuRecent.Count)
+        '    For rfMove = mnuRecent.Count - 1 To 2 Step -1
+        '        mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
+        '        mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
+        '    Next rfMove
+        'End If
+        'mnuRecent(1).Visible = True
+        'mnuRecent(1).Tag = FilePath
+        'mnuRecent(1).Text = "&1 " & FilenameOnly(mnuRecent(rfMove).Tag)
+    End Sub
 End Class

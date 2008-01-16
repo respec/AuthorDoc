@@ -25,58 +25,31 @@ Friend Class frmOptions
 		
 	End Sub
 	
-	Private Sub txtFont_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtFont.Click
-		'UPGRADE_ISSUE: MSComDlg.CommonDialog control cdlg was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E047632-2D91-44D6-B2A3-0801707AF686"'
-		CopyFont(txtFont, (frmMain.cdlg))
-		On Error GoTo ExitSub
-		'UPGRADE_WARNING: The CommonDialog CancelError property is not supported in Visual Basic .NET. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="8B377936-3DF7-4745-AA26-DD00FA5B9BE1"'
-		frmMain.cdlg.CancelError = True
-		'UPGRADE_ISSUE: Constant cdlCFBoth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="55B59875-9A95-4B71-9D6A-7C294BF7139D"'
-		'UPGRADE_ISSUE: MSComDlg.CommonDialog property cdlg.flags was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-		frmMain.cdlg.Flags = MSComDlg.FontsConstants.cdlCFBoth
-		'UPGRADE_ISSUE: Constant cdlCFScalableOnly was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="55B59875-9A95-4B71-9D6A-7C294BF7139D"'
-		'UPGRADE_ISSUE: MSComDlg.CommonDialog property cdlg.flags was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-		frmMain.cdlg.Flags = MSComDlg.FontsConstants.cdlCFScalableOnly
-		'UPGRADE_ISSUE: Constant cdlCFWYSIWYG was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="55B59875-9A95-4B71-9D6A-7C294BF7139D"'
-		'UPGRADE_ISSUE: MSComDlg.CommonDialog property cdlg.flags was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-		frmMain.cdlg.Flags = MSComDlg.FontsConstants.cdlCFWYSIWYG
-		frmMain.cdlgFont.ShowDialog()
-		
-		'UPGRADE_ISSUE: MSComDlg.CommonDialog control cdlg was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E047632-2D91-44D6-B2A3-0801707AF686"'
-		CopyFont((frmMain.cdlg), txtFont)
-		If frmMain.cdlgFont.Font.Name = txtFont.Font.Name Then
-			txtFont.Text = frmMain.cdlgFont.Font.Name
-		End If
-		
-ExitSub: 
-		'UPGRADE_WARNING: The CommonDialog CancelError property is not supported in Visual Basic .NET. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="8B377936-3DF7-4745-AA26-DD00FA5B9BE1"'
-		frmMain.cdlg.CancelError = False
-	End Sub
+    Private Sub txtFont_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtFont.Click
+        Dim lFontDialog As New FontDialog
+        With lFontDialog
+            .Font = txtFont.Font
+            .AllowVectorFonts = True
+            .AllowVerticalFonts = False
+            .FontMustExist = True
+
+            If .ShowDialog = Windows.Forms.DialogResult.OK Then
+                txtFont.Font = .Font
+                txtFont.Text = .Font.Name
+            End If
+        End With
+    End Sub
 	
-	Private Sub CopyFont(ByRef src As Object, ByRef dst As Object)
-		On Error Resume Next 'Some objects have only some of the font attributes
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontBold. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontBold. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontBold = src.FontBold
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontItalic. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontItalic. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontItalic = src.FontItalic
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontName. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontName. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontName = src.FontName
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontSize. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontSize. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontSize = src.FontSize
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontStrikethru. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontStrikethru. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontStrikethru = src.FontStrikethru
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontUnderline. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontUnderline. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontUnderline = src.FontUnderline
-		'UPGRADE_WARNING: Couldn't resolve default property of object dst.FontTransparent. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		'UPGRADE_WARNING: Couldn't resolve default property of object src.FontTransparent. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-		dst.FontTransparent = src.FontTransparent
-	End Sub
+    'Private Sub CopyFont(ByRef src As Object, ByRef dst As Object)
+    '	On Error Resume Next 'Some objects have only some of the font attributes
+    '       dst.FontBold = src.FontBold
+    '	dst.FontItalic = src.FontItalic
+    '	dst.FontName = src.FontName
+    '	dst.FontSize = src.FontSize
+    '	dst.FontStrikethru = src.FontStrikethru
+    '	dst.FontUnderline = src.FontUnderline
+    '	dst.FontTransparent = src.FontTransparent
+    'End Sub
 	
 	Private Sub CopyFont2RichText(ByRef src As System.Windows.Forms.TextBox, ByRef dst As System.Windows.Forms.RichTextBox)
 		Dim lSelStart, lSelLength As Integer

@@ -207,7 +207,8 @@ Module modConvert
 	
 	Private Sub ReadStyleFile(ByRef StyleFilename As String, ByRef HeadingLevel As Short)
 		Dim inFile As Short
-		Dim CurrSection, buf, FirstChar As String
+        Dim CurrSection As String = ""
+        Dim buf, FirstChar As String
 		Dim level As Short
 		
 		BeforeHTML = ""
@@ -259,37 +260,42 @@ Module modConvert
 								buf = Mid(buf, 2)
 							End While
 							'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-							GoSub SetVal
-						ElseIf CurrSection = "printstart" Then 
-							If OutputFormat = outputType.tPRINT Then WordCommand(buf, 0)
+                            Select Case CurrSection
+                                Case "beforehtml"
+                                    If level = 0 Then BeforeHTML = BeforeHTML & buf & vbCrLf
+                                Case "printsection" : WordStyle(level).Add(buf)
+                                Case "top" : HeaderStyle(level) = buf
+                                Case "bottom" : FooterStyle(level) = buf
+                                Case "body"
+                                    If Len(buf) > 0 Then
+                                        BodyStyle(level) = "<body " & buf & ">"
+                                    Else
+                                        BodyStyle(level) = "<body>"
+                                    End If
+                            End Select
+                        ElseIf CurrSection = "printstart" Then
+                            If OutputFormat = outputType.tPRINT Then WordCommand(buf, 0)
 						Else
 							For level = 0 To maxLevels
 								'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-								GoSub SetVal
-							Next level
+                                Select Case CurrSection
+                                    Case "beforehtml"
+                                        If level = 0 Then BeforeHTML = BeforeHTML & buf & vbCrLf
+                                    Case "printsection" : WordStyle(level).Add(buf)
+                                    Case "top" : HeaderStyle(level) = buf
+                                    Case "bottom" : FooterStyle(level) = buf
+                                    Case "body"
+                                        If Len(buf) > 0 Then
+                                            BodyStyle(level) = "<body " & buf & ">"
+                                        Else
+                                            BodyStyle(level) = "<body>"
+                                        End If
+                                End Select
+                            Next level
 						End If
 				End Select
 			End While
 		End If
-		Exit Sub
-		
-SetVal: 
-		Select Case CurrSection
-			Case "beforehtml"
-				If level = 0 Then BeforeHTML = BeforeHTML & buf & vbCrLf
-			Case "printsection" : WordStyle(level).Add(buf)
-			Case "top" : HeaderStyle(level) = buf
-			Case "bottom" : FooterStyle(level) = buf
-			Case "body"
-				If Len(buf) > 0 Then
-					BodyStyle(level) = "<body " & buf & ">"
-				Else
-					BodyStyle(level) = "<body>"
-				End If
-		End Select
-		'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		Return 
-		
 	End Sub
 	
 	Private Sub WordCommand(ByVal cmdline As String, ByVal localHeadingLevel As Integer)
@@ -786,7 +792,7 @@ TrimTargetText:
 				HREFsInsureExtension()
 				AbsoluteToRelative()
 				CopyImages()
-				FormatCardGraphic()
+                'FormatCardGraphic()
 				SaveInNewDir(SaveDirectory & SaveFilename)
 			End If
 			Status("Closing " & SourceFilename)
@@ -999,9 +1005,15 @@ NormalLine:
 					ImageFilename = Mid(buf, 4, InStr(buf, "}}}") - 4) & ".png"
 					buf = "<p><img src=""" & ImageFilename & """>"
 RetryImage: 
-					On Error GoTo MissingImage
-					FileCopy(SourceBaseDirectory & "png\" & ImageFilename, CurrentOutputDirectory & ImageFilename)
-					On Error GoTo 0
+                    Try
+                        FileCopy(SourceBaseDirectory & "png\" & ImageFilename, CurrentOutputDirectory & ImageFilename)
+                    Catch
+                        Select Case MsgBox("Missing Image: " & vbCr & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "Missing")
+                            Case MsgBoxResult.Retry : GoTo RetryImage
+                            Case MsgBoxResult.Ignore
+                            Case MsgBoxResult.Abort : Exit Sub
+                        End Select
+                    End Try
 				End If
 				buf = ReplaceString(buf, "[[[", "<br><figure>")
 				buf = ReplaceString(buf, "]]]", "</figure>")
@@ -1044,30 +1056,32 @@ RetryImage:
 					
 					If parsePos - AllCapsStart > 2 Then
 						keyword = Mid(buf, AllCapsStart, parsePos - AllCapsStart)
-						On Error GoTo NewFileKeyword
-						'UPGRADE_WARNING: Couldn't resolve default property of object FileKeywords(). Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-						dummy = FileKeywords.Item(keyword) 'Debug.Print "[" & FileKeywords(keyword) & "]";
-						Err.Clear()
-AddedLocal: 
-						'          On Error GoTo 0
-						'          On Error GoTo NewKeyword
-						'          Debug.Print "(" & Keywords(keyword) & ")";
-NotNew: 
-						'If InHeader Then
-						buf2 = buf2 & keyword & Chr(a)
-						'Else
-						'  buf2 = buf2 & vbcrlf _
-						''      & "<Object id=hhctrl type=""application/x-oleobject""" & vbcrlf _
-						''      & "classid = ""clsid:adb880a6-d8ff-11cf-9377-00aa003b7a11""" & vbcrlf _
-						''      & "codebase = ""hhctrl.ocx#Version=4,74,8702,0"" Width = 100 Height = 100>" & vbcrlf _
-						''      & "<param name=""Command"" value=""KLink"">" & vbcrlf _
-						''      & "<param name=""Button"" value=""Text:" & keyword & """>" & vbcrlf _
-						''      & "<param name=""Item1"" value="""">" & vbcrlf _
-						''      & "<param name=""Item2"" value=""" & keyword & """>" & vbcrlf & "</OBJECT>" & vbcrlf & Chr(a)
-						'End If
-					Else
-						buf2 = buf2 & Mid(buf, AllCapsStart, parsePos - AllCapsStart + 1)
-					End If
+                        Try
+                            'UPGRADE_WARNING: Couldn't resolve default property of object FileKeywords(). Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
+                            dummy = FileKeywords.Item(keyword) 'Debug.Print "[" & FileKeywords(keyword) & "]";
+                        Catch
+                        End Try
+                        'Try
+                        '    Debug.Print("(" & Keywords(keyword) & ")")
+                        'Catch
+                        '    Keywords.Add(keyword, keyword)
+                        '    Debug.Print("+" & keyword & ";")
+                        'End Try
+                        'If InHeader Then
+                        buf2 = buf2 & keyword & Chr(a)
+                        'Else
+                        '  buf2 = buf2 & vbcrlf _
+                        ''      & "<Object id=hhctrl type=""application/x-oleobject""" & vbcrlf _
+                        ''      & "classid = ""clsid:adb880a6-d8ff-11cf-9377-00aa003b7a11""" & vbcrlf _
+                        ''      & "codebase = ""hhctrl.ocx#Version=4,74,8702,0"" Width = 100 Height = 100>" & vbcrlf _
+                        ''      & "<param name=""Command"" value=""KLink"">" & vbcrlf _
+                        ''      & "<param name=""Button"" value=""Text:" & keyword & """>" & vbcrlf _
+                        ''      & "<param name=""Item1"" value="""">" & vbcrlf _
+                        ''      & "<param name=""Item2"" value=""" & keyword & """>" & vbcrlf & "</OBJECT>" & vbcrlf & Chr(a)
+                        'End If
+                    Else
+                        buf2 = buf2 & Mid(buf, AllCapsStart, parsePos - AllCapsStart + 1)
+                    End If
 					AllCapsStart = 0
 				Else
 					buf2 = buf2 & Chr(a)
@@ -1079,23 +1093,7 @@ NextChar:
 		Print(IDfile, buf2 & vbCrLf)
 		Exit Sub
 		
-NewFileKeyword: 
-		FileKeywords.Add(keyword, keyword)
-		'Debug.Print keyword & ";"
-		Err.Clear()
-		Resume AddedLocal
-NewKeyword: 
-		Keywords.Add(keyword, keyword)
-		'Debug.Print "+" & keyword & ";";
-		Err.Clear()
-		Resume NotNew
-MissingImage: 
-		Select Case MsgBox("Missing Image: " & vbCr & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "Missing")
-			Case MsgBoxResult.Retry : GoTo RetryImage
-			Case MsgBoxResult.Ignore : Resume Next
-			Case MsgBoxResult.Abort : Exit Sub
-		End Select
-	End Sub
+    End Sub
 	
 	Private Sub ConvertTablesToWord()
 		With word
@@ -3013,11 +3011,11 @@ NoPrevSection:
 			a = Asc(ch)
 			Select Case a
 				Case 65 To 90, 97 To 122, 47 'in range A-Z a-z or /
-					retval = retval & ch
+                    retval &= ch
 					lastReplaced = False
 				Case Else
 					If lastReplaced = False Then
-						retval = retval & "_"
+                        retval &= "_"
 						lastReplaced = True
 					End If
 			End Select
@@ -3037,13 +3035,13 @@ NoPrevSection:
 			a = Asc(ch)
 			Select Case a
 				Case 32, 33, 35 To 41, 43 To 46, 48 To 57, 65 To 90, 94, 95, 97 To 122
-					retval = retval & ch
+                    retval &= ch
 					lastReplaced = False
 				Case 0 - 31
 					'Omit control characters and don't insert underscores for them
 				Case Else
 					If lastReplaced = False Then
-						retval = retval & "_"
+                        retval &= "_"
 						lastReplaced = True
 					End If
 			End Select
@@ -3168,7 +3166,7 @@ NoPrevSection:
 	End Sub
 	
 	Private Function SectionContents() As String
-		Dim retval As String
+        Dim retval As String = ""
 		Dim localNextEntry As Integer
 		Dim nextLevel, lvl, prevLevel As Integer
 		Dim nextName, nextHref As String
@@ -3177,526 +3175,521 @@ NoPrevSection:
 		localNextEntry = NextProjectFileEntry
 		localHeadingWord(HeadingLevel) = HeadingWord(HeadingLevel)
 		prevLevel = HeadingLevel
-		'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-		GoSub GetNextEntryLevel
+        GetNextEntryLevel(localNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
 		If nextLevel > HeadingLevel Then
 			While nextLevel > HeadingLevel
 				
 				If nextLevel > prevLevel Then
 					For lvl = prevLevel To (nextLevel - 1)
-						retval = retval & "<ul>" & vbCr
+                        retval &= "<ul>" & vbCr
 					Next 
 				ElseIf nextLevel < prevLevel Then 
 					For lvl = nextLevel To (prevLevel - 1)
-						retval = retval & "</ul>" & vbCr
+                        retval &= "</ul>" & vbCr
 					Next 
 				End If
 				
-				retval = retval & "<li><a href=""" & nextHref & """>" & nextName & "</a>" & vbCr
+                retval &= "<li><a href=""" & nextHref & """>" & nextName & "</a>" & vbCr
 				prevLevel = nextLevel
-				'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-				GoSub GetNextEntryLevel
-			End While
-			retval = retval & "</ul>" & vbCr
+                GetNextEntryLevel(localNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
+            End While
+            retval &= "</ul>" & vbCr
 		End If
 		SectionContents = retval
-		Exit Function
-		
-GetNextEntryLevel: 
-		If localNextEntry > MaxProjectFileEntry Then
-			nextLevel = 0
-		Else
-			nextName = LTrim(ProjectFileEntry(localNextEntry))
-			nextLevel = (Len(ProjectFileEntry(localNextEntry)) - Len(nextName)) / 2 + 1
-			nextName = RTrim(nextName)
-			localHeadingWord(nextLevel) = nextName
-			nextHref = ""
-			For lvl = HeadingLevel To nextLevel - 1
-				nextHref = nextHref & localHeadingWord(lvl) & "\"
-			Next 
-			nextHref = nextHref & nextName & ".html"
-			localNextEntry = localNextEntry + 1
-		End If
-		'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		Return 
-		
-	End Function
-	
-	Private Sub CopyImages()
-		Dim endPos, startPos, chrPos As Integer
-		Dim lcaseText As String
-		Dim SrcPath, ImageFilename, DstPath As String
-		Dim HTMLsafeFilename As String
-		Dim IgnoreAll As Boolean
-		
-		lcaseText = LCase(TargetText)
-		If OutputFormat = outputType.tHELP Or OutputFormat = outputType.tPRINT Then Exit Sub
-		Status("Copying Images")
+    End Function
+
+    Private Sub GetNextEntryLevel(ByRef localNextEntry As Integer, _
+                                  ByRef nextLevel As Integer, _
+                                  ByRef nextName As String, _
+                                  ByRef nextHref As String, _
+                                  ByRef localHeadingWord() As String)
+        If localNextEntry > MaxProjectFileEntry Then
+            nextLevel = 0
+        Else
+            nextName = LTrim(ProjectFileEntry(localNextEntry))
+            nextLevel = (Len(ProjectFileEntry(localNextEntry)) - Len(nextName)) / 2 + 1
+            nextName = RTrim(nextName)
+            localHeadingWord(nextLevel) = nextName
+            nextHref = ""
+            For lvl As Integer = HeadingLevel To nextLevel - 1
+                nextHref = nextHref & localHeadingWord(lvl) & "\"
+            Next
+            nextHref = nextHref & nextName & ".html"
+            localNextEntry = localNextEntry + 1
+        End If
+    End Sub
+
+    Private Sub CopyImages()
+        Dim endPos, startPos, chrPos As Integer
+        Dim lcaseText As String
+        Dim SrcPath, ImageFilename, DstPath As String
+        Dim HTMLsafeFilename As String
+        Dim IgnoreAll As Boolean
+
+        lcaseText = LCase(TargetText)
+        If OutputFormat = outputType.tHELP Or OutputFormat = outputType.tPRINT Then Exit Sub
+        Status("Copying Images")
         SrcPath = IO.Path.GetDirectoryName(SourceBaseDirectory & SourceFilename) & "\"
         DstPath = IO.Path.GetDirectoryName(SaveDirectory & SaveFilename) & "\"
-		startPos = InStr(lcaseText, " src=""")
-		Dim s As String
-		While startPos > 0
-			endPos = InStr(startPos + 6, lcaseText, """")
-			If endPos = 0 Then Exit Sub
-			ImageFilename = Mid(TargetText, startPos + 6, endPos - startPos - 6)
-CheckForImage: 
-			'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-			If Len(Dir(SrcPath & ImageFilename)) > 0 Then
+        startPos = InStr(lcaseText, " src=""")
+        Dim s As String
+        While startPos > 0
+            endPos = InStr(startPos + 6, lcaseText, """")
+            If endPos = 0 Then Exit Sub
+            ImageFilename = Mid(TargetText, startPos + 6, endPos - startPos - 6)
+CheckForImage:
+            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+            If Len(Dir(SrcPath & ImageFilename)) > 0 Then
                 s = IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), DstPath))
-				'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
                 If Len(Dir(s, FileAttribute.Directory)) = 0 Then System.IO.Directory.CreateDirectory(s) 'MkDirPath(s)
-				FileCopy(SrcPath & ImageFilename, DstPath & ImageFilename)
-			ElseIf Not IgnoreAll Then 
-				Select Case MsgBox("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc") = MsgBoxResult.Abort
-					Case MsgBoxResult.Abort : Exit Sub
-					Case MsgBoxResult.Retry : GoTo CheckForImage
-					Case MsgBoxResult.Ignore
-						If MsgBox("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then IgnoreAll = True
-				End Select
-			End If
-			
-			If OutputFormat = outputType.tHTML Then
-				HTMLsafeFilename = ReplaceString(ImageFilename, "\", "/")
-				HTMLsafeFilename = ReplaceString(HTMLsafeFilename, " ", "%20")
-				If HTMLsafeFilename <> ImageFilename Then
-					TargetText = Left(TargetText, startPos + 5) & HTMLsafeFilename & Mid(TargetText, endPos)
-					lcaseText = LCase(TargetText)
-				End If
-			End If
-			
-			startPos = InStr(endPos, lcaseText, " src=""")
-		End While
-	End Sub
-	
-	Private Sub HREFsInsureExtension()
-		Dim LinkFile, LinkRef, LinkTopic As String
-		Dim endPos, startPos, pos As Integer
-		
-		If OutputFormat = outputType.tHELP Then
-			HREFsInsureExtensionWithWord()
-		ElseIf OutputFormat = outputType.tPRINT Then 
-			'We don't preserve links in printable, so skip this step
-		Else
-			Status("HREFsInsureExtension")
-			startPos = InStr(LCase(TargetText), "<a href=""")
-			While startPos > 0
-				endPos = InStr(startPos + 9, TargetText, """")
-				If endPos = 0 Then Exit Sub
-				LinkRef = Mid(TargetText, startPos + 9, endPos - startPos - 9)
-				pos = InStr(LinkRef, "#")
-				If pos = 0 Then
-					LinkFile = LinkRef
-					LinkTopic = ""
-				Else
-					LinkFile = Left(LinkRef, pos - 1)
-					LinkTopic = Mid(LinkRef, pos)
-				End If
-				If Len(LinkFile) > 0 Then
-					If InStr(LCase(LinkFile), ".html") < 1 And InStr(LinkFile, ":") < 1 Then
-						If LCase(Right(LinkFile, 4)) = ".txt" Then
-							LinkFile = Left(LinkFile, Len(LinkFile) - 3) & "html"
-						Else
-							LinkFile = LinkFile & ".html"
-						End If
-					End If
-					If OutputFormat = outputType.tHTML Then
-						LinkFile = ReplaceString(LinkFile, "\", "/")
-						LinkFile = ReplaceString(LinkFile, " ", "%20")
-					End If
-				End If
-				If LinkFile & LinkTopic <> LinkRef Then
-					TargetText = Left(TargetText, startPos + 8) & LinkFile & LinkTopic & Mid(TargetText, endPos)
-				End If
-				startPos = InStr(endPos, LCase(TargetText), "<a href=""")
-			End While
-		End If
-	End Sub
-	Private Sub HREFsInsureExtensionWithWord()
-		Dim topic, LinkRef, LinkLabel, id As String
-		Dim pos As Integer
-		With word
-			.StartOfDocument()
-			.Cancel()
-			Status("HREFsInsureExtension")
-			.EditFind("<A HREF=""", "", 0)
-			While .EditFindFound
-				'set LinkRef$
-				.CharRight() '.EditClear
-				.EditBookmark("LinkStart")
-				.EditFind(""">")
-				If Not .EditFindFound Then Exit Sub
-				.CharLeft() '.EditClear
-				.ExtendSelection()
-				.EditGoTo("LinkStart")
-				LinkRef = .Selection
-				.Cancel()
-				.CharRight()
-				If InStr(LCase(LinkRef), ".html") < 1 Then
-					pos = InStr(1, LinkRef, "#")
-					If pos > 0 Then .CharLeft(Len(LinkRef) - pos + 1)
-					.ExtendSelection()
-					.CharLeft(4)
-					If LCase(.Selection) = ".txt" Then
-						.EditClear()
-					Else
-						.Cancel()
-						.CharRight()
-					End If
-					.Insert(".html")
-				End If
-				
-				.EditFind("<A HREF=""")
-			End While
-		End With
-	End Sub
-	
-	Private Sub DebugMsg(ByRef s As String)
-		Debug.Print(s)
-	End Sub
-	
-	Private Sub Status(ByRef s As String)
-		frmConvert.Text1.Text = s
-		System.Windows.Forms.Application.DoEvents()
-		'DebugMsg "Status: " & s
-	End Sub
-	
-	Public Sub FormatCardGraphic()
-		Dim startPos, endPos As Integer
-		Dim ImageFilename, TableText, ImageDirectory As String
-		Dim ImageMap As String
-		startPos = InStr(TargetText, WholeCardHeader)
-		If startPos > 0 Then
-			endPos = InStrRev(TargetText, Asterisks80)
-			If endPos > 0 Then
-                ImageDirectory = IO.Path.GetDirectoryName(SaveDirectory & SaveFilename)
-				ImageFilename = FilenameOnly(SaveFilename) & ".bmp"
-				TableText = Mid(TargetText, startPos + lenWholeCardHeader, endPos - startPos - lenWholeCardHeader)
-				ImageMap = CardImage(TableText)
-				If Len(ImageMap) > 0 Then
-					TargetText = "<map name=""CardImageMap"">" & vbCrLf & ImageMap & "</map>" & vbCrLf & Left(TargetText, startPos - 1) & "<p>" & vbCrLf & "<img src=""" & ImageFilename & """ usemap=""#CardImageMap"" border=0>" & vbCrLf & "<p>" & Mid(TargetText, endPos + 81)
-				Else
-					TargetText = Left(TargetText, startPos - 1) & "<p>" & vbCrLf & "<img src=""" & ImageFilename & """>" & vbCrLf & "<p>" & Mid(TargetText, endPos + 81)
-				End If
-				'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-				If Len(Dir(ImageDirectory, FileAttribute.Directory)) = 0 Then MkDir(ImageDirectory)
-				'UPGRADE_WARNING: SavePicture was upgraded to System.Drawing.Image.Save and has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-				frmSample.img.Image.Save(ImageDirectory & "\" & ImageFilename)
-			End If
-		End If
-	End Sub
-	
-	'Creates image on frmSample.img and returns HTML map for links
-	Public Function CardImage(ByRef TableText As String) As String
-		Dim TextRow(255) As String
-		Dim RowY(255) As Integer
-		Dim TensY As Integer
-		Dim OnesY As Integer
-		Dim Row, Rows As Integer
-		Dim col, lentxt As Integer
-		Dim lastCR, thisCR As Integer
-		Dim GrayColor As System.Drawing.Color
-		Dim curChar As String
-		Dim CharWidth As Integer
-		Dim XMargin As Integer
-		Dim CharHeight As Integer
-		Dim txt As String
-		Dim GrayLevel As Integer
-		Dim RangeExists As Boolean
-		Dim RowStopChecking As Integer
-		Dim SubsectionName As String
-		Dim retval As String
-		Dim StartLinkCol, parsePos, StopLinkCol As Integer
-		Dim SaveFileNameOnly As String
-		Dim DoLinks As Boolean
-		
-		DoLinks = True
-		
-		SaveFileNameOnly = FilenameOnly(SaveFilename)
-		retval = ""
-		GrayLevel = 170
-		txt = ReplaceString(TableText, "&gt;", ">")
-		txt = ReplaceString(txt, "&lt;", "<")
-		GrayColor = System.Drawing.ColorTranslator.FromOle(RGB(GrayLevel, GrayLevel, GrayLevel))
-		
-		lentxt = Len(txt)
-		thisCR = 0
-		Rows = 0
-		RowStopChecking = 256
-		'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-		GoSub FindCR
-		While lastCR <= lentxt
-			Rows = Rows + 1
-			TextRow(Rows) = Mid(txt, lastCR + 1, thisCR - lastCR - 1)
-			If Right(TextRow(Rows), 1) = vbCr Then TextRow(Rows) = Left(TextRow(Rows), Len(TextRow(Rows)) - 1)
-			Select Case TextRow(Rows)
-				Case SixSplats, SevenSplats, Asterisks80, TensPlace, OnesPlace 'Skip some rows
-					Rows = Rows - 1
-				Case "Example"
-					If RowStopChecking > 0 Then RowStopChecking = Rows
-				Case "<otyp>"
-					DoLinks = False
-				Case "SPEC-ACTIONS"
-					DoLinks = False
-					RowStopChecking = 0
-				Case Else 'Split long rows
-					While Len(TextRow(Rows)) > MaxRowLength
-						Rows = Rows + 1
-						TextRow(Rows) = ""
-						col = 1
-						While Mid(TextRow(Rows - 1), col, 1) = " "
-							TextRow(Rows) = TextRow(Rows) & " "
-							col = col + 1
-						End While
-						TextRow(Rows) = TextRow(Rows) & Mid(TextRow(Rows - 1), MaxRowLength + 1)
-						TextRow(Rows - 1) = Left(TextRow(Rows - 1), MaxRowLength)
-					End While
-			End Select
-			'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-			GoSub FindCR
-		End While
-		
-		frmSample.Visible = True
-		With frmSample.img
-			'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-            CharWidth = .TextWidth("X")
-			XMargin = CharWidth / 2
-			'UPGRADE_ISSUE: PictureBox method img.TextHeight was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			CharHeight = .TextHeight("X")
-			.Width = CharWidth * MaxRowLength + XMargin * 2
-			.Height = CharHeight * 10 'Start with enough height for header, adjust again after header
-			'UPGRADE_ISSUE: PictureBox method img.Cls was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			.Cls()
-			'frmSample.img.Line (0, 0)-(.Width, 0), vbBlack
-			
-			'Print tens places in gray
-			.ForeColor = GrayColor
-			'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			.CurrentY = CharHeight / 2
-			'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			TensY = .CurrentY
-			For col = 1 To 8
-				curChar = CStr(col)
-				'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				.CurrentX = XMargin + (col * 10 - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-				'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Print(curChar)
-			Next 
-			'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			frmSample.img.Print()
-			'Print Ones Place in gray
-			'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			OnesY = .CurrentY
-			For col = 1 To 80
-				curChar = CStr(col Mod 10)
-				'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				.CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-				'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Print(curChar)
-			Next 
-			'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			frmSample.img.Print()
-			'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			RowY(0) = .CurrentY
-			.Height = RowY(0) + (OnesY - TensY) * Rows + TensY
-			.ForeColor = System.Drawing.Color.Black
-			If InStr(txt, "<-range>") > 0 Then
-				RangeExists = True
-				col = 5
-				'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
-				'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-				GoSub NumberCol
-				col = 10
-				'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
-				'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-				GoSub NumberCol
-			Else
-				RangeExists = False
-			End If
-			For Row = 1 To Rows
-				RowY(Row) = RowY(Row - 1) + OnesY - TensY
-				
-				StartLinkCol = 0
-				StopLinkCol = 0
-				
-				If LCase(Mid(TextRow(Row), 3, lenTableType)) = LCase(TableType) Then
-					Mid(TextRow(Row), 3, lenTableType) = TableType
-					StartLinkCol = lenTableType + 3
-					'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-					GoSub StartArea
-				End If
-				
-				If LCase(Mid(TextRow(Row), 3, 13)) = "general input" Then
-					Mid(TextRow(Row), 3, 7) = "General input"
-					StartLinkCol = 3
-					'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-					GoSub StartArea
-				End If
-				
-				If LCase(Mid(TextRow(Row), 3, 7)) = "section" Then
-					Mid(TextRow(Row), 3, 7) = "Section"
-					StartLinkCol = 11
-					'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-					GoSub StartArea
-				End If
-				
-				If Not DoLinks Then StartLinkCol = 0
-				
-				For col = 1 To Len(TextRow(Row))
-					curChar = Mid(TextRow(Row), col, 1)
-					'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-					'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-					.CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-					'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-					.CurrentY = RowY(Row)
-					
-					If col = StartLinkCol Then .ForeColor = System.Drawing.Color.Blue
-					'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-					If col = StopLinkCol Then GoSub EndTableLink
-					
-					'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-					frmSample.img.Print(curChar)
-					
-					If (Not RangeExists Or col > 10) And Row < RowStopChecking Then
-						Select Case curChar
-							Case "<"
-								'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-								frmSample.img.Line (XMargin + (col - 1) * CharWidth, 0) - (0, .Height), GrayColor
-								'GoSub NumberCol
-							Case ">"
-								'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-								frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
-								'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-								GoSub NumberCol
-						End Select
-					End If
-				Next 
-				'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-				If System.Drawing.ColorTranslator.ToOle(.ForeColor) <> System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Black) Then GoSub EndTableLink
-				'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Print()
-				'frmSample.img.Line (col * CharWidth, 0)-((col + 1) * CharWidth, .Height), RGB(222, 222, 222), BF
-			Next 
-			'Clipboard.SetData .Image
-			If frmSample.WindowState <> System.Windows.Forms.FormWindowState.Normal Then frmSample.WindowState = System.Windows.Forms.FormWindowState.Normal
-			frmSample.SetBounds(frmSample.Left, frmSample.Top, VB6.TwipsToPixelsX((.Width * VB6.TwipsPerPixelX) + 108), VB6.TwipsToPixelsY((.Height * VB6.TwipsPerPixelY) + 372))
-			CardImage = retval
-			
-			Exit Function
-			
-StartArea: 
-			If DoLinks Then
-				'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				retval = retval & "<area coords=""" & .CurrentX & "," & .CurrentY
-				StopLinkCol = InStr(StartLinkCol, TextRow(Row), "]")
-				If StopLinkCol > 0 Then 'Ignore tables containing the string "Tables in brackets  are ..."
-					If Mid(TextRow(Row), StopLinkCol - 1, 1) = "[" Then StopLinkCol = 0
-				End If
-				If StopLinkCol = 0 Then
-					StopLinkCol = InStr(StartLinkCol, TextRow(Row), "  ")
-					If StopLinkCol = 0 Then
-						StopLinkCol = 999
-					End If
-				End If
-			End If
-			'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-			Return 
-			
-EndTableLink: 
-			If DoLinks Then
-				.ForeColor = System.Drawing.Color.Black
-				If curChar = "]" Or curChar = " " Then
-					SubsectionName = Trim(Mid(TextRow(Row), 3, col - 3))
-				Else
-					SubsectionName = Trim(Mid(TextRow(Row), 3))
-				End If
-				If Left(SubsectionName, 7) = "Section" Then SubsectionName = Mid(SubsectionName, 9)
-				If Left(SubsectionName, lenTableType) = TableType Then SubsectionName = Mid(SubsectionName, lenTableType + 1)
-				'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				retval = retval & "," & .CurrentX & "," & .CurrentY + CharHeight & """ href="""
-				
-				'Several special cases for sections that are not where they are expected
-				Select Case Left(SubsectionName, 9)
-					Case "SOIL-DATA", "CROP-DATE"
-						retval = retval & "PWATER Input"
-					Case "OXRX inpu", "NUTRX inp", "PLANK inp", "PHCARB in"
-						retval = retval & SaveFileNameOnly
-						If SaveFileNameOnly <> "Input for RQUAL sections" Then
-							retval = retval & "/Input for RQUAL sections"
-						End If
-					Case "SURF-EXPO"
-						If SaveFileNameOnly = "GQUAL input" Then
-							retval = retval & "Input for RQUAL sections/PLANK input"
-						Else
-							retval = retval & SaveFileNameOnly
-						End If
-					Case Else
-						If SaveFileNameOnly <> "OXRX input" And (SubsectionName = "ELEV" Or Left(SubsectionName, 3) = "OX-") Then
-							retval = retval & "Input for RQUAL sections/OXRX input"
-						Else 'Most links do not need tweaking and fall through to here
-							retval = retval & SaveFileNameOnly
-						End If
-				End Select
-				retval = retval & "/" & SubsectionName & ".html"">" & vbCrLf
-			End If
-			'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-			Return 
-			
-NumberCol: 
-			If col > 9 Then 'And curChar <> "<" Then
-				curChar = CStr(Int(col / 10))
-				'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				.CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-				'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				.CurrentY = TensY
-				'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-				frmSample.img.Print(curChar)
-			End If
-			curChar = CStr(col Mod 10)
-			'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			.CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-			'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			.CurrentY = OnesY
-			'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-			frmSample.img.Print(curChar)
-			'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-			Return 
-		End With
-		
-FindCR: 
-		lastCR = thisCR
-		If lastCR < lentxt Then
-			If Mid(txt, lastCR + 1, 1) = vbLf Then lastCR = lastCR + 1
-		End If
-		
-		thisCR = InStr(thisCR + 1, txt, vbLf)
-		If thisCR = 0 Then thisCR = lentxt + 1
-		'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-		Return 
-		
-	End Function
-	
-	'Public Sub PictureString(buf As String)
-	'  Dim col As Long, maxcol As Long, curChar As String
-	'  maxcol = Len(buf)
-	'  If maxcol > Cols Then maxcol = Cols
-	'  With frmSample.img
-	'    .CurrentY = Row * CharHeight
-	'    For col = 1 To maxcol
-	'      curChar = Mid(buf, col, 1)
-	'      .CurrentX = (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
-	'      frmSample.img.Print curChar;
-	'    Next
-	'  End With
-	'  Row = Row + 1
-	'  If Len(buf) > CharWidth Then PictureString Mid(buf, CharWidth + 1)
-	'End Sub
+                FileCopy(SrcPath & ImageFilename, DstPath & ImageFilename)
+            ElseIf Not IgnoreAll Then
+                Select Case MsgBox("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc") = MsgBoxResult.Abort
+                    Case MsgBoxResult.Abort : Exit Sub
+                    Case MsgBoxResult.Retry : GoTo CheckForImage
+                    Case MsgBoxResult.Ignore
+                        If MsgBox("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then IgnoreAll = True
+                End Select
+            End If
+
+            If OutputFormat = outputType.tHTML Then
+                HTMLsafeFilename = ReplaceString(ImageFilename, "\", "/")
+                HTMLsafeFilename = ReplaceString(HTMLsafeFilename, " ", "%20")
+                If HTMLsafeFilename <> ImageFilename Then
+                    TargetText = Left(TargetText, startPos + 5) & HTMLsafeFilename & Mid(TargetText, endPos)
+                    lcaseText = LCase(TargetText)
+                End If
+            End If
+
+            startPos = InStr(endPos, lcaseText, " src=""")
+        End While
+    End Sub
+
+    Private Sub HREFsInsureExtension()
+        Dim LinkFile, LinkRef, LinkTopic As String
+        Dim endPos, startPos, pos As Integer
+
+        If OutputFormat = outputType.tHELP Then
+            HREFsInsureExtensionWithWord()
+        ElseIf OutputFormat = outputType.tPRINT Then
+            'We don't preserve links in printable, so skip this step
+        Else
+            Status("HREFsInsureExtension")
+            startPos = InStr(LCase(TargetText), "<a href=""")
+            While startPos > 0
+                endPos = InStr(startPos + 9, TargetText, """")
+                If endPos = 0 Then Exit Sub
+                LinkRef = Mid(TargetText, startPos + 9, endPos - startPos - 9)
+                pos = InStr(LinkRef, "#")
+                If pos = 0 Then
+                    LinkFile = LinkRef
+                    LinkTopic = ""
+                Else
+                    LinkFile = Left(LinkRef, pos - 1)
+                    LinkTopic = Mid(LinkRef, pos)
+                End If
+                If Len(LinkFile) > 0 Then
+                    If InStr(LCase(LinkFile), ".html") < 1 And InStr(LinkFile, ":") < 1 Then
+                        If LCase(Right(LinkFile, 4)) = ".txt" Then
+                            LinkFile = Left(LinkFile, Len(LinkFile) - 3) & "html"
+                        Else
+                            LinkFile = LinkFile & ".html"
+                        End If
+                    End If
+                    If OutputFormat = outputType.tHTML Then
+                        LinkFile = ReplaceString(LinkFile, "\", "/")
+                        LinkFile = ReplaceString(LinkFile, " ", "%20")
+                    End If
+                End If
+                If LinkFile & LinkTopic <> LinkRef Then
+                    TargetText = Left(TargetText, startPos + 8) & LinkFile & LinkTopic & Mid(TargetText, endPos)
+                End If
+                startPos = InStr(endPos, LCase(TargetText), "<a href=""")
+            End While
+        End If
+    End Sub
+    Private Sub HREFsInsureExtensionWithWord()
+        Dim topic, LinkRef, LinkLabel, id As String
+        Dim pos As Integer
+        With word
+            .StartOfDocument()
+            .Cancel()
+            Status("HREFsInsureExtension")
+            .EditFind("<A HREF=""", "", 0)
+            While .EditFindFound
+                'set LinkRef$
+                .CharRight() '.EditClear
+                .EditBookmark("LinkStart")
+                .EditFind(""">")
+                If Not .EditFindFound Then Exit Sub
+                .CharLeft() '.EditClear
+                .ExtendSelection()
+                .EditGoTo("LinkStart")
+                LinkRef = .Selection
+                .Cancel()
+                .CharRight()
+                If InStr(LCase(LinkRef), ".html") < 1 Then
+                    pos = InStr(1, LinkRef, "#")
+                    If pos > 0 Then .CharLeft(Len(LinkRef) - pos + 1)
+                    .ExtendSelection()
+                    .CharLeft(4)
+                    If LCase(.Selection) = ".txt" Then
+                        .EditClear()
+                    Else
+                        .Cancel()
+                        .CharRight()
+                    End If
+                    .Insert(".html")
+                End If
+
+                .EditFind("<A HREF=""")
+            End While
+        End With
+    End Sub
+
+    Private Sub DebugMsg(ByRef s As String)
+        Debug.Print(s)
+    End Sub
+
+    Private Sub Status(ByRef s As String)
+        frmConvert.Text1.Text = s
+        System.Windows.Forms.Application.DoEvents()
+        'DebugMsg "Status: " & s
+    End Sub
+
+    'Public Sub FormatCardGraphic()
+    '    Dim startPos, endPos As Integer
+    '    Dim ImageFilename, TableText, ImageDirectory As String
+    '    Dim ImageMap As String
+    '    startPos = InStr(TargetText, WholeCardHeader)
+    '    If startPos > 0 Then
+    '        endPos = InStrRev(TargetText, Asterisks80)
+    '        If endPos > 0 Then
+    '            ImageDirectory = IO.Path.GetDirectoryName(SaveDirectory & SaveFilename)
+    '            ImageFilename = FilenameOnly(SaveFilename) & ".bmp"
+    '            TableText = Mid(TargetText, startPos + lenWholeCardHeader, endPos - startPos - lenWholeCardHeader)
+    '            ImageMap = CardImage(TableText)
+    '            If Len(ImageMap) > 0 Then
+    '                TargetText = "<map name=""CardImageMap"">" & vbCrLf & ImageMap & "</map>" & vbCrLf & Left(TargetText, startPos - 1) & "<p>" & vbCrLf & "<img src=""" & ImageFilename & """ usemap=""#CardImageMap"" border=0>" & vbCrLf & "<p>" & Mid(TargetText, endPos + 81)
+    '            Else
+    '                TargetText = Left(TargetText, startPos - 1) & "<p>" & vbCrLf & "<img src=""" & ImageFilename & """>" & vbCrLf & "<p>" & Mid(TargetText, endPos + 81)
+    '            End If
+    '            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+    '            If Len(Dir(ImageDirectory, FileAttribute.Directory)) = 0 Then MkDir(ImageDirectory)
+    '            'UPGRADE_WARNING: SavePicture was upgraded to System.Drawing.Image.Save and has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+    '            frmSample.img.Image.Save(ImageDirectory & "\" & ImageFilename)
+    '        End If
+    '    End If
+    'End Sub
+
+    'Creates image on frmSample.img and returns HTML map for links
+    '    Public Function CardImage(ByRef TableText As String) As String
+    '        Dim TextRow(255) As String
+    '        Dim RowY(255) As Integer
+    '        Dim TensY As Integer
+    '        Dim OnesY As Integer
+    '        Dim Row, Rows As Integer
+    '        Dim col, lentxt As Integer
+    '        Dim lastCR, thisCR As Integer
+    '        Dim GrayColor As System.Drawing.Color
+    '        Dim curChar As String
+    '        Dim CharWidth As Integer
+    '        Dim XMargin As Integer
+    '        Dim CharHeight As Integer
+    '        Dim txt As String
+    '        Dim GrayLevel As Integer
+    '        Dim RangeExists As Boolean
+    '        Dim RowStopChecking As Integer
+    '        Dim SubsectionName As String
+    '        Dim retval As String
+    '        Dim StartLinkCol, parsePos, StopLinkCol As Integer
+    '        Dim SaveFileNameOnly As String
+    '        Dim DoLinks As Boolean
+
+    '        DoLinks = True
+
+    '        SaveFileNameOnly = FilenameOnly(SaveFilename)
+    '        retval = ""
+    '        GrayLevel = 170
+    '        txt = ReplaceString(TableText, "&gt;", ">")
+    '        txt = ReplaceString(txt, "&lt;", "<")
+    '        GrayColor = System.Drawing.ColorTranslator.FromOle(RGB(GrayLevel, GrayLevel, GrayLevel))
+
+    '        lentxt = Len(txt)
+    '        thisCR = 0
+    '        Rows = 0
+    '        RowStopChecking = 256
+    '        FindCR(lastCR, thisCR, lentxt, txt)
+    '        While lastCR <= lentxt
+    '            Rows = Rows + 1
+    '            TextRow(Rows) = Mid(txt, lastCR + 1, thisCR - lastCR - 1)
+    '            If Right(TextRow(Rows), 1) = vbCr Then TextRow(Rows) = Left(TextRow(Rows), Len(TextRow(Rows)) - 1)
+    '            Select Case TextRow(Rows)
+    '                Case SixSplats, SevenSplats, Asterisks80, TensPlace, OnesPlace 'Skip some rows
+    '                    Rows = Rows - 1
+    '                Case "Example"
+    '                    If RowStopChecking > 0 Then RowStopChecking = Rows
+    '                Case "<otyp>"
+    '                    DoLinks = False
+    '                Case "SPEC-ACTIONS"
+    '                    DoLinks = False
+    '                    RowStopChecking = 0
+    '                Case Else 'Split long rows
+    '                    While Len(TextRow(Rows)) > MaxRowLength
+    '                        Rows = Rows + 1
+    '                        TextRow(Rows) = ""
+    '                        col = 1
+    '                        While Mid(TextRow(Rows - 1), col, 1) = " "
+    '                            TextRow(Rows) = TextRow(Rows) & " "
+    '                            col = col + 1
+    '                        End While
+    '                        TextRow(Rows) = TextRow(Rows) & Mid(TextRow(Rows - 1), MaxRowLength + 1)
+    '                        TextRow(Rows - 1) = Left(TextRow(Rows - 1), MaxRowLength)
+    '                    End While
+    '            End Select
+    '            FindCR(lastCR, thisCR, lentxt, txt)
+    '        End While
+
+    '        frmSample.Visible = True
+    '        With frmSample.img
+    '            'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            CharWidth = .TextWidth("X")
+    '            XMargin = CharWidth / 2
+    '            'UPGRADE_ISSUE: PictureBox method img.TextHeight was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            CharHeight = .TextHeight("X")
+    '            .Width = CharWidth * MaxRowLength + XMargin * 2
+    '            .Height = CharHeight * 10 'Start with enough height for header, adjust again after header
+    '            'UPGRADE_ISSUE: PictureBox method img.Cls was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            .Cls()
+    '            'frmSample.img.Line (0, 0)-(.Width, 0), vbBlack
+
+    '            'Print tens places in gray
+    '            .ForeColor = GrayColor
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            .CurrentY = CharHeight / 2
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            TensY = .CurrentY
+    '            For col = 1 To 8
+    '                curChar = CStr(col)
+    '                'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                .CurrentX = XMargin + (col * 10 - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '                'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                frmSample.img.Print(curChar)
+    '            Next
+    '            'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            frmSample.img.Print()
+    '            'Print Ones Place in gray
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            OnesY = .CurrentY
+    '            For col = 1 To 80
+    '                curChar = CStr(col Mod 10)
+    '                'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                .CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '                'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                frmSample.img.Print(curChar)
+    '            Next
+    '            'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            frmSample.img.Print()
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            RowY(0) = .CurrentY
+    '            .Height = RowY(0) + (OnesY - TensY) * Rows + TensY
+    '            .ForeColor = System.Drawing.Color.Black
+    '            If InStr(txt, "<-range>") > 0 Then
+    '                RangeExists = True
+    '                col = 5
+    '                'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '				frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
+    '                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '				GoSub NumberCol
+    '                col = 10
+    '                'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '				frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
+    '                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '				GoSub NumberCol
+    '            Else
+    '                RangeExists = False
+    '            End If
+    '            For Row = 1 To Rows
+    '                RowY(Row) = RowY(Row - 1) + OnesY - TensY
+
+    '                StartLinkCol = 0
+    '                StopLinkCol = 0
+
+    '                If LCase(Mid(TextRow(Row), 3, lenTableType)) = LCase(TableType) Then
+    '                    Mid(TextRow(Row), 3, lenTableType) = TableType
+    '                    StartLinkCol = lenTableType + 3
+    '                    'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '					GoSub StartArea
+    '                End If
+
+    '                If LCase(Mid(TextRow(Row), 3, 13)) = "general input" Then
+    '                    Mid(TextRow(Row), 3, 7) = "General input"
+    '                    StartLinkCol = 3
+    '                    'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '					GoSub StartArea
+    '                End If
+
+    '                If LCase(Mid(TextRow(Row), 3, 7)) = "section" Then
+    '                    Mid(TextRow(Row), 3, 7) = "Section"
+    '                    StartLinkCol = 11
+    '                    'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '					GoSub StartArea
+    '                End If
+
+    '                If Not DoLinks Then StartLinkCol = 0
+
+    '                For col = 1 To Len(TextRow(Row))
+    '                    curChar = Mid(TextRow(Row), col, 1)
+    '                    'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                    'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                    .CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '                    'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                    .CurrentY = RowY(Row)
+
+    '                    If col = StartLinkCol Then .ForeColor = System.Drawing.Color.Blue
+    '                    'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '					If col = StopLinkCol Then GoSub EndTableLink
+
+    '                    'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                    frmSample.img.Print(curChar)
+
+    '                    If (Not RangeExists Or col > 10) And Row < RowStopChecking Then
+    '                        Select Case curChar
+    '                            Case "<"
+    '                                'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '								frmSample.img.Line (XMargin + (col - 1) * CharWidth, 0) - (0, .Height), GrayColor
+    '                                'GoSub NumberCol
+    '                            Case ">"
+    '                                'UPGRADE_ISSUE: PictureBox method img.Line was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '								frmSample.img.Line (XMargin + col * CharWidth, 0) - (0, .Height), GrayColor
+    '                                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '								GoSub NumberCol
+    '                        End Select
+    '                    End If
+    '                Next
+    '                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
+    '				If System.Drawing.ColorTranslator.ToOle(.ForeColor) <> System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Black) Then GoSub EndTableLink
+    '                'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                frmSample.img.Print()
+    '                'frmSample.img.Line (col * CharWidth, 0)-((col + 1) * CharWidth, .Height), RGB(222, 222, 222), BF
+    '            Next
+    '            'Clipboard.SetData .Image
+    '            If frmSample.WindowState <> System.Windows.Forms.FormWindowState.Normal Then frmSample.WindowState = System.Windows.Forms.FormWindowState.Normal
+    '            frmSample.SetBounds(frmSample.Left, frmSample.Top, VB6.TwipsToPixelsX((.Width * VB6.TwipsPerPixelX) + 108), VB6.TwipsToPixelsY((.Height * VB6.TwipsPerPixelY) + 372))
+    '            CardImage = retval
+
+    '            Exit Function
+
+    'StartArea:
+    '            If DoLinks Then
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                retval &= "<area coords=""" & .CurrentX & "," & .CurrentY
+    '                StopLinkCol = InStr(StartLinkCol, TextRow(Row), "]")
+    '                If StopLinkCol > 0 Then 'Ignore tables containing the string "Tables in brackets  are ..."
+    '                    If Mid(TextRow(Row), StopLinkCol - 1, 1) = "[" Then StopLinkCol = 0
+    '                End If
+    '                If StopLinkCol = 0 Then
+    '                    StopLinkCol = InStr(StartLinkCol, TextRow(Row), "  ")
+    '                    If StopLinkCol = 0 Then
+    '                        StopLinkCol = 999
+    '                    End If
+    '                End If
+    '            End If
+    '            'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+    '            Return
+
+    'EndTableLink:
+    '            If DoLinks Then
+    '                .ForeColor = System.Drawing.Color.Black
+    '                If curChar = "]" Or curChar = " " Then
+    '                    SubsectionName = Trim(Mid(TextRow(Row), 3, col - 3))
+    '                Else
+    '                    SubsectionName = Trim(Mid(TextRow(Row), 3))
+    '                End If
+    '                If Left(SubsectionName, 7) = "Section" Then SubsectionName = Mid(SubsectionName, 9)
+    '                If Left(SubsectionName, lenTableType) = TableType Then SubsectionName = Mid(SubsectionName, lenTableType + 1)
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                retval &= "," & .CurrentX & "," & .CurrentY + CharHeight & """ href="""
+
+    '                'Several special cases for sections that are not where they are expected
+    '                Select Case Left(SubsectionName, 9)
+    '                    Case "SOIL-DATA", "CROP-DATE"
+    '                        retval &= "PWATER Input"
+    '                    Case "OXRX inpu", "NUTRX inp", "PLANK inp", "PHCARB in"
+    '                        retval &= SaveFileNameOnly
+    '                        If SaveFileNameOnly <> "Input for RQUAL sections" Then
+    '                            retval &= "/Input for RQUAL sections"
+    '                        End If
+    '                    Case "SURF-EXPO"
+    '                        If SaveFileNameOnly = "GQUAL input" Then
+    '                            retval &= "Input for RQUAL sections/PLANK input"
+    '                        Else
+    '                            retval &= SaveFileNameOnly
+    '                        End If
+    '                    Case Else
+    '                        If SaveFileNameOnly <> "OXRX input" And (SubsectionName = "ELEV" Or Left(SubsectionName, 3) = "OX-") Then
+    '                            retval &= "Input for RQUAL sections/OXRX input"
+    '                        Else 'Most links do not need tweaking and fall through to here
+    '                            retval &= SaveFileNameOnly
+    '                        End If
+    '                End Select
+    '                retval &= "/" & SubsectionName & ".html"">" & vbCrLf
+    '            End If
+    '            'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+    '            Return
+
+    'NumberCol:
+    '            If col > 9 Then 'And curChar <> "<" Then
+    '                curChar = CStr(Int(col / 10))
+    '                'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                .CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '                'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                .CurrentY = TensY
+    '                'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '                frmSample.img.Print(curChar)
+    '            End If
+    '            curChar = CStr(col Mod 10)
+    '            'UPGRADE_ISSUE: PictureBox method img.TextWidth was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentX was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            .CurrentX = XMargin + (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '            'UPGRADE_ISSUE: PictureBox property img.CurrentY was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            .CurrentY = OnesY
+    '            'UPGRADE_ISSUE: PictureBox method img.Print was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
+    '            frmSample.img.Print(curChar)
+    '            'UPGRADE_WARNING: Return has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
+    '            Return
+    '        End With
+    '    End Function
+
+    Private Sub FindCR(ByRef lastCR As Integer, ByRef thisCR As Integer, ByVal lentxt As Integer, ByVal txt As String)
+        lastCR = thisCR
+        If lastCR < lentxt Then
+            If Mid(txt, lastCR + 1, 1) = vbLf Then lastCR = lastCR + 1
+        End If
+
+        thisCR = InStr(thisCR + 1, txt, vbLf)
+        If thisCR = 0 Then thisCR = lentxt + 1
+    End Sub
+
+    'Public Sub PictureString(buf As String)
+    '  Dim col As Long, maxcol As Long, curChar As String
+    '  maxcol = Len(buf)
+    '  If maxcol > Cols Then maxcol = Cols
+    '  With frmSample.img
+    '    .CurrentY = Row * CharHeight
+    '    For col = 1 To maxcol
+    '      curChar = Mid(buf, col, 1)
+    '      .CurrentX = (col - 1) * CharWidth + (CharWidth - .TextWidth(curChar)) / 2
+    '      frmSample.img.Print curChar;
+    '    Next
+    '  End With
+    '  Row = Row + 1
+    '  If Len(buf) > CharWidth Then PictureString Mid(buf, CharWidth + 1)
+    'End Sub
 End Module

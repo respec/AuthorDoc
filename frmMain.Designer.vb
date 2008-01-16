@@ -85,477 +85,543 @@
 	'It can be modified using the Windows Form Designer.
 	'Do not modify it using the code editor.
 	<System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
-		Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(frmMain))
-		Me.components = New System.ComponentModel.Container()
-		Me.ToolTip1 = New System.Windows.Forms.ToolTip(components)
-		Me.TimerSlowAction = New System.Windows.Forms.Timer(components)
-		Me.fraFind = New System.Windows.Forms.Panel
-		Me.txtFind = New System.Windows.Forms.TextBox
-		Me.txtReplace = New System.Windows.Forms.TextBox
-		Me.cmdFind = New System.Windows.Forms.Button
-		Me.cmdReplace = New System.Windows.Forms.Button
-		Me.Timer1 = New System.Windows.Forms.Timer(components)
-		Me.sash = New System.Windows.Forms.Panel
-		Me.txtMain = New System.Windows.Forms.RichTextBox
-		Me.cdlgOpen = New System.Windows.Forms.OpenFileDialog
-		Me.cdlgSave = New System.Windows.Forms.SaveFileDialog
-		Me.tree1 = New AxComctlLib.AxTreeView
-		Me.cdlgImageOpen = New System.Windows.Forms.OpenFileDialog
-		Me.mnuContext = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(components)
-		Me.mnuRecent = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(components)
-		Me.mnuTop = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(components)
-		Me.MainMenu1 = New System.Windows.Forms.MenuStrip
-		Me._mnuTop_0 = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuOpenProject = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuSaveProject = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuNewProject = New System.Windows.Forms.ToolStripMenuItem
-		Me.sep1 = New System.Windows.Forms.ToolStripSeparator
-		Me.mnuNewSection = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuSaveFile = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuRevert = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuAutoSave = New System.Windows.Forms.ToolStripMenuItem
-		Me.sep2 = New System.Windows.Forms.ToolStripSeparator
-		Me.mnuConvert = New System.Windows.Forms.ToolStripMenuItem
-		Me._mnuRecent_0 = New System.Windows.Forms.ToolStripSeparator
-		Me.sep3 = New System.Windows.Forms.ToolStripSeparator
-		Me.mnuExit = New System.Windows.Forms.ToolStripMenuItem
-		Me._mnuTop_1 = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuCut = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuCopy = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuPaste = New System.Windows.Forms.ToolStripMenuItem
-		Me.sep5 = New System.Windows.Forms.ToolStripSeparator
-		Me.mnuFindSelection = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuFind = New System.Windows.Forms.ToolStripMenuItem
-		Me._mnuTop_2 = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuUnderline = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuBold = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuItalic = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuLink = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuLinkSection = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuImage = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuIndexword = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuKeyword = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuOL = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuUL = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuPRE = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuFigure = New System.Windows.Forms.ToolStripMenuItem
-		Me.sep4 = New System.Windows.Forms.ToolStripSeparator
-		Me.mnuAutoParagraph = New System.Windows.Forms.ToolStripMenuItem
-		Me._mnuTop_3 = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuFormatting = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuFormatWhileTyping = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuOptions = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuTextImage = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuContextTop = New System.Windows.Forms.ToolStripMenuItem
-		Me._mnuContext_0 = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuTopHelp = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuHelpContents = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuHelpAbout = New System.Windows.Forms.ToolStripMenuItem
-		Me.mnuHelpWebsite = New System.Windows.Forms.ToolStripMenuItem
-		Me.fraFind.SuspendLayout()
-		Me.MainMenu1.SuspendLayout()
-		Me.SuspendLayout()
-		Me.ToolTip1.Active = True
-		CType(Me.tree1, System.ComponentModel.ISupportInitialize).BeginInit()
-		CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).BeginInit()
-		CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).BeginInit()
-		CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).BeginInit()
-		Me.Text = "AuthorDoc"
-		Me.ClientSize = New System.Drawing.Size(739, 475)
-		Me.Location = New System.Drawing.Point(14, 62)
-		Me.Icon = CType(resources.GetObject("frmMain.Icon"), System.Drawing.Icon)
-		Me.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultLocation
-		Me.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.BackColor = System.Drawing.SystemColors.Control
-		Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable
-		Me.ControlBox = True
-		Me.Enabled = True
-		Me.KeyPreview = False
-		Me.MaximizeBox = True
-		Me.MinimizeBox = True
-		Me.Cursor = System.Windows.Forms.Cursors.Default
-		Me.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.ShowInTaskbar = True
-		Me.HelpButton = False
-		Me.WindowState = System.Windows.Forms.FormWindowState.Normal
-		Me.Name = "frmMain"
-		Me.TimerSlowAction.Enabled = False
-		Me.TimerSlowAction.Interval = 1000
-		Me.fraFind.BorderStyle = System.Windows.Forms.BorderStyle.None
-		Me.fraFind.Text = "Frame1"
-		Me.fraFind.Size = New System.Drawing.Size(391, 41)
-		Me.fraFind.Location = New System.Drawing.Point(160, 0)
-		Me.fraFind.TabIndex = 3
-		Me.fraFind.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.fraFind.BackColor = System.Drawing.SystemColors.Control
-		Me.fraFind.Enabled = True
-		Me.fraFind.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.fraFind.Cursor = System.Windows.Forms.Cursors.Default
-		Me.fraFind.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.fraFind.Visible = True
-		Me.fraFind.Name = "fraFind"
-		Me.txtFind.AutoSize = False
-		Me.txtFind.Size = New System.Drawing.Size(111, 24)
-		Me.txtFind.Location = New System.Drawing.Point(70, 10)
-		Me.txtFind.TabIndex = 7
-		Me.txtFind.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.txtFind.AcceptsReturn = True
-		Me.txtFind.TextAlign = System.Windows.Forms.HorizontalAlignment.Left
-		Me.txtFind.BackColor = System.Drawing.SystemColors.Window
-		Me.txtFind.CausesValidation = True
-		Me.txtFind.Enabled = True
-		Me.txtFind.ForeColor = System.Drawing.SystemColors.WindowText
-		Me.txtFind.HideSelection = True
-		Me.txtFind.ReadOnly = False
-		Me.txtFind.Maxlength = 0
-		Me.txtFind.Cursor = System.Windows.Forms.Cursors.IBeam
-		Me.txtFind.MultiLine = False
-		Me.txtFind.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.txtFind.ScrollBars = System.Windows.Forms.ScrollBars.None
-		Me.txtFind.TabStop = True
-		Me.txtFind.Visible = True
-		Me.txtFind.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.txtFind.Name = "txtFind"
-		Me.txtReplace.AutoSize = False
-		Me.txtReplace.Size = New System.Drawing.Size(111, 24)
-		Me.txtReplace.Location = New System.Drawing.Point(280, 10)
-		Me.txtReplace.TabIndex = 6
-		Me.txtReplace.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.txtReplace.AcceptsReturn = True
-		Me.txtReplace.TextAlign = System.Windows.Forms.HorizontalAlignment.Left
-		Me.txtReplace.BackColor = System.Drawing.SystemColors.Window
-		Me.txtReplace.CausesValidation = True
-		Me.txtReplace.Enabled = True
-		Me.txtReplace.ForeColor = System.Drawing.SystemColors.WindowText
-		Me.txtReplace.HideSelection = True
-		Me.txtReplace.ReadOnly = False
-		Me.txtReplace.Maxlength = 0
-		Me.txtReplace.Cursor = System.Windows.Forms.Cursors.IBeam
-		Me.txtReplace.MultiLine = False
-		Me.txtReplace.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.txtReplace.ScrollBars = System.Windows.Forms.ScrollBars.None
-		Me.txtReplace.TabStop = True
-		Me.txtReplace.Visible = True
-		Me.txtReplace.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.txtReplace.Name = "txtReplace"
-		Me.cmdFind.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-		Me.cmdFind.Text = "Find:"
-		Me.cmdFind.Size = New System.Drawing.Size(61, 21)
-		Me.cmdFind.Location = New System.Drawing.Point(0, 10)
-		Me.cmdFind.TabIndex = 5
-		Me.cmdFind.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.cmdFind.BackColor = System.Drawing.SystemColors.Control
-		Me.cmdFind.CausesValidation = True
-		Me.cmdFind.Enabled = True
-		Me.cmdFind.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.cmdFind.Cursor = System.Windows.Forms.Cursors.Default
-		Me.cmdFind.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.cmdFind.TabStop = True
-		Me.cmdFind.Name = "cmdFind"
-		Me.cmdReplace.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
-		Me.cmdReplace.Text = "Replace:"
-		Me.cmdReplace.Size = New System.Drawing.Size(81, 21)
-		Me.cmdReplace.Location = New System.Drawing.Point(190, 10)
-		Me.cmdReplace.TabIndex = 4
-		Me.cmdReplace.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.cmdReplace.BackColor = System.Drawing.SystemColors.Control
-		Me.cmdReplace.CausesValidation = True
-		Me.cmdReplace.Enabled = True
-		Me.cmdReplace.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.cmdReplace.Cursor = System.Windows.Forms.Cursors.Default
-		Me.cmdReplace.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.cmdReplace.TabStop = True
-		Me.cmdReplace.Name = "cmdReplace"
-		Me.Timer1.Enabled = False
-		Me.Timer1.Interval = 100
-		Me.sash.BorderStyle = System.Windows.Forms.BorderStyle.None
-		Me.sash.Text = "Frame1"
-		Me.sash.Size = New System.Drawing.Size(6, 462)
-		Me.sash.Location = New System.Drawing.Point(150, 0)
-		Me.sash.Cursor = System.Windows.Forms.Cursors.SizeWE
-		Me.sash.TabIndex = 0
-		Me.sash.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.sash.BackColor = System.Drawing.SystemColors.Control
-		Me.sash.Enabled = True
-		Me.sash.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.sash.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.sash.Visible = True
-		Me.sash.Name = "sash"
-		Me.txtMain.Size = New System.Drawing.Size(391, 421)
-		Me.txtMain.Location = New System.Drawing.Point(160, 40)
-		Me.txtMain.TabIndex = 2
-		Me.txtMain.Enabled = True
-		Me.txtMain.HideSelection = False
-		Me.txtMain.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
-		Me.txtMain.RTF = resources.GetString("txtMain.TextRTF")
-		Me.txtMain.Font = New System.Drawing.Font("Courier New", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.txtMain.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.txtMain.Name = "txtMain"
-		tree1.OcxState = CType(resources.GetObject("tree1.OcxState"), System.Windows.Forms.AxHost.State)
-		Me.tree1.Size = New System.Drawing.Size(152, 462)
-		Me.tree1.Location = New System.Drawing.Point(0, 0)
-		Me.tree1.TabIndex = 1
-		Me.tree1.Name = "tree1"
-		Me._mnuTop_0.Name = "_mnuTop_0"
-		Me._mnuTop_0.Text = "&File"
-		Me._mnuTop_0.Checked = False
-		Me._mnuTop_0.Enabled = True
-		Me._mnuTop_0.Visible = True
-		Me.mnuOpenProject.Name = "mnuOpenProject"
-		Me.mnuOpenProject.Text = "&Open Project"
-		Me.mnuOpenProject.Checked = False
-		Me.mnuOpenProject.Enabled = True
-		Me.mnuOpenProject.Visible = True
-		Me.mnuSaveProject.Name = "mnuSaveProject"
-		Me.mnuSaveProject.Text = "Save Project As"
-		Me.mnuSaveProject.Checked = False
-		Me.mnuSaveProject.Enabled = True
-		Me.mnuSaveProject.Visible = True
-		Me.mnuNewProject.Name = "mnuNewProject"
-		Me.mnuNewProject.Text = "New Project"
-		Me.mnuNewProject.Checked = False
-		Me.mnuNewProject.Enabled = True
-		Me.mnuNewProject.Visible = True
-		Me.sep1.Enabled = True
-		Me.sep1.Visible = True
-		Me.sep1.Name = "sep1"
-		Me.mnuNewSection.Name = "mnuNewSection"
-		Me.mnuNewSection.Text = "&New Section"
-		Me.mnuNewSection.Checked = False
-		Me.mnuNewSection.Enabled = True
-		Me.mnuNewSection.Visible = True
-		Me.mnuSaveFile.Name = "mnuSaveFile"
-		Me.mnuSaveFile.Text = "&Save Section"
-		Me.mnuSaveFile.Enabled = False
-		Me.mnuSaveFile.Checked = False
-		Me.mnuSaveFile.Visible = True
-		Me.mnuRevert.Name = "mnuRevert"
-		Me.mnuRevert.Text = "&Revert to Saved"
-		Me.mnuRevert.Checked = False
-		Me.mnuRevert.Enabled = True
-		Me.mnuRevert.Visible = True
-		Me.mnuAutoSave.Name = "mnuAutoSave"
-		Me.mnuAutoSave.Text = "&Auto-Save"
-		Me.mnuAutoSave.Checked = False
-		Me.mnuAutoSave.Enabled = True
-		Me.mnuAutoSave.Visible = True
-		Me.sep2.Enabled = True
-		Me.sep2.Visible = True
-		Me.sep2.Name = "sep2"
-		Me.mnuConvert.Name = "mnuConvert"
-		Me.mnuConvert.Text = "&Convert"
-		Me.mnuConvert.Checked = False
-		Me.mnuConvert.Enabled = True
-		Me.mnuConvert.Visible = True
-		Me._mnuRecent_0.Visible = False
-		Me._mnuRecent_0.Enabled = True
-		Me._mnuRecent_0.Name = "_mnuRecent_0"
-		Me.sep3.Enabled = True
-		Me.sep3.Visible = True
-		Me.sep3.Name = "sep3"
-		Me.mnuExit.Name = "mnuExit"
-		Me.mnuExit.Text = "E&xit"
-		Me.mnuExit.Checked = False
-		Me.mnuExit.Enabled = True
-		Me.mnuExit.Visible = True
-		Me._mnuTop_1.Name = "_mnuTop_1"
-		Me._mnuTop_1.Text = "&Edit"
-		Me._mnuTop_1.Checked = False
-		Me._mnuTop_1.Enabled = True
-		Me._mnuTop_1.Visible = True
-		Me.mnuCut.Name = "mnuCut"
-		Me.mnuCut.Text = "Cut"
-		Me.mnuCut.Checked = False
-		Me.mnuCut.Enabled = True
-		Me.mnuCut.Visible = True
-		Me.mnuCopy.Name = "mnuCopy"
-		Me.mnuCopy.Text = "Copy"
-		Me.mnuCopy.Checked = False
-		Me.mnuCopy.Enabled = True
-		Me.mnuCopy.Visible = True
-		Me.mnuPaste.Name = "mnuPaste"
-		Me.mnuPaste.Text = "Paste"
-		Me.mnuPaste.Checked = False
-		Me.mnuPaste.Enabled = True
-		Me.mnuPaste.Visible = True
-		Me.sep5.Enabled = True
-		Me.sep5.Visible = True
-		Me.sep5.Name = "sep5"
-		Me.mnuFindSelection.Name = "mnuFindSelection"
-		Me.mnuFindSelection.Text = "Find Selection"
-		Me.mnuFindSelection.ShortcutKeys = CType(System.Windows.Forms.Keys.Control or System.Windows.Forms.Keys.F, System.Windows.Forms.Keys)
-		Me.mnuFindSelection.Checked = False
-		Me.mnuFindSelection.Enabled = True
-		Me.mnuFindSelection.Visible = True
-		Me.mnuFind.Name = "mnuFind"
-		Me.mnuFind.Text = "Find"
-		Me.mnuFind.ShortcutKeys = CType(System.Windows.Forms.Keys.F3, System.Windows.Forms.Keys)
-		Me.mnuFind.Checked = False
-		Me.mnuFind.Enabled = True
-		Me.mnuFind.Visible = True
-		Me._mnuTop_2.Name = "_mnuTop_2"
-		Me._mnuTop_2.Text = "&Tags"
-		Me._mnuTop_2.Checked = False
-		Me._mnuTop_2.Enabled = True
-		Me._mnuTop_2.Visible = True
-		Me.mnuUnderline.Name = "mnuUnderline"
-		Me.mnuUnderline.Text = "&Underline <u>...</u>"
-		Me.mnuUnderline.Checked = False
-		Me.mnuUnderline.Enabled = True
-		Me.mnuUnderline.Visible = True
-		Me.mnuBold.Name = "mnuBold"
-		Me.mnuBold.Text = "&Bold <b>...</b>"
-		Me.mnuBold.Checked = False
-		Me.mnuBold.Enabled = True
-		Me.mnuBold.Visible = True
-		Me.mnuItalic.Name = "mnuItalic"
-		Me.mnuItalic.Text = "&Italic <i>...</i>"
-		Me.mnuItalic.ShortcutKeys = CType(System.Windows.Forms.Keys.Control or System.Windows.Forms.Keys.I, System.Windows.Forms.Keys)
-		Me.mnuItalic.Checked = False
-		Me.mnuItalic.Enabled = True
-		Me.mnuItalic.Visible = True
-		Me.mnuLink.Name = "mnuLink"
-		Me.mnuLink.Text = "&Link <a href=""..."">...</a>"
-		Me.mnuLink.ShortcutKeys = CType(System.Windows.Forms.Keys.Control or System.Windows.Forms.Keys.L, System.Windows.Forms.Keys)
-		Me.mnuLink.Checked = False
-		Me.mnuLink.Enabled = True
-		Me.mnuLink.Visible = True
-		Me.mnuLinkSection.Name = "mnuLinkSection"
-		Me.mnuLinkSection.Text = "Link &Section"
-		Me.mnuLinkSection.Checked = False
-		Me.mnuLinkSection.Enabled = True
-		Me.mnuLinkSection.Visible = True
-		Me.mnuImage.Name = "mnuImage"
-		Me.mnuImage.Text = "I&mage <img src=""..."">"
-		Me.mnuImage.ShortcutKeys = CType(System.Windows.Forms.Keys.Control or System.Windows.Forms.Keys.M, System.Windows.Forms.Keys)
-		Me.mnuImage.Checked = False
-		Me.mnuImage.Enabled = True
-		Me.mnuImage.Visible = True
-		Me.mnuIndexword.Name = "mnuIndexword"
-		Me.mnuIndexword.Text = "Inde&x word <indexword=...>"
-		Me.mnuIndexword.Checked = False
-		Me.mnuIndexword.Enabled = True
-		Me.mnuIndexword.Visible = True
-		Me.mnuKeyword.Name = "mnuKeyword"
-		Me.mnuKeyword.Text = "&Keyword <keyword=...>"
-		Me.mnuKeyword.Checked = False
-		Me.mnuKeyword.Enabled = True
-		Me.mnuKeyword.Visible = True
-		Me.mnuOL.Name = "mnuOL"
-		Me.mnuOL.Text = "&Numbered List <ol><li>...</ol>"
-		Me.mnuOL.Checked = False
-		Me.mnuOL.Enabled = True
-		Me.mnuOL.Visible = True
-		Me.mnuUL.Name = "mnuUL"
-		Me.mnuUL.Text = "Bulle&ts <ul><li>...</ul>"
-		Me.mnuUL.Checked = False
-		Me.mnuUL.Enabled = True
-		Me.mnuUL.Visible = True
-		Me.mnuPRE.Name = "mnuPRE"
-		Me.mnuPRE.Text = "&Preformatted <pre>...</pre>"
-		Me.mnuPRE.ShortcutKeys = CType(System.Windows.Forms.Keys.Control or System.Windows.Forms.Keys.P, System.Windows.Forms.Keys)
-		Me.mnuPRE.Checked = False
-		Me.mnuPRE.Enabled = True
-		Me.mnuPRE.Visible = True
-		Me.mnuFigure.Name = "mnuFigure"
-		Me.mnuFigure.Text = "&Figure <figure>...</figure>"
-		Me.mnuFigure.Checked = False
-		Me.mnuFigure.Enabled = True
-		Me.mnuFigure.Visible = True
-		Me.sep4.Enabled = True
-		Me.sep4.Visible = True
-		Me.sep4.Name = "sep4"
-		Me.mnuAutoParagraph.Name = "mnuAutoParagraph"
-		Me.mnuAutoParagraph.Text = "Automatic Paragraphs <p>"
-		Me.mnuAutoParagraph.Checked = True
-		Me.mnuAutoParagraph.Enabled = True
-		Me.mnuAutoParagraph.Visible = True
-		Me._mnuTop_3.Name = "_mnuTop_3"
-		Me._mnuTop_3.Text = "&View"
-		Me._mnuTop_3.Checked = False
-		Me._mnuTop_3.Enabled = True
-		Me._mnuTop_3.Visible = True
-		Me.mnuFormatting.Name = "mnuFormatting"
-		Me.mnuFormatting.Text = "&Formatting"
-		Me.mnuFormatting.Checked = True
-		Me.mnuFormatting.Enabled = True
-		Me.mnuFormatting.Visible = True
-		Me.mnuFormatWhileTyping.Name = "mnuFormatWhileTyping"
-		Me.mnuFormatWhileTyping.Text = "Format While Typing"
-		Me.mnuFormatWhileTyping.Checked = False
-		Me.mnuFormatWhileTyping.Enabled = True
-		Me.mnuFormatWhileTyping.Visible = True
-		Me.mnuOptions.Name = "mnuOptions"
-		Me.mnuOptions.Text = "&Options"
-		Me.mnuOptions.Checked = False
-		Me.mnuOptions.Enabled = True
-		Me.mnuOptions.Visible = True
-		Me.mnuTextImage.Name = "mnuTextImage"
-		Me.mnuTextImage.Text = "Test TextImage"
-		Me.mnuTextImage.Checked = False
-		Me.mnuTextImage.Enabled = True
-		Me.mnuTextImage.Visible = True
-		Me.mnuContextTop.Name = "mnuContextTop"
-		Me.mnuContextTop.Text = "Context"
-		Me.mnuContextTop.Checked = False
-		Me.mnuContextTop.Enabled = True
-		Me.mnuContextTop.Visible = True
-		Me._mnuContext_0.Name = "_mnuContext_0"
-		Me._mnuContext_0.Text = "Delete"
-		Me._mnuContext_0.Checked = False
-		Me._mnuContext_0.Enabled = True
-		Me._mnuContext_0.Visible = True
-		Me.mnuTopHelp.Name = "mnuTopHelp"
-		Me.mnuTopHelp.Text = "&Help"
-		Me.mnuTopHelp.Checked = False
-		Me.mnuTopHelp.Enabled = True
-		Me.mnuTopHelp.Visible = True
-		Me.mnuHelpContents.Name = "mnuHelpContents"
-		Me.mnuHelpContents.Text = "&Contents"
-		Me.mnuHelpContents.Checked = False
-		Me.mnuHelpContents.Enabled = True
-		Me.mnuHelpContents.Visible = True
-		Me.mnuHelpAbout.Name = "mnuHelpAbout"
-		Me.mnuHelpAbout.Text = "&About"
-		Me.mnuHelpAbout.Checked = False
-		Me.mnuHelpAbout.Enabled = True
-		Me.mnuHelpAbout.Visible = True
-		Me.mnuHelpWebsite.Name = "mnuHelpWebsite"
-		Me.mnuHelpWebsite.Text = "&Web Site"
-		Me.mnuHelpWebsite.Checked = False
-		Me.mnuHelpWebsite.Enabled = True
-		Me.mnuHelpWebsite.Visible = True
-		Me.Controls.Add(fraFind)
-		Me.Controls.Add(sash)
-		Me.Controls.Add(txtMain)
-		Me.Controls.Add(tree1)
-		Me.fraFind.Controls.Add(txtFind)
-		Me.fraFind.Controls.Add(txtReplace)
-		Me.fraFind.Controls.Add(cmdFind)
-		Me.fraFind.Controls.Add(cmdReplace)
-		Me.mnuContext.SetIndex(_mnuContext_0, CType(0, Short))
-		Me.mnuRecent.SetIndex(_mnuRecent_0, CType(0, Short))
-		Me.mnuTop.SetIndex(_mnuTop_0, CType(0, Short))
-		Me.mnuTop.SetIndex(_mnuTop_1, CType(1, Short))
-		Me.mnuTop.SetIndex(_mnuTop_2, CType(2, Short))
-		Me.mnuTop.SetIndex(_mnuTop_3, CType(3, Short))
-		CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).EndInit()
-		CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).EndInit()
-		CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).EndInit()
-		CType(Me.tree1, System.ComponentModel.ISupportInitialize).EndInit()
-		MainMenu1.Items.AddRange(New System.Windows.Forms.ToolStripItem(){Me._mnuTop_0, Me._mnuTop_1, Me._mnuTop_2, Me._mnuTop_3, Me.mnuContextTop, Me.mnuTopHelp})
-		_mnuTop_0.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me.mnuOpenProject, Me.mnuSaveProject, Me.mnuNewProject, Me.sep1, Me.mnuNewSection, Me.mnuSaveFile, Me.mnuRevert, Me.mnuAutoSave, Me.sep2, Me.mnuConvert, Me._mnuRecent_0, Me.sep3, Me.mnuExit})
-		_mnuTop_1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me.mnuCut, Me.mnuCopy, Me.mnuPaste, Me.sep5, Me.mnuFindSelection, Me.mnuFind})
-		_mnuTop_2.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me.mnuUnderline, Me.mnuBold, Me.mnuItalic, Me.mnuLink, Me.mnuLinkSection, Me.mnuImage, Me.mnuIndexword, Me.mnuKeyword, Me.mnuOL, Me.mnuUL, Me.mnuPRE, Me.mnuFigure, Me.sep4, Me.mnuAutoParagraph})
-		_mnuTop_3.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me.mnuFormatting, Me.mnuFormatWhileTyping, Me.mnuOptions, Me.mnuTextImage})
-		mnuContextTop.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me._mnuContext_0})
-		mnuTopHelp.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem(){Me.mnuHelpContents, Me.mnuHelpAbout, Me.mnuHelpWebsite})
-		Me.Controls.Add(MainMenu1)
-		Me.fraFind.ResumeLayout(False)
-		Me.MainMenu1.ResumeLayout(False)
-		Me.ResumeLayout(False)
-		Me.PerformLayout()
-	End Sub
+        Me.components = New System.ComponentModel.Container
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.TimerSlowAction = New System.Windows.Forms.Timer(Me.components)
+        Me.fraFind = New System.Windows.Forms.Panel
+        Me.txtFind = New System.Windows.Forms.TextBox
+        Me.txtReplace = New System.Windows.Forms.TextBox
+        Me.cmdFind = New System.Windows.Forms.Button
+        Me.cmdReplace = New System.Windows.Forms.Button
+        Me.Timer1 = New System.Windows.Forms.Timer(Me.components)
+        Me.sash = New System.Windows.Forms.Panel
+        Me.txtMain = New System.Windows.Forms.RichTextBox
+        Me.cdlgOpen = New System.Windows.Forms.OpenFileDialog
+        Me.cdlgSave = New System.Windows.Forms.SaveFileDialog
+        Me.tree1 = New AxComctlLib.AxTreeView
+        Me.cdlgImageOpen = New System.Windows.Forms.OpenFileDialog
+        Me.mnuContext = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
+        Me._mnuContext_0 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuRecent = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
+        Me.mnuTop = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
+        Me._mnuTop_0 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuOpenProject = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuSaveProject = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuNewProject = New System.Windows.Forms.ToolStripMenuItem
+        Me.sep1 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuNewSection = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuSaveFile = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuRevert = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuAutoSave = New System.Windows.Forms.ToolStripMenuItem
+        Me.sep2 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuConvert = New System.Windows.Forms.ToolStripMenuItem
+        Me._mnuRecent_0 = New System.Windows.Forms.ToolStripSeparator
+        Me.sep3 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuExit = New System.Windows.Forms.ToolStripMenuItem
+        Me._mnuTop_1 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuCut = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuCopy = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuPaste = New System.Windows.Forms.ToolStripMenuItem
+        Me.sep5 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuFindSelection = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuFind = New System.Windows.Forms.ToolStripMenuItem
+        Me._mnuTop_2 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuUnderline = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuBold = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuItalic = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuLink = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuLinkSection = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuImage = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuIndexword = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuKeyword = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuOL = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuUL = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuPRE = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuFigure = New System.Windows.Forms.ToolStripMenuItem
+        Me.sep4 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuAutoParagraph = New System.Windows.Forms.ToolStripMenuItem
+        Me._mnuTop_3 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuFormatting = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuFormatWhileTyping = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuOptions = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuTextImage = New System.Windows.Forms.ToolStripMenuItem
+        Me.MainMenu1 = New System.Windows.Forms.MenuStrip
+        Me.mnuContextTop = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuTopHelp = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuHelpContents = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuHelpAbout = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuHelpWebsite = New System.Windows.Forms.ToolStripMenuItem
+        Me.fraFind.SuspendLayout()
+        CType(Me.tree1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.MainMenu1.SuspendLayout()
+        Me.SuspendLayout()
+        '
+        'TimerSlowAction
+        '
+        Me.TimerSlowAction.Interval = 1000
+        '
+        'fraFind
+        '
+        Me.fraFind.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.fraFind.BackColor = System.Drawing.SystemColors.Control
+        Me.fraFind.Controls.Add(Me.txtFind)
+        Me.fraFind.Controls.Add(Me.txtReplace)
+        Me.fraFind.Controls.Add(Me.cmdFind)
+        Me.fraFind.Controls.Add(Me.cmdReplace)
+        Me.fraFind.Cursor = System.Windows.Forms.Cursors.Default
+        Me.fraFind.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.fraFind.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.fraFind.Location = New System.Drawing.Point(348, 0)
+        Me.fraFind.Name = "fraFind"
+        Me.fraFind.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.fraFind.Size = New System.Drawing.Size(391, 27)
+        Me.fraFind.TabIndex = 3
+        Me.fraFind.Text = "Frame1"
+        '
+        'txtFind
+        '
+        Me.txtFind.AcceptsReturn = True
+        Me.txtFind.BackColor = System.Drawing.SystemColors.Window
+        Me.txtFind.Cursor = System.Windows.Forms.Cursors.IBeam
+        Me.txtFind.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtFind.ForeColor = System.Drawing.SystemColors.WindowText
+        Me.txtFind.Location = New System.Drawing.Point(67, 3)
+        Me.txtFind.MaxLength = 0
+        Me.txtFind.Name = "txtFind"
+        Me.txtFind.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.txtFind.Size = New System.Drawing.Size(111, 20)
+        Me.txtFind.TabIndex = 7
+        '
+        'txtReplace
+        '
+        Me.txtReplace.AcceptsReturn = True
+        Me.txtReplace.BackColor = System.Drawing.SystemColors.Window
+        Me.txtReplace.Cursor = System.Windows.Forms.Cursors.IBeam
+        Me.txtReplace.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtReplace.ForeColor = System.Drawing.SystemColors.WindowText
+        Me.txtReplace.Location = New System.Drawing.Point(271, 3)
+        Me.txtReplace.MaxLength = 0
+        Me.txtReplace.Name = "txtReplace"
+        Me.txtReplace.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.txtReplace.Size = New System.Drawing.Size(111, 20)
+        Me.txtReplace.TabIndex = 6
+        '
+        'cmdFind
+        '
+        Me.cmdFind.BackColor = System.Drawing.SystemColors.Control
+        Me.cmdFind.Cursor = System.Windows.Forms.Cursors.Default
+        Me.cmdFind.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.cmdFind.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.cmdFind.Location = New System.Drawing.Point(0, 3)
+        Me.cmdFind.Name = "cmdFind"
+        Me.cmdFind.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.cmdFind.Size = New System.Drawing.Size(61, 21)
+        Me.cmdFind.TabIndex = 5
+        Me.cmdFind.Text = "Find:"
+        Me.cmdFind.UseVisualStyleBackColor = False
+        '
+        'cmdReplace
+        '
+        Me.cmdReplace.BackColor = System.Drawing.SystemColors.Control
+        Me.cmdReplace.Cursor = System.Windows.Forms.Cursors.Default
+        Me.cmdReplace.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.cmdReplace.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.cmdReplace.Location = New System.Drawing.Point(184, 3)
+        Me.cmdReplace.Name = "cmdReplace"
+        Me.cmdReplace.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.cmdReplace.Size = New System.Drawing.Size(81, 21)
+        Me.cmdReplace.TabIndex = 4
+        Me.cmdReplace.Text = "Replace:"
+        Me.cmdReplace.UseVisualStyleBackColor = False
+        '
+        'Timer1
+        '
+        '
+        'sash
+        '
+        Me.sash.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+                    Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.sash.BackColor = System.Drawing.SystemColors.Control
+        Me.sash.Cursor = System.Windows.Forms.Cursors.SizeWE
+        Me.sash.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.sash.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.sash.Location = New System.Drawing.Point(150, 34)
+        Me.sash.Name = "sash"
+        Me.sash.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.sash.Size = New System.Drawing.Size(10, 440)
+        Me.sash.TabIndex = 0
+        Me.sash.Text = "Frame1"
+        '
+        'txtMain
+        '
+        Me.txtMain.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+                    Or System.Windows.Forms.AnchorStyles.Left) _
+                    Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
+        Me.txtMain.Font = New System.Drawing.Font("Courier New", 9.75!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtMain.HideSelection = False
+        Me.txtMain.Location = New System.Drawing.Point(160, 30)
+        Me.txtMain.Name = "txtMain"
+        Me.txtMain.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
+        Me.txtMain.Size = New System.Drawing.Size(579, 445)
+        Me.txtMain.TabIndex = 2
+        Me.txtMain.Text = "txtMain"
+        '
+        'tree1
+        '
+        Me.tree1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
+                    Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.tree1.Location = New System.Drawing.Point(0, 30)
+        Me.tree1.Name = "tree1"
+        Me.tree1.OcxState = CType(resources.GetObject("tree1.OcxState"), System.Windows.Forms.AxHost.State)
+        Me.tree1.Size = New System.Drawing.Size(152, 444)
+        Me.tree1.TabIndex = 1
+        '
+        'mnuContext
+        '
+        '
+        '_mnuContext_0
+        '
+        Me.mnuContext.SetIndex(Me._mnuContext_0, CType(0, Short))
+        Me._mnuContext_0.Name = "_mnuContext_0"
+        Me._mnuContext_0.Size = New System.Drawing.Size(138, 24)
+        Me._mnuContext_0.Text = "Delete"
+        '
+        'mnuRecent
+        '
+        '
+        '_mnuTop_0
+        '
+        Me._mnuTop_0.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuOpenProject, Me.mnuSaveProject, Me.mnuNewProject, Me.sep1, Me.mnuNewSection, Me.mnuSaveFile, Me.mnuRevert, Me.mnuAutoSave, Me.sep2, Me.mnuConvert, Me._mnuRecent_0, Me.sep3, Me.mnuExit})
+        Me.mnuTop.SetIndex(Me._mnuTop_0, CType(0, Short))
+        Me._mnuTop_0.Name = "_mnuTop_0"
+        Me._mnuTop_0.Size = New System.Drawing.Size(45, 23)
+        Me._mnuTop_0.Text = "&File"
+        '
+        'mnuOpenProject
+        '
+        Me.mnuOpenProject.Name = "mnuOpenProject"
+        Me.mnuOpenProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuOpenProject.Text = "&Open Project"
+        '
+        'mnuSaveProject
+        '
+        Me.mnuSaveProject.Name = "mnuSaveProject"
+        Me.mnuSaveProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuSaveProject.Text = "Save Project As"
+        '
+        'mnuNewProject
+        '
+        Me.mnuNewProject.Name = "mnuNewProject"
+        Me.mnuNewProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuNewProject.Text = "New Project"
+        '
+        'sep1
+        '
+        Me.sep1.Name = "sep1"
+        Me.sep1.Size = New System.Drawing.Size(202, 6)
+        '
+        'mnuNewSection
+        '
+        Me.mnuNewSection.Name = "mnuNewSection"
+        Me.mnuNewSection.Size = New System.Drawing.Size(205, 24)
+        Me.mnuNewSection.Text = "&New Section"
+        '
+        'mnuSaveFile
+        '
+        Me.mnuSaveFile.Enabled = False
+        Me.mnuSaveFile.Name = "mnuSaveFile"
+        Me.mnuSaveFile.Size = New System.Drawing.Size(205, 24)
+        Me.mnuSaveFile.Text = "&Save Section"
+        '
+        'mnuRevert
+        '
+        Me.mnuRevert.Name = "mnuRevert"
+        Me.mnuRevert.Size = New System.Drawing.Size(205, 24)
+        Me.mnuRevert.Text = "&Revert to Saved"
+        '
+        'mnuAutoSave
+        '
+        Me.mnuAutoSave.Name = "mnuAutoSave"
+        Me.mnuAutoSave.Size = New System.Drawing.Size(205, 24)
+        Me.mnuAutoSave.Text = "&Auto-Save"
+        '
+        'sep2
+        '
+        Me.sep2.Name = "sep2"
+        Me.sep2.Size = New System.Drawing.Size(202, 6)
+        '
+        'mnuConvert
+        '
+        Me.mnuConvert.Name = "mnuConvert"
+        Me.mnuConvert.Size = New System.Drawing.Size(205, 24)
+        Me.mnuConvert.Text = "&Convert"
+        '
+        '_mnuRecent_0
+        '
+        Me._mnuRecent_0.Name = "_mnuRecent_0"
+        Me._mnuRecent_0.Size = New System.Drawing.Size(202, 6)
+        Me._mnuRecent_0.Visible = False
+        '
+        'sep3
+        '
+        Me.sep3.Name = "sep3"
+        Me.sep3.Size = New System.Drawing.Size(202, 6)
+        '
+        'mnuExit
+        '
+        Me.mnuExit.Name = "mnuExit"
+        Me.mnuExit.Size = New System.Drawing.Size(205, 24)
+        Me.mnuExit.Text = "E&xit"
+        '
+        '_mnuTop_1
+        '
+        Me._mnuTop_1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCut, Me.mnuCopy, Me.mnuPaste, Me.sep5, Me.mnuFindSelection, Me.mnuFind})
+        Me.mnuTop.SetIndex(Me._mnuTop_1, CType(1, Short))
+        Me._mnuTop_1.Name = "_mnuTop_1"
+        Me._mnuTop_1.Size = New System.Drawing.Size(48, 23)
+        Me._mnuTop_1.Text = "&Edit"
+        '
+        'mnuCut
+        '
+        Me.mnuCut.Name = "mnuCut"
+        Me.mnuCut.Size = New System.Drawing.Size(246, 24)
+        Me.mnuCut.Text = "Cut"
+        '
+        'mnuCopy
+        '
+        Me.mnuCopy.Name = "mnuCopy"
+        Me.mnuCopy.Size = New System.Drawing.Size(246, 24)
+        Me.mnuCopy.Text = "Copy"
+        '
+        'mnuPaste
+        '
+        Me.mnuPaste.Name = "mnuPaste"
+        Me.mnuPaste.Size = New System.Drawing.Size(246, 24)
+        Me.mnuPaste.Text = "Paste"
+        '
+        'sep5
+        '
+        Me.sep5.Name = "sep5"
+        Me.sep5.Size = New System.Drawing.Size(243, 6)
+        '
+        'mnuFindSelection
+        '
+        Me.mnuFindSelection.Name = "mnuFindSelection"
+        Me.mnuFindSelection.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.F), System.Windows.Forms.Keys)
+        Me.mnuFindSelection.Size = New System.Drawing.Size(246, 24)
+        Me.mnuFindSelection.Text = "Find Selection"
+        '
+        'mnuFind
+        '
+        Me.mnuFind.Name = "mnuFind"
+        Me.mnuFind.ShortcutKeys = System.Windows.Forms.Keys.F3
+        Me.mnuFind.Size = New System.Drawing.Size(246, 24)
+        Me.mnuFind.Text = "Find"
+        '
+        '_mnuTop_2
+        '
+        Me._mnuTop_2.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuUnderline, Me.mnuBold, Me.mnuItalic, Me.mnuLink, Me.mnuLinkSection, Me.mnuImage, Me.mnuIndexword, Me.mnuKeyword, Me.mnuOL, Me.mnuUL, Me.mnuPRE, Me.mnuFigure, Me.sep4, Me.mnuAutoParagraph})
+        Me.mnuTop.SetIndex(Me._mnuTop_2, CType(2, Short))
+        Me._mnuTop_2.Name = "_mnuTop_2"
+        Me._mnuTop_2.Size = New System.Drawing.Size(55, 23)
+        Me._mnuTop_2.Text = "&Tags"
+        '
+        'mnuUnderline
+        '
+        Me.mnuUnderline.Name = "mnuUnderline"
+        Me.mnuUnderline.Size = New System.Drawing.Size(361, 24)
+        Me.mnuUnderline.Text = "&Underline <u>...</u>"
+        '
+        'mnuBold
+        '
+        Me.mnuBold.Name = "mnuBold"
+        Me.mnuBold.Size = New System.Drawing.Size(361, 24)
+        Me.mnuBold.Text = "&Bold <b>...</b>"
+        '
+        'mnuItalic
+        '
+        Me.mnuItalic.Name = "mnuItalic"
+        Me.mnuItalic.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.I), System.Windows.Forms.Keys)
+        Me.mnuItalic.Size = New System.Drawing.Size(361, 24)
+        Me.mnuItalic.Text = "&Italic <i>...</i>"
+        '
+        'mnuLink
+        '
+        Me.mnuLink.Name = "mnuLink"
+        Me.mnuLink.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.L), System.Windows.Forms.Keys)
+        Me.mnuLink.Size = New System.Drawing.Size(361, 24)
+        Me.mnuLink.Text = "&Link <a href=""..."">...</a>"
+        '
+        'mnuLinkSection
+        '
+        Me.mnuLinkSection.Name = "mnuLinkSection"
+        Me.mnuLinkSection.Size = New System.Drawing.Size(361, 24)
+        Me.mnuLinkSection.Text = "Link &Section"
+        '
+        'mnuImage
+        '
+        Me.mnuImage.Name = "mnuImage"
+        Me.mnuImage.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.M), System.Windows.Forms.Keys)
+        Me.mnuImage.Size = New System.Drawing.Size(361, 24)
+        Me.mnuImage.Text = "I&mage <img src=""..."">"
+        '
+        'mnuIndexword
+        '
+        Me.mnuIndexword.Name = "mnuIndexword"
+        Me.mnuIndexword.Size = New System.Drawing.Size(361, 24)
+        Me.mnuIndexword.Text = "Inde&x word <indexword=...>"
+        '
+        'mnuKeyword
+        '
+        Me.mnuKeyword.Name = "mnuKeyword"
+        Me.mnuKeyword.Size = New System.Drawing.Size(361, 24)
+        Me.mnuKeyword.Text = "&Keyword <keyword=...>"
+        '
+        'mnuOL
+        '
+        Me.mnuOL.Name = "mnuOL"
+        Me.mnuOL.Size = New System.Drawing.Size(361, 24)
+        Me.mnuOL.Text = "&Numbered List <ol><li>...</ol>"
+        '
+        'mnuUL
+        '
+        Me.mnuUL.Name = "mnuUL"
+        Me.mnuUL.Size = New System.Drawing.Size(361, 24)
+        Me.mnuUL.Text = "Bulle&ts <ul><li>...</ul>"
+        '
+        'mnuPRE
+        '
+        Me.mnuPRE.Name = "mnuPRE"
+        Me.mnuPRE.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.P), System.Windows.Forms.Keys)
+        Me.mnuPRE.Size = New System.Drawing.Size(361, 24)
+        Me.mnuPRE.Text = "&Preformatted <pre>...</pre>"
+        '
+        'mnuFigure
+        '
+        Me.mnuFigure.Name = "mnuFigure"
+        Me.mnuFigure.Size = New System.Drawing.Size(361, 24)
+        Me.mnuFigure.Text = "&Figure <figure>...</figure>"
+        '
+        'sep4
+        '
+        Me.sep4.Name = "sep4"
+        Me.sep4.Size = New System.Drawing.Size(358, 6)
+        '
+        'mnuAutoParagraph
+        '
+        Me.mnuAutoParagraph.Checked = True
+        Me.mnuAutoParagraph.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.mnuAutoParagraph.Name = "mnuAutoParagraph"
+        Me.mnuAutoParagraph.Size = New System.Drawing.Size(361, 24)
+        Me.mnuAutoParagraph.Text = "Automatic Paragraphs <p>"
+        '
+        '_mnuTop_3
+        '
+        Me._mnuTop_3.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuFormatting, Me.mnuFormatWhileTyping, Me.mnuOptions, Me.mnuTextImage})
+        Me.mnuTop.SetIndex(Me._mnuTop_3, CType(3, Short))
+        Me._mnuTop_3.Name = "_mnuTop_3"
+        Me._mnuTop_3.Size = New System.Drawing.Size(55, 23)
+        Me._mnuTop_3.Text = "&View"
+        '
+        'mnuFormatting
+        '
+        Me.mnuFormatting.Checked = True
+        Me.mnuFormatting.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.mnuFormatting.Name = "mnuFormatting"
+        Me.mnuFormatting.Size = New System.Drawing.Size(242, 24)
+        Me.mnuFormatting.Text = "&Formatting"
+        '
+        'mnuFormatWhileTyping
+        '
+        Me.mnuFormatWhileTyping.Name = "mnuFormatWhileTyping"
+        Me.mnuFormatWhileTyping.Size = New System.Drawing.Size(242, 24)
+        Me.mnuFormatWhileTyping.Text = "Format While Typing"
+        '
+        'mnuOptions
+        '
+        Me.mnuOptions.Name = "mnuOptions"
+        Me.mnuOptions.Size = New System.Drawing.Size(242, 24)
+        Me.mnuOptions.Text = "&Options"
+        '
+        'mnuTextImage
+        '
+        Me.mnuTextImage.Name = "mnuTextImage"
+        Me.mnuTextImage.Size = New System.Drawing.Size(242, 24)
+        Me.mnuTextImage.Text = "Test TextImage"
+        '
+        'MainMenu1
+        '
+        Me.MainMenu1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me._mnuTop_0, Me._mnuTop_1, Me._mnuTop_2, Me._mnuTop_3, Me.mnuContextTop, Me.mnuTopHelp})
+        Me.MainMenu1.Location = New System.Drawing.Point(0, 0)
+        Me.MainMenu1.Name = "MainMenu1"
+        Me.MainMenu1.Size = New System.Drawing.Size(739, 27)
+        Me.MainMenu1.TabIndex = 4
+        '
+        'mnuContextTop
+        '
+        Me.mnuContextTop.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me._mnuContext_0})
+        Me.mnuContextTop.Name = "mnuContextTop"
+        Me.mnuContextTop.Size = New System.Drawing.Size(75, 23)
+        Me.mnuContextTop.Text = "Context"
+        '
+        'mnuTopHelp
+        '
+        Me.mnuTopHelp.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuHelpContents, Me.mnuHelpAbout, Me.mnuHelpWebsite})
+        Me.mnuTopHelp.Name = "mnuTopHelp"
+        Me.mnuTopHelp.Size = New System.Drawing.Size(53, 23)
+        Me.mnuTopHelp.Text = "&Help"
+        '
+        'mnuHelpContents
+        '
+        Me.mnuHelpContents.Name = "mnuHelpContents"
+        Me.mnuHelpContents.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpContents.Text = "&Contents"
+        '
+        'mnuHelpAbout
+        '
+        Me.mnuHelpAbout.Name = "mnuHelpAbout"
+        Me.mnuHelpAbout.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpAbout.Text = "&About"
+        '
+        'mnuHelpWebsite
+        '
+        Me.mnuHelpWebsite.Name = "mnuHelpWebsite"
+        Me.mnuHelpWebsite.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpWebsite.Text = "&Web Site"
+        '
+        'frmMain
+        '
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 14.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.BackColor = System.Drawing.SystemColors.Control
+        Me.ClientSize = New System.Drawing.Size(739, 475)
+        Me.Controls.Add(Me.fraFind)
+        Me.Controls.Add(Me.sash)
+        Me.Controls.Add(Me.txtMain)
+        Me.Controls.Add(Me.tree1)
+        Me.Controls.Add(Me.MainMenu1)
+        Me.Cursor = System.Windows.Forms.Cursors.Default
+        Me.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Location = New System.Drawing.Point(14, 62)
+        Me.Name = "frmMain"
+        Me.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.Text = "AuthorDoc"
+        Me.fraFind.ResumeLayout(False)
+        Me.fraFind.PerformLayout()
+        CType(Me.tree1, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.MainMenu1.ResumeLayout(False)
+        Me.MainMenu1.PerformLayout()
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
+
+    End Sub
 #End Region 
 End Class

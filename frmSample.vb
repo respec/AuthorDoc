@@ -23,7 +23,7 @@ Friend Class frmSample
 			Case "BMP", "GIF"
 				img.Image = System.Drawing.Image.FromFile(Filename)
 			Case Else
-				tempFilename = GetTmpPath & FilenameOnly(Filename) & ".bmp"
+                tempFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(Filename) & ".bmp")
 				' -D = delete original, -quiet = no output, -o = output filename
 				cmdline = "-o """ & tempFilename & """ -out bmp """ & Filename & """"
 				RunNconvert(cmdline)
