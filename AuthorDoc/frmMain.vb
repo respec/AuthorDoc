@@ -8,6 +8,7 @@ Friend Class frmMain
 	Inherits System.Windows.Forms.Form
 	'Copyright 2000 by AQUA TERRA Consultants
 
+    Dim mnuRecent As New ArrayList
     Dim path As String
 	Dim CurrentFileContents As String 'What was last saved or retrieved from CurrentFilename
     Dim MaxUndo As Integer = 10
@@ -206,7 +207,7 @@ NextReplace:
         End If
         For rf = MaxRecentFiles To 1 Step -1
             setting = GetSetting(AppName, SectionRecentFiles, CStr(rf), "")
-            If setting <> "" Then AddRecentFile(CStr(setting))
+            If IO.File.Exists(setting) Then AddRecentFile(CStr(setting))
         Next rf
 
         mnuFormatting.Checked = ViewFormatting
@@ -577,7 +578,7 @@ ErrNew:
         cdlgSave.FileName = cdlgOpen.FileName
         If Len(cdlgOpen.FileName) > 0 Then
             AddRecentFile((cdlgOpen.FileName))
-            mnuRecent_Click(mnuRecent.Item(1), New System.EventArgs())
+            mnuRecent_Click(mnuRecent.Item(0), New System.EventArgs())
         End If
     End Sub
 
@@ -589,13 +590,11 @@ ErrNew:
         txtMain.SelectedText = My.Computer.Clipboard.GetText
     End Sub
 
-    Public Sub mnuRecent_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuRecent.Click
-        Dim Index As Short = mnuRecent.GetIndex(eventSender)
-        Dim newFilePath As String
-        If Index > 0 Then
-            If QuerySaveProject <> MsgBoxResult.Cancel Then
-                If QuerySave <> MsgBoxResult.Cancel Then
-                    newFilePath = mnuRecent(Index).Tag
+    Public Sub mnuRecent_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs)
+        Dim newFilePath As String = eventSender.Tag
+        If newFilePath.Length > 0 Then
+            If QuerySaveProject() <> MsgBoxResult.Cancel Then
+                If QuerySave() <> MsgBoxResult.Cancel Then
                     path = IO.Path.GetDirectoryName(newFilePath)
                     Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
                     OpenProject(newFilePath, tree1)
@@ -1358,30 +1357,44 @@ endsub:
         End If
     End Sub
 
-    Private Sub AddRecentFile(ByRef FilePath As String)
-        'Dim rf, rfMove As Integer
-        'Dim newPath As String
-        'Dim match As Boolean
-        'rf = 0
-        'While Not match And rf <= mnuRecent.Count - 2
-        '    rf = rf + 1
-        '    If UCase(mnuRecent(rf).Tag) = UCase(FilePath) Then match = True
-        'End While
-        'If match Then 'move file to top of list
-        '    For rfMove = rf To 2 Step -1
-        '        mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
-        '        mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
-        '    Next rfMove
-        'Else 'Add file to list
-        '    mnuRecent(0).Visible = True
-        '    If mnuRecent.Count <= MaxRecentFiles Then mnuRecent.Load(mnuRecent.Count)
-        '    For rfMove = mnuRecent.Count - 1 To 2 Step -1
-        '        mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
-        '        mnuRecent(rfMove).Text = "&" & rfMove & " " & FilenameOnly(mnuRecent(rfMove).Tag)
-        '    Next rfMove
-        'End If
-        'mnuRecent(1).Visible = True
-        'mnuRecent(1).Tag = FilePath
-        'mnuRecent(1).Text = "&1 " & FilenameOnly(mnuRecent(rfMove).Tag)
+    Friend Sub AddRecentFile(ByRef FilePath As String)
+        Dim rf, rfMove As Integer
+        Dim match As Boolean = False
+        rf = 0
+        For Each lRecent As ToolStripMenuItem In mnuRecent 'as While Not match And rf <= mnuRecent.Count - 1
+            If lRecent.Tag.ToString.ToUpper = FilePath.ToUpper Then
+                match = True
+                Exit For
+            End If
+            rf += 1
+        Next ' End While
+        If match Then 'move file to top of list
+            For rfMove = rf To 1 Step -1
+                mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
+                mnuRecent(rfMove).Text = "&" & rfMove + 1 & " " & FilenameOnly(mnuRecent(rfMove).Tag)
+            Next rfMove
+            mnuRecent(0).tag = FilePath
+            mnuRecent(0).text = "&1 " & FilenameOnly(FilePath)
+        Else 'Add file to list
+            mnuRecentSeparator.Visible = True
+            Dim lToolStripMenuItem As New ToolStripMenuItem
+            With lToolStripMenuItem
+                .Tag = FilePath
+                .Visible = True
+            End With
+            mnuRecent.Insert(0, lToolStripMenuItem)
+            mnuFile.DropDownItems.Insert(mnuFile.DropDownItems.IndexOf(mnuRecentSeparator) + 1, lToolStripMenuItem)
+            AddHandler lToolStripMenuItem.Click, AddressOf mnuRecent_Click
+
+            Dim lRecentIndex As Integer = 1
+            For lRecentIndex = mnuRecent.Count - 1 To 0 Step -1
+                If lRecentIndex >= MaxRecentFiles Then
+                    mnuFile.DropDownItems.Remove(mnuRecent.Item(lRecentIndex))
+                    mnuRecent.RemoveAt(lRecentIndex)
+                Else
+                    mnuRecent(lRecentIndex).Text = "&" & lRecentIndex + 1 & " " & FilenameOnly(mnuRecent(lRecentIndex).Tag)
+                End If
+            Next
+        End If
     End Sub
 End Class

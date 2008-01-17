@@ -209,46 +209,43 @@ Module modConvert
     End Sub
 
     Private Sub ReadStyleFile(ByRef StyleFilename As String, ByRef HeadingLevel As Short)
-        Dim inFile As Short
         Dim CurrSection As String = ""
         Dim buf, FirstChar As String
-        Dim level As Short
-
-        BeforeHTML = ""
-
+		Dim level As Short
+		
+		BeforeHTML = ""
+		
         For level = 1 To maxLevels
             'UPGRADE_NOTE: Object WordStyle() may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
             WordStyle(level) = Nothing
-            WordStyle(level) = New Collection
-        Next
-
-        If Len(StyleFilename) = 0 Then
-            StyleFilename = StyleFile(HeadingLevel)
-        Else
-            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-            If Len(Dir(StyleFilename)) = 0 Then
+			WordStyle(level) = New Collection
+		Next 
+		
+		If Len(StyleFilename) = 0 Then
+			StyleFilename = StyleFile(HeadingLevel)
+		Else
+            If Not IO.File.Exists(StyleFilename) Then
                 'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
                 If Len(Dir(StyleFilename & ".sty")) > 0 Then
                     StyleFilename = StyleFilename & ".sty"
                 End If
             End If
-            StyleFilename = CurDir() & "\" & StyleFilename
-        End If
-
-        'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-        If Len(Dir(StyleFilename)) > 0 Then
-            inFile = FreeFile()
-            FileOpen(inFile, StyleFilename, OpenMode.Input)
+			StyleFilename = CurDir() & "\" & StyleFilename
+		End If
+		
+        If IO.File.Exists(StyleFilename) Then
+            Dim lStyleReader As New System.IO.BinaryReader(New System.IO.FileStream(StyleFilename, IO.FileMode.Open))
             StyleFile(HeadingLevel) = StyleFilename
             StyleLevel = HeadingLevel
-            While Not EOF(inFile)
-                buf = LineInput(inFile)
-                buf = Trim(buf)
-                FirstChar = Left(buf, 1)
-                Select Case FirstChar
-                    Case "#", ""
-                        'skip comments and blank lines
-                    Case "["
+            Try
+                Do
+                    buf = NextLine(lStyleReader)
+                    buf = Trim(buf)
+                    FirstChar = Left(buf, 1)
+                    Select Case FirstChar
+                        Case "#", ""
+                            'skip comments and blank lines
+                        Case "["
                         CurrSection = LCase(Mid(buf, 2, Len(buf) - 2))
                         level = 0
                     Case Else
@@ -291,13 +288,16 @@ Module modConvert
                                         If Len(buf) > 0 Then
                                             BodyStyle(level) = "<body " & buf & ">"
                                         Else
-                                            BodyStyle(level) = "<body>"
-                                        End If
-                                End Select
-                            Next level
-                        End If
-                End Select
-            End While
+                                                BodyStyle(level) = "<body>"
+                                            End If
+                                    End Select
+                                Next level
+                            End If
+                    End Select
+                Loop
+            Catch
+                lStyleReader.Close()
+            End Try
         End If
     End Sub
 
@@ -708,9 +708,10 @@ WordCommandErr:
         lastSourceFilename = ""
         SourceFilename = NextSourceFilename
         If OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP Then
-            pWordApp = New Microsoft.Office.Interop.Word.Application
-            pWordBasic = pWordApp.WordBasic ' CreateObject("Word.Basic")
-            'pWordApp = GetObject(, "Word.Application")
+            'pWordApp = New Microsoft.Office.Interop.Word.Application
+            'pWordBasic = pWordApp.WordBasic 
+            pWordBasic = CreateObject("Word.Basic")
+            pWordApp = GetObject(, "Word.Application")
 
             With pWordBasic
                 .AppShow()

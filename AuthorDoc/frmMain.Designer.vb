@@ -31,8 +31,7 @@
 	Public WithEvents tree1 As AxComctlLib.AxTreeView
 	Public cdlgImageOpen As System.Windows.Forms.OpenFileDialog
 	Public WithEvents mnuContext As Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray
-	Public WithEvents mnuRecent As Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray
-	Public WithEvents mnuTop As Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray
+    Public WithEvents mnuTop As Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray
 	Public WithEvents mnuOpenProject As System.Windows.Forms.ToolStripMenuItem
 	Public WithEvents mnuSaveProject As System.Windows.Forms.ToolStripMenuItem
 	Public WithEvents mnuNewProject As System.Windows.Forms.ToolStripMenuItem
@@ -43,48 +42,48 @@
 	Public WithEvents mnuAutoSave As System.Windows.Forms.ToolStripMenuItem
 	Public WithEvents sep2 As System.Windows.Forms.ToolStripSeparator
 	Public WithEvents mnuConvert As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuRecent_0 As System.Windows.Forms.ToolStripSeparator
-	Public WithEvents sep3 As System.Windows.Forms.ToolStripSeparator
-	Public WithEvents mnuExit As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuTop_0 As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuCut As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuCopy As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuPaste As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents sep5 As System.Windows.Forms.ToolStripSeparator
-	Public WithEvents mnuFindSelection As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuFind As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuTop_1 As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuUnderline As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuBold As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuItalic As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuLink As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuLinkSection As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuImage As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuIndexword As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuKeyword As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuOL As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuUL As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuPRE As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuFigure As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents sep4 As System.Windows.Forms.ToolStripSeparator
-	Public WithEvents mnuAutoParagraph As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuTop_2 As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuFormatting As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuFormatWhileTyping As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuOptions As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuTextImage As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuTop_3 As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents _mnuContext_0 As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuContextTop As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuHelpContents As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuHelpAbout As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuHelpWebsite As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents mnuTopHelp As System.Windows.Forms.ToolStripMenuItem
-	Public WithEvents MainMenu1 As System.Windows.Forms.MenuStrip
-	'NOTE: The following procedure is required by the Windows Form Designer
-	'It can be modified using the Windows Form Designer.
-	'Do not modify it using the code editor.
-	<System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
+    Public WithEvents mnuRecentSeparator As System.Windows.Forms.ToolStripSeparator
+    Public WithEvents sep3 As System.Windows.Forms.ToolStripSeparator
+    Public WithEvents mnuExit As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuFile As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuCut As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuCopy As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuPaste As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents sep5 As System.Windows.Forms.ToolStripSeparator
+    Public WithEvents mnuFindSelection As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuFind As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents _mnuTop_1 As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuUnderline As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuBold As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuItalic As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuLink As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuLinkSection As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuImage As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuIndexword As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuKeyword As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuOL As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuUL As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuPRE As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuFigure As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents sep4 As System.Windows.Forms.ToolStripSeparator
+    Public WithEvents mnuAutoParagraph As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents _mnuTop_2 As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuFormatting As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuFormatWhileTyping As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuOptions As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuTextImage As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents _mnuTop_3 As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents _mnuContext_0 As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuContextTop As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuHelpContents As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuHelpAbout As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuHelpWebsite As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents mnuTopHelp As System.Windows.Forms.ToolStripMenuItem
+    Public WithEvents MainMenu1 As System.Windows.Forms.MenuStrip
+    'NOTE: The following procedure is required by the Windows Form Designer
+    'It can be modified using the Windows Form Designer.
+    'Do not modify it using the code editor.
+    <System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
@@ -103,9 +102,8 @@
         Me.cdlgImageOpen = New System.Windows.Forms.OpenFileDialog
         Me.mnuContext = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
         Me._mnuContext_0 = New System.Windows.Forms.ToolStripMenuItem
-        Me.mnuRecent = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
         Me.mnuTop = New Microsoft.VisualBasic.Compatibility.VB6.ToolStripMenuItemArray(Me.components)
-        Me._mnuTop_0 = New System.Windows.Forms.ToolStripMenuItem
+        Me.mnuFile = New System.Windows.Forms.ToolStripMenuItem
         Me.mnuOpenProject = New System.Windows.Forms.ToolStripMenuItem
         Me.mnuSaveProject = New System.Windows.Forms.ToolStripMenuItem
         Me.mnuNewProject = New System.Windows.Forms.ToolStripMenuItem
@@ -116,7 +114,7 @@
         Me.mnuAutoSave = New System.Windows.Forms.ToolStripMenuItem
         Me.sep2 = New System.Windows.Forms.ToolStripSeparator
         Me.mnuConvert = New System.Windows.Forms.ToolStripMenuItem
-        Me._mnuRecent_0 = New System.Windows.Forms.ToolStripSeparator
+        Me.mnuRecentSeparator = New System.Windows.Forms.ToolStripSeparator
         Me.sep3 = New System.Windows.Forms.ToolStripSeparator
         Me.mnuExit = New System.Windows.Forms.ToolStripMenuItem
         Me._mnuTop_1 = New System.Windows.Forms.ToolStripMenuItem
@@ -155,7 +153,6 @@
         Me.fraFind.SuspendLayout()
         CType(Me.tree1, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MainMenu1.SuspendLayout()
         Me.SuspendLayout()
@@ -193,7 +190,7 @@
         Me.txtFind.MaxLength = 0
         Me.txtFind.Name = "txtFind"
         Me.txtFind.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.txtFind.Size = New System.Drawing.Size(111, 20)
+        Me.txtFind.Size = New System.Drawing.Size(111, 23)
         Me.txtFind.TabIndex = 7
         '
         'txtReplace
@@ -207,7 +204,7 @@
         Me.txtReplace.MaxLength = 0
         Me.txtReplace.Name = "txtReplace"
         Me.txtReplace.RightToLeft = System.Windows.Forms.RightToLeft.No
-        Me.txtReplace.Size = New System.Drawing.Size(111, 20)
+        Me.txtReplace.Size = New System.Drawing.Size(111, 23)
         Me.txtReplace.TabIndex = 6
         '
         'cmdFind
@@ -287,94 +284,91 @@
         '
         Me.mnuContext.SetIndex(Me._mnuContext_0, CType(0, Short))
         Me._mnuContext_0.Name = "_mnuContext_0"
-        Me._mnuContext_0.Size = New System.Drawing.Size(138, 24)
+        Me._mnuContext_0.Size = New System.Drawing.Size(132, 22)
         Me._mnuContext_0.Text = "Delete"
         '
-        'mnuRecent
+        'mnuFile
         '
-        '
-        '_mnuTop_0
-        '
-        Me._mnuTop_0.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuOpenProject, Me.mnuSaveProject, Me.mnuNewProject, Me.sep1, Me.mnuNewSection, Me.mnuSaveFile, Me.mnuRevert, Me.mnuAutoSave, Me.sep2, Me.mnuConvert, Me._mnuRecent_0, Me.sep3, Me.mnuExit})
-        Me.mnuTop.SetIndex(Me._mnuTop_0, CType(0, Short))
-        Me._mnuTop_0.Name = "_mnuTop_0"
-        Me._mnuTop_0.Size = New System.Drawing.Size(45, 23)
-        Me._mnuTop_0.Text = "&File"
+        Me.mnuFile.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuOpenProject, Me.mnuSaveProject, Me.mnuNewProject, Me.sep1, Me.mnuNewSection, Me.mnuSaveFile, Me.mnuRevert, Me.mnuAutoSave, Me.sep2, Me.mnuConvert, Me.mnuRecentSeparator, Me.sep3, Me.mnuExit})
+        Me.mnuTop.SetIndex(Me.mnuFile, CType(0, Short))
+        Me.mnuFile.Name = "mnuFile"
+        Me.mnuFile.Size = New System.Drawing.Size(40, 22)
+        Me.mnuFile.Text = "&File"
         '
         'mnuOpenProject
         '
         Me.mnuOpenProject.Name = "mnuOpenProject"
-        Me.mnuOpenProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuOpenProject.Size = New System.Drawing.Size(197, 22)
         Me.mnuOpenProject.Text = "&Open Project"
         '
         'mnuSaveProject
         '
         Me.mnuSaveProject.Name = "mnuSaveProject"
-        Me.mnuSaveProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuSaveProject.Size = New System.Drawing.Size(197, 22)
         Me.mnuSaveProject.Text = "Save Project As"
         '
         'mnuNewProject
         '
         Me.mnuNewProject.Name = "mnuNewProject"
-        Me.mnuNewProject.Size = New System.Drawing.Size(205, 24)
+        Me.mnuNewProject.Size = New System.Drawing.Size(197, 22)
         Me.mnuNewProject.Text = "New Project"
         '
         'sep1
         '
         Me.sep1.Name = "sep1"
-        Me.sep1.Size = New System.Drawing.Size(202, 6)
+        Me.sep1.Size = New System.Drawing.Size(194, 6)
         '
         'mnuNewSection
         '
         Me.mnuNewSection.Name = "mnuNewSection"
-        Me.mnuNewSection.Size = New System.Drawing.Size(205, 24)
+        Me.mnuNewSection.Size = New System.Drawing.Size(197, 22)
         Me.mnuNewSection.Text = "&New Section"
         '
         'mnuSaveFile
         '
         Me.mnuSaveFile.Enabled = False
         Me.mnuSaveFile.Name = "mnuSaveFile"
-        Me.mnuSaveFile.Size = New System.Drawing.Size(205, 24)
+        Me.mnuSaveFile.Size = New System.Drawing.Size(197, 22)
         Me.mnuSaveFile.Text = "&Save Section"
         '
         'mnuRevert
         '
         Me.mnuRevert.Name = "mnuRevert"
-        Me.mnuRevert.Size = New System.Drawing.Size(205, 24)
+        Me.mnuRevert.Size = New System.Drawing.Size(197, 22)
         Me.mnuRevert.Text = "&Revert to Saved"
         '
         'mnuAutoSave
         '
         Me.mnuAutoSave.Name = "mnuAutoSave"
-        Me.mnuAutoSave.Size = New System.Drawing.Size(205, 24)
+        Me.mnuAutoSave.Size = New System.Drawing.Size(197, 22)
         Me.mnuAutoSave.Text = "&Auto-Save"
         '
         'sep2
         '
         Me.sep2.Name = "sep2"
-        Me.sep2.Size = New System.Drawing.Size(202, 6)
+        Me.sep2.Size = New System.Drawing.Size(194, 6)
         '
         'mnuConvert
         '
         Me.mnuConvert.Name = "mnuConvert"
-        Me.mnuConvert.Size = New System.Drawing.Size(205, 24)
+        Me.mnuConvert.Size = New System.Drawing.Size(197, 22)
         Me.mnuConvert.Text = "&Convert"
         '
-        '_mnuRecent_0
+        'mnuRecentSeparator
         '
-        Me._mnuRecent_0.Name = "_mnuRecent_0"
-        Me._mnuRecent_0.Size = New System.Drawing.Size(202, 6)
-        Me._mnuRecent_0.Visible = False
+        Me.mnuRecentSeparator.Name = "mnuRecentSeparator"
+        Me.mnuRecentSeparator.Size = New System.Drawing.Size(194, 6)
+        Me.mnuRecentSeparator.Visible = False
         '
         'sep3
         '
         Me.sep3.Name = "sep3"
-        Me.sep3.Size = New System.Drawing.Size(202, 6)
+        Me.sep3.Size = New System.Drawing.Size(194, 6)
         '
         'mnuExit
         '
         Me.mnuExit.Name = "mnuExit"
-        Me.mnuExit.Size = New System.Drawing.Size(205, 24)
+        Me.mnuExit.Size = New System.Drawing.Size(197, 22)
         Me.mnuExit.Text = "E&xit"
         '
         '_mnuTop_1
@@ -382,44 +376,44 @@
         Me._mnuTop_1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuCut, Me.mnuCopy, Me.mnuPaste, Me.sep5, Me.mnuFindSelection, Me.mnuFind})
         Me.mnuTop.SetIndex(Me._mnuTop_1, CType(1, Short))
         Me._mnuTop_1.Name = "_mnuTop_1"
-        Me._mnuTop_1.Size = New System.Drawing.Size(48, 23)
+        Me._mnuTop_1.Size = New System.Drawing.Size(43, 22)
         Me._mnuTop_1.Text = "&Edit"
         '
         'mnuCut
         '
         Me.mnuCut.Name = "mnuCut"
-        Me.mnuCut.Size = New System.Drawing.Size(246, 24)
+        Me.mnuCut.Size = New System.Drawing.Size(226, 22)
         Me.mnuCut.Text = "Cut"
         '
         'mnuCopy
         '
         Me.mnuCopy.Name = "mnuCopy"
-        Me.mnuCopy.Size = New System.Drawing.Size(246, 24)
+        Me.mnuCopy.Size = New System.Drawing.Size(226, 22)
         Me.mnuCopy.Text = "Copy"
         '
         'mnuPaste
         '
         Me.mnuPaste.Name = "mnuPaste"
-        Me.mnuPaste.Size = New System.Drawing.Size(246, 24)
+        Me.mnuPaste.Size = New System.Drawing.Size(226, 22)
         Me.mnuPaste.Text = "Paste"
         '
         'sep5
         '
         Me.sep5.Name = "sep5"
-        Me.sep5.Size = New System.Drawing.Size(243, 6)
+        Me.sep5.Size = New System.Drawing.Size(223, 6)
         '
         'mnuFindSelection
         '
         Me.mnuFindSelection.Name = "mnuFindSelection"
         Me.mnuFindSelection.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.F), System.Windows.Forms.Keys)
-        Me.mnuFindSelection.Size = New System.Drawing.Size(246, 24)
+        Me.mnuFindSelection.Size = New System.Drawing.Size(226, 22)
         Me.mnuFindSelection.Text = "Find Selection"
         '
         'mnuFind
         '
         Me.mnuFind.Name = "mnuFind"
         Me.mnuFind.ShortcutKeys = System.Windows.Forms.Keys.F3
-        Me.mnuFind.Size = New System.Drawing.Size(246, 24)
+        Me.mnuFind.Size = New System.Drawing.Size(226, 22)
         Me.mnuFind.Text = "Find"
         '
         '_mnuTop_2
@@ -427,96 +421,96 @@
         Me._mnuTop_2.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuUnderline, Me.mnuBold, Me.mnuItalic, Me.mnuLink, Me.mnuLinkSection, Me.mnuImage, Me.mnuIndexword, Me.mnuKeyword, Me.mnuOL, Me.mnuUL, Me.mnuPRE, Me.mnuFigure, Me.sep4, Me.mnuAutoParagraph})
         Me.mnuTop.SetIndex(Me._mnuTop_2, CType(2, Short))
         Me._mnuTop_2.Name = "_mnuTop_2"
-        Me._mnuTop_2.Size = New System.Drawing.Size(55, 23)
+        Me._mnuTop_2.Size = New System.Drawing.Size(53, 22)
         Me._mnuTop_2.Text = "&Tags"
         '
         'mnuUnderline
         '
         Me.mnuUnderline.Name = "mnuUnderline"
-        Me.mnuUnderline.Size = New System.Drawing.Size(361, 24)
+        Me.mnuUnderline.Size = New System.Drawing.Size(337, 22)
         Me.mnuUnderline.Text = "&Underline <u>...</u>"
         '
         'mnuBold
         '
         Me.mnuBold.Name = "mnuBold"
-        Me.mnuBold.Size = New System.Drawing.Size(361, 24)
+        Me.mnuBold.Size = New System.Drawing.Size(337, 22)
         Me.mnuBold.Text = "&Bold <b>...</b>"
         '
         'mnuItalic
         '
         Me.mnuItalic.Name = "mnuItalic"
         Me.mnuItalic.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.I), System.Windows.Forms.Keys)
-        Me.mnuItalic.Size = New System.Drawing.Size(361, 24)
+        Me.mnuItalic.Size = New System.Drawing.Size(337, 22)
         Me.mnuItalic.Text = "&Italic <i>...</i>"
         '
         'mnuLink
         '
         Me.mnuLink.Name = "mnuLink"
         Me.mnuLink.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.L), System.Windows.Forms.Keys)
-        Me.mnuLink.Size = New System.Drawing.Size(361, 24)
+        Me.mnuLink.Size = New System.Drawing.Size(337, 22)
         Me.mnuLink.Text = "&Link <a href=""..."">...</a>"
         '
         'mnuLinkSection
         '
         Me.mnuLinkSection.Name = "mnuLinkSection"
-        Me.mnuLinkSection.Size = New System.Drawing.Size(361, 24)
+        Me.mnuLinkSection.Size = New System.Drawing.Size(337, 22)
         Me.mnuLinkSection.Text = "Link &Section"
         '
         'mnuImage
         '
         Me.mnuImage.Name = "mnuImage"
         Me.mnuImage.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.M), System.Windows.Forms.Keys)
-        Me.mnuImage.Size = New System.Drawing.Size(361, 24)
+        Me.mnuImage.Size = New System.Drawing.Size(337, 22)
         Me.mnuImage.Text = "I&mage <img src=""..."">"
         '
         'mnuIndexword
         '
         Me.mnuIndexword.Name = "mnuIndexword"
-        Me.mnuIndexword.Size = New System.Drawing.Size(361, 24)
+        Me.mnuIndexword.Size = New System.Drawing.Size(337, 22)
         Me.mnuIndexword.Text = "Inde&x word <indexword=...>"
         '
         'mnuKeyword
         '
         Me.mnuKeyword.Name = "mnuKeyword"
-        Me.mnuKeyword.Size = New System.Drawing.Size(361, 24)
+        Me.mnuKeyword.Size = New System.Drawing.Size(337, 22)
         Me.mnuKeyword.Text = "&Keyword <keyword=...>"
         '
         'mnuOL
         '
         Me.mnuOL.Name = "mnuOL"
-        Me.mnuOL.Size = New System.Drawing.Size(361, 24)
+        Me.mnuOL.Size = New System.Drawing.Size(337, 22)
         Me.mnuOL.Text = "&Numbered List <ol><li>...</ol>"
         '
         'mnuUL
         '
         Me.mnuUL.Name = "mnuUL"
-        Me.mnuUL.Size = New System.Drawing.Size(361, 24)
+        Me.mnuUL.Size = New System.Drawing.Size(337, 22)
         Me.mnuUL.Text = "Bulle&ts <ul><li>...</ul>"
         '
         'mnuPRE
         '
         Me.mnuPRE.Name = "mnuPRE"
         Me.mnuPRE.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.P), System.Windows.Forms.Keys)
-        Me.mnuPRE.Size = New System.Drawing.Size(361, 24)
+        Me.mnuPRE.Size = New System.Drawing.Size(337, 22)
         Me.mnuPRE.Text = "&Preformatted <pre>...</pre>"
         '
         'mnuFigure
         '
         Me.mnuFigure.Name = "mnuFigure"
-        Me.mnuFigure.Size = New System.Drawing.Size(361, 24)
+        Me.mnuFigure.Size = New System.Drawing.Size(337, 22)
         Me.mnuFigure.Text = "&Figure <figure>...</figure>"
         '
         'sep4
         '
         Me.sep4.Name = "sep4"
-        Me.sep4.Size = New System.Drawing.Size(358, 6)
+        Me.sep4.Size = New System.Drawing.Size(334, 6)
         '
         'mnuAutoParagraph
         '
         Me.mnuAutoParagraph.Checked = True
         Me.mnuAutoParagraph.CheckState = System.Windows.Forms.CheckState.Checked
         Me.mnuAutoParagraph.Name = "mnuAutoParagraph"
-        Me.mnuAutoParagraph.Size = New System.Drawing.Size(361, 24)
+        Me.mnuAutoParagraph.Size = New System.Drawing.Size(337, 22)
         Me.mnuAutoParagraph.Text = "Automatic Paragraphs <p>"
         '
         '_mnuTop_3
@@ -524,7 +518,7 @@
         Me._mnuTop_3.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuFormatting, Me.mnuFormatWhileTyping, Me.mnuOptions, Me.mnuTextImage})
         Me.mnuTop.SetIndex(Me._mnuTop_3, CType(3, Short))
         Me._mnuTop_3.Name = "_mnuTop_3"
-        Me._mnuTop_3.Size = New System.Drawing.Size(55, 23)
+        Me._mnuTop_3.Size = New System.Drawing.Size(49, 22)
         Me._mnuTop_3.Text = "&View"
         '
         'mnuFormatting
@@ -532,70 +526,70 @@
         Me.mnuFormatting.Checked = True
         Me.mnuFormatting.CheckState = System.Windows.Forms.CheckState.Checked
         Me.mnuFormatting.Name = "mnuFormatting"
-        Me.mnuFormatting.Size = New System.Drawing.Size(242, 24)
+        Me.mnuFormatting.Size = New System.Drawing.Size(226, 22)
         Me.mnuFormatting.Text = "&Formatting"
         '
         'mnuFormatWhileTyping
         '
         Me.mnuFormatWhileTyping.Name = "mnuFormatWhileTyping"
-        Me.mnuFormatWhileTyping.Size = New System.Drawing.Size(242, 24)
+        Me.mnuFormatWhileTyping.Size = New System.Drawing.Size(226, 22)
         Me.mnuFormatWhileTyping.Text = "Format While Typing"
         '
         'mnuOptions
         '
         Me.mnuOptions.Name = "mnuOptions"
-        Me.mnuOptions.Size = New System.Drawing.Size(242, 24)
+        Me.mnuOptions.Size = New System.Drawing.Size(226, 22)
         Me.mnuOptions.Text = "&Options"
         '
         'mnuTextImage
         '
         Me.mnuTextImage.Name = "mnuTextImage"
-        Me.mnuTextImage.Size = New System.Drawing.Size(242, 24)
+        Me.mnuTextImage.Size = New System.Drawing.Size(226, 22)
         Me.mnuTextImage.Text = "Test TextImage"
         '
         'MainMenu1
         '
-        Me.MainMenu1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me._mnuTop_0, Me._mnuTop_1, Me._mnuTop_2, Me._mnuTop_3, Me.mnuContextTop, Me.mnuTopHelp})
+        Me.MainMenu1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuFile, Me._mnuTop_1, Me._mnuTop_2, Me._mnuTop_3, Me.mnuContextTop, Me.mnuTopHelp})
         Me.MainMenu1.Location = New System.Drawing.Point(0, 0)
         Me.MainMenu1.Name = "MainMenu1"
-        Me.MainMenu1.Size = New System.Drawing.Size(739, 27)
+        Me.MainMenu1.Size = New System.Drawing.Size(739, 26)
         Me.MainMenu1.TabIndex = 4
         '
         'mnuContextTop
         '
         Me.mnuContextTop.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me._mnuContext_0})
         Me.mnuContextTop.Name = "mnuContextTop"
-        Me.mnuContextTop.Size = New System.Drawing.Size(75, 23)
+        Me.mnuContextTop.Size = New System.Drawing.Size(71, 22)
         Me.mnuContextTop.Text = "Context"
         '
         'mnuTopHelp
         '
         Me.mnuTopHelp.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.mnuHelpContents, Me.mnuHelpAbout, Me.mnuHelpWebsite})
         Me.mnuTopHelp.Name = "mnuTopHelp"
-        Me.mnuTopHelp.Size = New System.Drawing.Size(53, 23)
+        Me.mnuTopHelp.Size = New System.Drawing.Size(48, 22)
         Me.mnuTopHelp.Text = "&Help"
         '
         'mnuHelpContents
         '
         Me.mnuHelpContents.Name = "mnuHelpContents"
-        Me.mnuHelpContents.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpContents.Size = New System.Drawing.Size(149, 22)
         Me.mnuHelpContents.Text = "&Contents"
         '
         'mnuHelpAbout
         '
         Me.mnuHelpAbout.Name = "mnuHelpAbout"
-        Me.mnuHelpAbout.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpAbout.Size = New System.Drawing.Size(149, 22)
         Me.mnuHelpAbout.Text = "&About"
         '
         'mnuHelpWebsite
         '
         Me.mnuHelpWebsite.Name = "mnuHelpWebsite"
-        Me.mnuHelpWebsite.Size = New System.Drawing.Size(156, 24)
+        Me.mnuHelpWebsite.Size = New System.Drawing.Size(149, 22)
         Me.mnuHelpWebsite.Text = "&Web Site"
         '
         'frmMain
         '
-        Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 14.0!)
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.SystemColors.Control
         Me.ClientSize = New System.Drawing.Size(739, 475)
@@ -615,7 +609,6 @@
         Me.fraFind.PerformLayout()
         CType(Me.tree1, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.mnuContext, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.mnuRecent, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.mnuTop, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MainMenu1.ResumeLayout(False)
         Me.MainMenu1.PerformLayout()
