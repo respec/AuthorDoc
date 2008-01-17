@@ -102,6 +102,7 @@ Module modFileIO
             End While
             FileClose(f)
         End If
+        frmMain.AddRecentFile(ProjectFileName)
 		t.Visible = True
 		frmMain.Cursor = System.Windows.Forms.Cursors.Default
 		If t.Nodes.Count > 0 Then t.Nodes(1).EnsureVisible()
