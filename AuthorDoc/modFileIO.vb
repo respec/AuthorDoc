@@ -4,7 +4,7 @@ Imports VB = Microsoft.VisualBasic
 Imports atcUtility
 
 Module modFileIO
-	'Copyright 2000 by AQUA TERRA Consultants
+    'Copyright 2000-2008 by AQUA TERRA Consultants
 	
 	Private Declare Function WaitForSingleObject Lib "kernel32" (ByVal hHandle As Integer, ByVal dwMilliseconds As Integer) As Integer
 	
@@ -61,10 +61,10 @@ Module modFileIO
             If MsgBox("File not found. Create new project file '" & filename & "'?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
                 'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
 
-                ProjectFileName = filename
-                BaseName = FilenameOnly(filename)
+                pProjectFileName = filename
+                pBaseName = FilenameOnly(filename)
                 t.Nodes.Clear()
-                t.Nodes.Add(, , "N" & BaseName, BaseName)
+                t.Nodes.Add(, , "N" & pBaseName, pBaseName)
                 t.Nodes(1).Expanded = True
 
                 FileOpen(f, filename, OpenMode.Output)
@@ -73,10 +73,10 @@ Module modFileIO
         Else
             'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
 
-            ProjectFileName = filename
-            BaseName = FilenameOnly(filename)
+            pProjectFileName = filename
+            pBaseName = FilenameOnly(filename)
             t.Nodes.Clear()
-            t.Nodes.Add(, , "N" & BaseName, BaseName)
+            t.Nodes.Add(, , "N" & pBaseName, pBaseName)
             t.Nodes(1).Expanded = True
 
             FileOpen(f, filename, OpenMode.Input)
@@ -89,7 +89,7 @@ Module modFileIO
                     key = ThisName
                     SectionName(SectionLevel) = ThisName
                     If SectionLevel = 1 Then
-                        nod = t.Nodes.Add("N" & BaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
+                        nod = t.Nodes.Add("N" & pBaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
                     Else
                         For lvl = SectionLevel - 1 To 1 Step -1
                             key = SectionName(lvl) & "\" & key
@@ -102,7 +102,7 @@ Module modFileIO
             End While
             FileClose(f)
         End If
-        frmMain.AddRecentFile(ProjectFileName)
+        frmMain.AddRecentFile(pProjectFileName)
 		t.Visible = True
 		frmMain.Cursor = System.Windows.Forms.Cursors.Default
 		If t.Nodes.Count > 0 Then t.Nodes(1).EnsureVisible()
@@ -165,8 +165,7 @@ skip:
 				WriteProjectSection(kid, outfile)
 				kid = kid.Next
 			Next 
-			'UPGRADE_NOTE: Object kid may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
-			kid = Nothing
+            kid = Nothing
 		End If
 	End Sub
 End Module

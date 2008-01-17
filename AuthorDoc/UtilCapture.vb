@@ -1,7 +1,7 @@
 'Option Strict Off
 'Option Explicit On
 'Module UtilCapture
-'	'Copyright 2000 by AQUA TERRA Consultants
+'	'Copyright 2000-2008 by AQUA TERRA Consultants
 '	'
 '	' Visual Basic 4.0 16/32 Capture Routines
 '	'
