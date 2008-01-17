@@ -1,16 +1,18 @@
 Option Strict Off
 Option Explicit On
+
+Imports MapWinUtility
+
 Module modGlobal
-	'Copyright 2000 by AQUA TERRA Consultants
+    'Copyright 2000-2008 by AQUA TERRA Consultants
 
-    Public AppName As String = "AuthorDoc"
-
-	Public Const SourceExtension As String = ".txt"
+    Public pAppName As String = "AuthorDoc"
+    Public Const pSourceExtension As String = ".txt"
 	
 	'Variables mostly for conversion
-	Public BaseName As String
-	Public ProjectFileName As String 'file containing list of source files
-	Public CurrentFilename As String 'current file in frmMain, txtMain
+    Public pBaseName As String
+    Public pProjectFileName As String 'file containing list of source files
+    Public pCurrentFilename As String 'current file in frmMain, txtMain
 	
 	'Global Const RTF_START = "{\rtf1\ansi\deff0{\fonttbl{\f0\fswiss MS Sans Serif;}}\pard\plain\fs17 "
 	'Global Const RTF_BOLD = "\plain\fs17\b "
@@ -28,15 +30,15 @@ Module modGlobal
 	'Global Const RTF_PARAGRAPH = "\par "
 	'Global Const RTF_END = "}"
 	
-	'Labels for popup context menu, set in frmMain Form_Load
-	Public CaptureNew As String
-	Public CaptureReplace As String
-	Public BrowseImage As String
+    'Labels for popup context menu, set in here or in frmMain Form_Load
+    Public pCaptureNew As String = "Capture New Image"
+    Public pCaptureReplace As String = "Capture Replacement Image"
+    Public BrowseImage As String
 	Public ViewImage As String
 	Public SelectLink As String
 	Public DeleteTag As String
 	
-	Public Keywords As Collection
+    Public pKeywords As Collection
 	Public FileKeywords As Collection
 	Public FindTimeout As Single
 End Module

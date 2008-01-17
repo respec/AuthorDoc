@@ -5,7 +5,7 @@ Imports atcUtility
 
 Friend Class frmSample
 	Inherits System.Windows.Forms.Form
-	'Copyright 2000 by AQUA TERRA Consultants
+    'Copyright 2000-2008 by AQUA TERRA Consultants
 	
 	Private Declare Function GetModuleUsage Lib "Kernel" (ByVal hModule As Short) As Short
 	Private Const SW_HIDE As Short = 0 'Hidden Window

@@ -2,7 +2,7 @@ Option Strict Off
 Option Explicit On
 Friend Class frmOptions
 	Inherits System.Windows.Forms.Form
-	'Copyright 2000 by AQUA TERRA Consultants
+    'Copyright 2000-2008 by AQUA TERRA Consultants
 	
 	Private Sub Command1_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles Command1.Click
 		If IsNumeric(txtTreeIndent.Text) Then frmMain.tree1.Indentation = CSng(txtTreeIndent.Text)

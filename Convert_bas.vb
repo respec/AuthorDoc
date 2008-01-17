@@ -2,28 +2,28 @@ Option Strict Off
 Option Explicit On
 
 Imports atcUtility
-
+Imports MapWinUtility
 Imports Microsoft.Office.Interop.Word
 
 Module modConvert
-	'Copyright 2000 by AQUA TERRA Consultants
+    'Copyright 2000-2008 by AQUA TERRA Consultants
 	
-	'BaseName (~) is the name of program being documented.
-	'File ~.txt contains list of source files (ProjectFileName)
+    'pBaseName (~) is the name of program being documented.
+    'File ~.txt contains list of source files (pProjectFileName)
 	'~.hlp will be created if converting to help (also optionally ~.cnt, ~.hpj)
 	'~.doc will be created if converting to printable
 	'~.hhp, ~.hhc, ~.ID -> ~.chm
 	
-	Public OutputFormat As outputType
+    Public OutputFormat As outputType
 	
-	Public Enum outputType
-		tASCII = 0
-		tHTML = 1
-		tPRINT = 2
-		tHELP = 3
-		tHTMLHELP = 4
-		NONE = -999
-	End Enum
+    Public Enum OutputType
+        tASCII = 0
+        tHTML = 1
+        tPRINT = 2
+        tHELP = 3
+        tHTMLHELP = 4
+        NONE = -999
+    End Enum
 	
     Private pWordBasic As Word.WordBasic
     Private pWordApp As Microsoft.Office.Interop.Word.Application
@@ -48,9 +48,8 @@ Module modConvert
     Private HelpSourceRTFName As String
     Private Directory As String
 
-    Private ProjectFileEntry() As String
-    Private NextProjectFileEntry As Integer
-    Private MaxProjectFileEntry As Integer
+    Private mProjectFileEntrys As New Collection
+    Private mNextProjectFileEntry As Integer
 
     Private HeadingWord(8) As String
     Private HeadingText(maxLevels) As String
@@ -121,17 +120,16 @@ Module modConvert
 
     'Returns position of first character from chars in str
     'Returns len(str) + 1 if none were found (0 if none found and reverse=true)
-    'UPGRADE_NOTE: str was upgraded to str_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-    Private Function FirstCharPos(ByRef start As Integer, ByRef str_Renamed As String, ByRef chars As String, Optional ByRef reverse As Boolean = False) As Integer
+    Private Function FirstCharPos(ByRef start As Integer, ByRef aString As String, ByRef chars As String, Optional ByRef reverse As Boolean = False) As Integer
         Dim CharPos, retval, curval, LenChars As Integer
-        If reverse Then retval = 0 Else retval = Len(str_Renamed) + 1
+        If reverse Then retval = 0 Else retval = Len(aString) + 1
         LenChars = Len(chars)
         For CharPos = 1 To LenChars
             If reverse Then
-                curval = InStrRev(str_Renamed, Mid(chars, CharPos, 1), start)
+                curval = InStrRev(aString, Mid(chars, CharPos, 1), start)
                 If curval > retval Then retval = curval
             Else
-                curval = InStr(start, str_Renamed, Mid(chars, CharPos, 1))
+                curval = InStr(start, aString, Mid(chars, CharPos, 1))
                 If curval > 0 And curval < retval Then retval = curval
             End If
         Next CharPos
@@ -141,23 +139,23 @@ Module modConvert
     Public Sub CreateHelpProject(ByRef IDfileExists As Boolean)
         Dim outf As Short
         outf = FreeFile
-        FileOpen(outf, SaveDirectory & BaseName & ".hpj", OpenMode.Output)
+        FileOpen(outf, SaveDirectory & pBaseName & ".hpj", OpenMode.Output)
         PrintLine(outf, "[OPTIONS]" & vbCrLf)
         PrintLine(outf, "LCID=0x409 0x0 0x0 ; English (United States)" & vbCrLf)
         PrintLine(outf, "REPORT=Yes" & vbCrLf)
-        PrintLine(outf, "CNT=" & BaseName & ".cnt" & vbCrLf & vbCrLf)
-        PrintLine(outf, "HLP=" & BaseName & ".hlp" & vbCrLf & vbCrLf)
+        PrintLine(outf, "CNT=" & pBaseName & ".cnt" & vbCrLf & vbCrLf)
+        PrintLine(outf, "HLP=" & pBaseName & ".hlp" & vbCrLf & vbCrLf)
 
         PrintLine(outf, "[FILES]" & vbCrLf)
         PrintLine(outf, HelpSourceRTFName & vbCrLf & vbCrLf)
 
         If IDfileExists Then
             PrintLine(outf, "[MAP]" & vbCrLf)
-            PrintLine(outf, "#include <" & BaseName & ".ID>" & vbCrLf & vbCrLf)
+            PrintLine(outf, "#include <" & pBaseName & ".ID>" & vbCrLf & vbCrLf)
         End If
 
         PrintLine(outf, "[WINDOWS]" & vbCrLf)
-        PrintLine(outf, "Main=" & Chr(34) & BaseName & " Manual" & Chr(34) & ", , 60672, (r14876671), (r12632256), f2; " & vbCrLf & vbCrLf & "")
+        PrintLine(outf, "Main=" & Chr(34) & pBaseName & " Manual" & Chr(34) & ", , 60672, (r14876671), (r12632256), f2; " & vbCrLf & vbCrLf & "")
 
         PrintLine(outf, "[CONFIG]" & vbCrLf)
         PrintLine(outf, "BrowseButtons()" & vbCrLf)
@@ -171,19 +169,19 @@ Module modConvert
     Private Sub OpenHTMLHelpProjectfile()
         'If OutputFormat = tHTMLHELP Then
         HTMLHelpProjectfile = FreeFile
-        FileOpen(HTMLHelpProjectfile, SaveDirectory & BaseName & ".hhp", OpenMode.Output)
+        FileOpen(HTMLHelpProjectfile, SaveDirectory & pBaseName & ".hhp", OpenMode.Output)
         Print(HTMLHelpProjectfile, "[OPTIONS]" & vbLf)
         Print(HTMLHelpProjectfile, "Auto Index=Yes" & vbLf)
         Print(HTMLHelpProjectfile, "Compatibility=1.1 Or later" & vbLf)
-        Print(HTMLHelpProjectfile, "Compiled file=" & BaseName & ".chm" & vbLf)
-        Print(HTMLHelpProjectfile, "Contents file=" & BaseName & ".hhc" & vbLf)
+        Print(HTMLHelpProjectfile, "Compiled file=" & pBaseName & ".chm" & vbLf)
+        Print(HTMLHelpProjectfile, "Contents file=" & pBaseName & ".hhc" & vbLf)
         'Print #HTMLHelpProjectfile, "Default topic=Introduction.html"
         Print(HTMLHelpProjectfile, "Display compile progress=Yes" & vbLf)
         Print(HTMLHelpProjectfile, "Enhanced decompilation=Yes" & vbLf)
         Print(HTMLHelpProjectfile, "Full-text search=Yes" & vbLf)
-        Print(HTMLHelpProjectfile, "Index file = " & BaseName & ".hhk" & vbLf)
+        Print(HTMLHelpProjectfile, "Index file = " & pBaseName & ".hhk" & vbLf)
         Print(HTMLHelpProjectfile, "Language=0x409 English (United States)" & vbLf)
-        Print(HTMLHelpProjectfile, "Title=" & BaseName & " Manual" & vbLf & vbLf)
+        Print(HTMLHelpProjectfile, "Title=" & pBaseName & " Manual" & vbLf & vbLf)
         'Print #HTMLHelpProjectfile, ""
         Print(HTMLHelpProjectfile, "[Files]" & vbLf)
         AliasSection = vbLf & "[ALIAS]"
@@ -195,7 +193,7 @@ Module modConvert
         If startTag > 0 Then
             closeTag = InStr(startTag, TargetText, ">")
             If closeTag < startTag Then
-                MsgBox("Style tag not terminated in " & SourceFilename)
+                Logger.Msg("Style tag not terminated in " & SourceFilename)
             Else
                 ReadStyleFile(Mid(TargetText, startTag + 7, closeTag - startTag - 7), HeadingLevel)
             End If
@@ -216,7 +214,6 @@ Module modConvert
 		BeforeHTML = ""
 		
         For level = 1 To maxLevels
-            'UPGRADE_NOTE: Object WordStyle() may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
             WordStyle(level) = Nothing
 			WordStyle(level) = New Collection
 		Next 
@@ -225,8 +222,7 @@ Module modConvert
 			StyleFilename = StyleFile(HeadingLevel)
 		Else
             If Not IO.File.Exists(StyleFilename) Then
-                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-                If Len(Dir(StyleFilename & ".sty")) > 0 Then
+                If IO.File.Exists(StyleFilename & ".sty") Then
                     StyleFilename = StyleFilename & ".sty"
                 End If
             End If
@@ -237,15 +233,14 @@ Module modConvert
             Dim lStyleReader As New System.IO.BinaryReader(New System.IO.FileStream(StyleFilename, IO.FileMode.Open))
             StyleFile(HeadingLevel) = StyleFilename
             StyleLevel = HeadingLevel
-            Try
-                Do
-                    buf = NextLine(lStyleReader)
-                    buf = Trim(buf)
-                    FirstChar = Left(buf, 1)
-                    Select Case FirstChar
-                        Case "#", ""
-                            'skip comments and blank lines
-                        Case "["
+            buf = NextLine(lStyleReader)
+            Do While Not buf Is Nothing
+                buf = buf.Trim
+                FirstChar = Left(buf, 1)
+                Select Case FirstChar
+                    Case "#", ""
+                        'skip comments and blank lines
+                    Case "["
                         CurrSection = LCase(Mid(buf, 2, Len(buf) - 2))
                         level = 0
                     Case Else
@@ -274,7 +269,7 @@ Module modConvert
                                     End If
                             End Select
                         ElseIf CurrSection = "printstart" Then
-                            If OutputFormat = outputType.tPRINT Then WordCommand(buf, 0)
+                            If OutputFormat = OutputType.tPRINT Then WordCommand(buf, 0)
                         Else
                             For level = 0 To maxLevels
                                 'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
@@ -288,22 +283,20 @@ Module modConvert
                                         If Len(buf) > 0 Then
                                             BodyStyle(level) = "<body " & buf & ">"
                                         Else
-                                                BodyStyle(level) = "<body>"
-                                            End If
-                                    End Select
-                                Next level
-                            End If
-                    End Select
-                Loop
-            Catch
-                lStyleReader.Close()
-            End Try
+                                            BodyStyle(level) = "<body>"
+                                        End If
+                                End Select
+                            Next level
+                        End If
+                End Select
+                buf = NextLine(lStyleReader)
+            Loop
+            lStyleReader.Close()
         End If
     End Sub
 
     Private Sub WordCommand(ByVal cmdline As String, ByVal localHeadingLevel As Integer)
-        'UPGRADE_NOTE: Val was upgraded to Val_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-        Dim arg, cmd, Val_Renamed As String
+        Dim arg, cmd, lValue As String
         Dim isnum As Boolean
         Dim consuming As String
         Dim intval As Short
@@ -339,7 +332,7 @@ Module modConvert
                         Case "double" : .BorderLineStyle(7)
                         Case "doublethick" : .BorderLineStyle(9)
                         Case "dashed" : .BorderLineStyle(11)
-                        Case Else : MsgBox("Unknown BorderLineStyle: " & consuming, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                        Case Else : Logger.Msg("Unknown BorderLineStyle: " & consuming, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                     End Select
                 Case "bordernone" : If IsNumeric(consuming) Then .BorderNone(CShort(consuming))
                 Case "borderoutside" : If IsNumeric(consuming) Then .BorderOutside(CShort(consuming))
@@ -357,15 +350,15 @@ Module modConvert
                 Case "editselectall" : .EditSelectAll()
                 Case "filepagesetup"
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
-                        If IsNumeric(Val_Renamed) Then intval = CShort(Val_Renamed) Else intval = 0
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
+                        If IsNumeric(lValue) Then intval = CShort(lValue) Else intval = 0
                         Select Case LCase(arg)
-                            Case "topmargin" : pWordBasic.FilePageSetup(TopMargin:=Val_Renamed)
-                            Case "bottommargin" : pWordBasic.FilePageSetup(BottomMargin:=Val_Renamed)
-                            Case "leftmargin" : pWordBasic.FilePageSetup(LeftMargin:=Val_Renamed)
-                            Case "rightmargin" : pWordBasic.FilePageSetup(RightMargin:=Val_Renamed)
-                            Case "headerdistance" : pWordBasic.FilePageSetup(HeaderDistance:=Val_Renamed)
+                            Case "topmargin" : pWordBasic.FilePageSetup(TopMargin:=lValue)
+                            Case "bottommargin" : pWordBasic.FilePageSetup(BottomMargin:=lValue)
+                            Case "leftmargin" : pWordBasic.FilePageSetup(LeftMargin:=lValue)
+                            Case "rightmargin" : pWordBasic.FilePageSetup(RightMargin:=lValue)
+                            Case "headerdistance" : pWordBasic.FilePageSetup(HeaderDistance:=lValue)
                             Case "facingpages" : pWordBasic.FilePageSetup(FacingPages:=intval)
                             Case "oddandevenpages" : pWordBasic.FilePageSetup(OddAndEvenPages:=intval)
                         End Select
@@ -395,17 +388,17 @@ Module modConvert
                     '              Case "fineshading":    .FormatDefineStyleBorders FineShading:=intval
                     '            End Select
                     '          Else
-                    '            MsgBox "non-numeric value for " & arg & " in " & cmd, vbOKOnly, "AuthorDoc:WordCommand"
+                    '            logger.msg "non-numeric value for " & arg & " in " & cmd, vbOKOnly, "AuthorDoc:WordCommand"
                     '          End If
                     '        Wend
                 Case "formatdefinestylefont"
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
                         If LCase(arg) = "font" Then
-                            .FormatDefineStyleFont(Font:=Val_Renamed)
-                        ElseIf IsNumeric(Val_Renamed) Then
-                            intval = CShort(Val_Renamed)
+                            .FormatDefineStyleFont(Font:=lValue)
+                        ElseIf IsNumeric(lValue) Then
+                            intval = CShort(lValue)
                             Select Case LCase(arg)
                                 Case "points" : .FormatDefineStyleFont(Points:=intval)
                                 Case "underline" : .FormatDefineStyleFont(Underline:=intval)
@@ -434,19 +427,19 @@ Module modConvert
                     '              Case "alignment":    .FormatDefineStylePara Alignment:=intval
                     '            End Select
                     '          Else
-                    '            MsgBox "non-numeric value for " & arg & " in " & cmd, vbOKOnly, "AuthorDoc:WordCommand"
+                    '            logger.msg "non-numeric value for " & arg & " in " & cmd, vbOKOnly, "AuthorDoc:WordCommand"
                     '          End If
                     '        Wend
                 Case "formatfont"
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
                         If LCase(arg) = "font" Then
-                            .FormatFont(Font:=Val_Renamed)
-                        ElseIf Len(Val_Renamed) = 0 Then
+                            .FormatFont(Font:=lValue)
+                        ElseIf Len(lValue) = 0 Then
                             If IsNumeric(arg) Then .FormatFont(Points:=arg)
-                        ElseIf IsNumeric(Val_Renamed) Then
-                            intval = CShort(Val_Renamed)
+                        ElseIf IsNumeric(lValue) Then
+                            intval = CShort(lValue)
                             Select Case LCase(arg)
                                 Case "points" : .FormatFont(Points:=intval)
                                 Case "underline" : .FormatFont(Underline:=intval)
@@ -459,20 +452,20 @@ Module modConvert
                                 Case "shadow" : .FormatFont(Shadow:=intval)
                             End Select
                         Else
-                            MsgBox("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                            Logger.Msg("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                         End If
                     End While
                 Case "formatheaderfooterlink" : .FormatHeaderFooterLink()
                 Case "formatpagenumber"
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
                         If LCase(arg) = "font" Then
-                            .FormatFont(Font:=Val_Renamed)
-                        ElseIf Len(Val_Renamed) = 0 Then
+                            .FormatFont(Font:=lValue)
+                        ElseIf Len(lValue) = 0 Then
                             If IsNumeric(arg) Then .FormatFont(Points:=arg)
-                        ElseIf IsNumeric(Val_Renamed) Then
-                            intval = CShort(Val_Renamed)
+                        ElseIf IsNumeric(lValue) Then
+                            intval = CShort(lValue)
                             Select Case LCase(arg)
                                 Case "chapternumber" : .FormatPageNumber(ChapterNumber:=intval)
                                 Case "numrestart" : .FormatPageNumber(NumRestart:=intval)
@@ -482,16 +475,16 @@ Module modConvert
                                 Case "separator" : .FormatPageNumber(Separator:=intval)
                             End Select
                         Else
-                            MsgBox("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                            Logger.Msg("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                         End If
                     End While
                 Case "formatpara", "formatparagraph"
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
-                        isnum = IsNumeric(Val_Renamed)
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
+                        isnum = IsNumeric(lValue)
                         If isnum Then
-                            intval = CShort(Val_Renamed)
+                            intval = CShort(lValue)
                             Select Case LCase(arg)
                                 Case "before" : .FormatParagraph(Before:=intval)
                                 Case "after" : .FormatParagraph(After:=intval)
@@ -499,7 +492,7 @@ Module modConvert
                                 Case "alignment" : .FormatParagraph(Alignment:=intval)
                             End Select
                         Else
-                            MsgBox("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                            Logger.Msg("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                         End If
                     End While
                     '      Case "formatstyle"
@@ -517,13 +510,13 @@ Module modConvert
                     '        End If
                 Case "formattabs"
                     arg = StrSplit(consuming, ",", """")
-                    Val_Renamed = StrSplit(consuming, ",", """") '1=left, 2=right
+                    lValue = StrSplit(consuming, ",", """") '1=left, 2=right
                     If Not IsNumeric(arg) Then
-                        MsgBox("non-numeric value for tab position in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
-                    ElseIf Not IsNumeric(Val_Renamed) Then
-                        MsgBox("non-numeric value for alignment in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                        Logger.Msg("non-numeric value for tab position in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                    ElseIf Not IsNumeric(lValue) Then
+                        Logger.Msg("non-numeric value for alignment in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                     Else
-                        intval = CShort(Val_Renamed)
+                        intval = CShort(lValue)
                         .FormatTabs(arg & """", Align:=intval, Set:=1)
                     End If
                 Case "formattabsclear" : .FormatTabs(ClearAll:=1)
@@ -541,7 +534,7 @@ Module modConvert
                         Case "evenpagesection" : .InsertBreak(4)
                         Case "oddpagesection" : .InsertBreak(5)
                         Case "line" : .InsertBreak(6)
-                        Case Else : MsgBox("Unknown argument to InsertBreak: " & consuming)
+                        Case Else : Logger.Msg("Unknown argument to InsertBreak: " & consuming)
                     End Select
                 Case "insertdatetime"
                     If Len(Trim(consuming)) > 0 Then
@@ -555,18 +548,18 @@ Module modConvert
                     posVal = 1
                     firstVal = 0
                     While Len(consuming) > 0
-                        Val_Renamed = StrSplit(consuming, ",", """")
-                        arg = StrSplit(Val_Renamed, ":=", """")
-                        isnum = IsNumeric(Val_Renamed)
+                        lValue = StrSplit(consuming, ",", """")
+                        arg = StrSplit(lValue, ":=", """")
+                        isnum = IsNumeric(lValue)
                         If isnum Then
-                            intval = CShort(Val_Renamed)
+                            intval = CShort(lValue)
                             Select Case LCase(arg)
                                 Case "type" : typeVal = intval
                                 Case "position" : posVal = intval
                                 Case "firstpage" : firstVal = intval
                             End Select
                         Else
-                            MsgBox("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
+                            Logger.Msg("non-numeric value for " & arg & " in " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc:WordCommand")
                         End If
                     End While
                     .InsertPageNumbers(Type:=typeVal, Position:=posVal, FirstPage:=firstVal)
@@ -588,20 +581,19 @@ Module modConvert
                     ViewHeaderAndSet(ReplaceStyleString(consuming, localHeadingLevel))
                 Case "viewnormal" : pWordApp.ActiveWindow.ActivePane.View.SeekView = WdSeekView.wdSeekMainDocument '.ViewNormal()
                 Case "viewpage" : .ViewPage()
-                Case Else : MsgBox("WordCommand not recognized: " & cmd)
+                Case Else : Logger.Msg("WordCommand not recognized: " & cmd)
             End Select
         End With
         Exit Sub
 WordCommandErr:
-        'MsgBox "Error with Word command '" & cmdline & "'" & vbCr & Err.Description
-        Debug.Print("Error with Word command '" & cmdline & "'" & vbCr & Err.Description)
+        'logger.msg "Error with Word command '" & cmdline & "'" & vbCr & Err.Description
+        Logger.Dbg("Error with Word command '" & cmdline & "'" & vbCr & Err.Description)
     End Sub
 
-    'UPGRADE_NOTE: str was upgraded to str_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-    Private Function ReplaceStyleString(ByRef str_Renamed As String, ByRef localHeadingLevel As Integer) As String
+    Private Function ReplaceStyleString(ByRef aString As String, ByRef localHeadingLevel As Integer) As String
         Dim retval, wordstr As String
         Dim endwordpos, level, wordpos, wordnum As Integer
-        retval = str_Renamed
+        retval = aString
         retval = ReplaceString(retval, "<sectionname>", HeadingText(localHeadingLevel))
         For level = 1 To localHeadingLevel
             retval = ReplaceString(retval, "<sectionname " & level & ">", HeadingText(level))
@@ -634,80 +626,70 @@ WordCommandErr:
         ReplaceStyleString = retval
     End Function
 
-    Public Sub Convert(ByRef outputAs As Short, ByRef makeContents As Boolean, ByRef timestamps As Boolean, ByRef makeUpNext As Boolean, ByRef makeID As Boolean, ByRef makeProject As Boolean)
-        Dim lastSourceFilename As String
-        Dim i As Integer
+    Public Sub Convert(ByRef aOutputAs As OutputType, ByRef makeContents As Boolean, ByRef timestamps As Boolean, ByRef makeUpNext As Boolean, ByRef makeID As Boolean, ByRef makeProject As Boolean)
         Dim buf As String
         Dim keyword As Object
         Dim replaceSelectionOption As Integer
 
-        Keywords = New Collection
+        Logger.StartToFile(CurDir() & "\logs\authordoc.log", False, True)
+        Logger.Dbg("StartConvert " & aOutputAs)
+
+        pKeywords = New Collection
         Init()
-        OutputFormat = outputAs
+        OutputFormat = aOutputAs
         BuildContents = makeContents
         BuildProject = makeProject
         FooterTimestamps = timestamps
         UpNext = makeUpNext
         BuildID = makeID
-        'UPGRADE_NOTE: Variable frmConvert.CmDialog1 was renamed frmConvert.CmDialog1Open. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="94ADAC4D-C65D-414F-A061-8FDC6B83C5EC"'
         frmConvert.CmDialog1Open.DefaultExt = "txt"
-        'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-        If Len(ProjectFileName) > 0 And Len(Dir(ProjectFileName)) > 0 Then
+        If IO.File.Exists(pProjectFileName) Then
             PromptForFiles = False
 
-            ProjectFile = FreeFile()
-            FileOpen(ProjectFile, ProjectFileName, OpenMode.Input)
-            ReDim ProjectFileEntry(100)
-            MaxProjectFileEntry = 0
-
-            While Not EOF(ProjectFile)
-                buf = LineInput(ProjectFile)
-                If Len(Trim(buf)) > 0 Then
-                    MaxProjectFileEntry = MaxProjectFileEntry + 1
-                    If MaxProjectFileEntry > UBound(ProjectFileEntry) Then
-                        ReDim Preserve ProjectFileEntry(MaxProjectFileEntry * 2)
+            Dim lProjectFileReader As New System.IO.BinaryReader(New System.IO.FileStream(pProjectFileName, IO.FileMode.Open))
+            Try
+                Do
+                    buf = NextLine(lProjectFileReader).TrimEnd
+                    If buf.Trim.Length > 0 Then
+                        mProjectFileEntrys.Add(buf)
                     End If
-                    ProjectFileEntry(MaxProjectFileEntry) = buf
-                End If
-            End While
-            ReDim Preserve ProjectFileEntry(MaxProjectFileEntry)
-            NextProjectFileEntry = 1
-            FileClose(ProjectFile)
-
+                Loop
+            Catch ex As Exception
+                lProjectFileReader.Close()
+            End Try
+            mNextProjectFileEntry = 1
         Else
-            MsgBox("Could not open project file")
+            Logger.Msg("Could not open project file " & pProjectFileName)
             Exit Sub
         End If
-        'If Not OpenFile("Open list of source files:", ProjectFileName) Then Exit Sub
-        SourceBaseDirectory = IO.Path.GetDirectoryName(ProjectFileName) & "\"
-        ChDrive(SourceBaseDirectory)
-        ChDir(SourceBaseDirectory)
-        'SaveDirectory = SourceBaseDirectory & BaseName & "ConversionOutput\"
+        'If Not OpenFile("Open list of source files:", pProjectFileName) Then Exit Sub
+        SourceBaseDirectory = IO.Path.GetDirectoryName(pProjectFileName) & "\"
+        ChDriveDir(SourceBaseDirectory)
+        'SaveDirectory = SourceBaseDirectory & pBaseName & "ConversionOutput\"
         SaveDirectory = SourceBaseDirectory & "Out\"
-        'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-        If Len(Dir(SaveDirectory, FileAttribute.Directory)) = 0 Then MkDir(SaveDirectory)
+        If Not IO.Directory.Exists(SaveDirectory) Then IO.Directory.CreateDirectory(SaveDirectory)
         If BuildProject Then
-            If OutputFormat = outputType.tHELP Then
+            If OutputFormat = OutputType.tHELP Then
                 CreateHelpProject(True)
-            ElseIf OutputFormat = outputType.tHTMLHELP Then
+            ElseIf OutputFormat = OutputType.tHTMLHELP Then
                 OpenHTMLHelpProjectfile()
-            ElseIf OutputFormat = outputType.tASCII Then
-                HTMLHelpProjectfile = FreeFile
-                FileOpen(HTMLHelpProjectfile, SaveDirectory & BaseName & ".txt", OpenMode.Output)
+            ElseIf OutputFormat = OutputType.tASCII Then
+                HTMLHelpProjectfile = FreeFile()
+                FileOpen(HTMLHelpProjectfile, SaveDirectory & pBaseName & ".txt", OpenMode.Output)
             End If
         End If
 
         If BuildID Then
-            IDfile = FreeFile
-            FileOpen(IDfile, SaveDirectory & BaseName & ".ID", OpenMode.Output)
+            IDfile = FreeFile()
+            FileOpen(IDfile, SaveDirectory & pBaseName & ".ID", OpenMode.Output)
             IDnum = 2
         End If
 
         InitContents()
         PromptForFiles = False
-        lastSourceFilename = ""
-        SourceFilename = NextSourceFilename
-        If OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP Then
+        Dim lastSourceFilename As String = ""
+        SourceFilename = NextSourceFilename()
+        If OutputFormat = OutputType.tPRINT Or OutputFormat = OutputType.tHELP Then
             'pWordApp = New Microsoft.Office.Interop.Word.Application
             'pWordBasic = pWordApp.WordBasic 
             pWordBasic = CreateObject("Word.Basic")
@@ -717,12 +699,12 @@ WordCommandErr:
                 .AppShow()
                 '.ToolsOptionsView PicturePlaceHolders:=1
                 .ChDir(SaveDirectory)
-                If OutputFormat = outputType.tPRINT Then
+                If OutputFormat = OutputType.tPRINT Then
                     .FileNewDefault()
                     DefinePrintStyles()
-                    .FileSaveAs(SaveDirectory & BaseName & ".doc", 0)
+                    .FileSaveAs(SaveDirectory & pBaseName & ".doc", 0)
                     TargetWin = .WindowName
-                ElseIf OutputFormat = outputType.tHELP Then
+                ElseIf OutputFormat = OutputType.tHELP Then
                     .FileNewDefault()
                     .FilePageSetup(PageWidth:="12 in")
                     .FileSaveAs(SaveDirectory & HelpSourceRTFName, 6)
@@ -731,7 +713,7 @@ WordCommandErr:
                 .ChDir(SourceBaseDirectory)
             End With
         End If
-        ReadStyleFile(BaseName & ".sty", 0)
+        ReadStyleFile(pBaseName & ".sty", 0)
         LastHeadingLevel = 0
         Dim dotpos As Integer
         While Len(SourceFilename) > 0 And SourceFilename <> lastSourceFilename
@@ -740,14 +722,16 @@ OpeningFile:
             lastSourceFilename = SourceFilename
             FirstHeaderInFile = True
             System.Windows.Forms.Application.DoEvents()
-            If OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP Then
+            If OutputFormat = OutputType.tPRINT Or OutputFormat = OutputType.tHELP Then
                 With pWordBasic
                     .Activate(TargetWin)
                     .ScreenUpdating(0) 'comment out to debug (show lots of updates)
                     .EditBookmark("CurrentFileStart")
-                    On Error GoTo FileNotFound
-                    .Insert(WholeFileString(Directory & SourceFilename))
-                    On Error GoTo 0
+                    Try
+                        .Insert(WholeFileString(Directory & SourceFilename))
+                    Catch ex As Exception
+                        GoTo FileNotFound
+                    End Try
                     NumberHeaderTagsWithWord()
                     If LinkToImageFiles >= 0 Then
                         .EditGoTo("CurrentFileStart")
@@ -756,23 +740,25 @@ OpeningFile:
                     .EndOfDocument()
                     .ScreenUpdating(1)
                 End With
-            ElseIf OutputFormat = outputType.tASCII Then
-                i = FreeFile()
-                On Error GoTo FileNotFound
-                FileOpen(i, Directory & SourceFilename, OpenMode.Input) 'SourceBaseDirectory &
-                On Error GoTo 0
+            ElseIf OutputFormat = OutputType.tASCII Then
+                Dim i As Integer = FreeFile()
+                Try
+                    FileOpen(i, Directory & SourceFilename, OpenMode.Input) 'SourceBaseDirectory &
+                Catch ex As Exception
+                    GoTo FileNotFound
+                End Try
                 While Not EOF(i) ' Loop until end of file.
                     ParseHSPFsourceLine(i)
                 End While
-                If BuildProject And Keywords.Count() > 0 Then
+                If BuildProject And pKeywords.Count() > 0 Then
                     Print(HTMLHelpProjectfile, vbCrLf & "[Keywords]" & vbCrLf)
-                    For Each keyword In Keywords
+                    For Each keyword In pKeywords 'TODO: where do keywords come from?
                         'UPGRADE_WARNING: Couldn't resolve default property of object keyword. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
                         Print(HTMLHelpProjectfile, keyword & vbCrLf)
                     Next keyword
                 End If
                 FileClose(i)
-            ElseIf OutputFormat = outputType.tHTML Or OutputFormat = outputType.tHTMLHELP Then
+            ElseIf OutputFormat = OutputType.tHTML Or OutputFormat = OutputType.tHTMLHELP Then
                 'OpenFile SourceFilename, SourceBaseDirectory & SourceFilename
                 SourceText = WholeFileString(SourceBaseDirectory & SourceFilename)
                 TargetText = Trim(SourceText)
@@ -786,14 +772,14 @@ TrimTargetText:
                 dotpos = InStrRev(SourceFilename, ".")
                 If dotpos > 1 Then SaveFilename = Left(SourceFilename, dotpos - 1) Else SaveFilename = SourceFilename
                 SaveFilename = SaveFilename & ".html"
-                If OutputFormat = outputType.tHTMLHELP Then
+                If OutputFormat = OutputType.tHTMLHELP Then
                     FormatTag("b", OutputFormat)
                     FormatKeywordsHTMLHelp()
                     If BuildProject Then Print(HTMLHelpProjectfile, SaveFilename & vbLf)
                 End If
                 NumberHeaderTags()
                 CheckStyle()
-                FormatHeadings(outputType.tHTML, SaveFilename)
+                FormatHeadings(OutputType.tHTML, SaveFilename)
                 TranslateButtons(OutputFormat)
                 MakeLocalTOCs()
                 HREFsInsureExtension()
@@ -806,15 +792,15 @@ TrimTargetText:
 OpenNextFile:
             SourceFilename = NextSourceFilename()
         End While
-        If OutputFormat = outputType.tHTMLHELP And makeProject Then
+        If OutputFormat = OutputType.tHTMLHELP And makeProject Then
             Print(HTMLHelpProjectfile, AliasSection & vbLf)
-            Print(HTMLHelpProjectfile, "[MAP]" & vbLf & "#include " & BaseName & ".ID" & vbLf)
+            Print(HTMLHelpProjectfile, "[MAP]" & vbLf & "#include " & pBaseName & ".ID" & vbLf)
             FileClose(HTMLHelpProjectfile)
-        ElseIf OutputFormat = outputType.tASCII Then
+        ElseIf OutputFormat = OutputType.tASCII Then
             FileClose(IDfile)
             FileClose(HTMLHelpProjectfile)
         End If
-        If (OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP) Then
+        If (OutputFormat = OutputType.tPRINT Or OutputFormat = OutputType.tHELP) Then
             With pWordBasic
                 .ToolsOptionsEdit((replaceSelectionOption)) 'save current value of this option
                 .ToolsOptionsEdit((1)) 'be sure option is on
@@ -823,13 +809,13 @@ OpenNextFile:
                 ConvertTablesToWord()
                 ConvertTagsToWord()
                 If makeContents Then
-                    If OutputFormat = outputType.tHTMLHELP Or OutputFormat = outputType.tHTML Then
+                    If OutputFormat = OutputType.tHTMLHELP Or OutputFormat = OutputType.tHTML Then
                         FinishHTMLHelpContents()
                         'ElseIf OutputFormat = tHTML Then
                         '  .Activate ContentsWin
                         '  .FileSaveAs Directory & "Contents.html", 2
                         '  .FileClose 2
-                    ElseIf OutputFormat = outputType.tPRINT Then
+                    ElseIf OutputFormat = OutputType.tPRINT Then
                         .Activate(TargetWin)
                         .StartOfDocument()
                         .Insert("Contents" & vbCr & vbCr)
@@ -850,24 +836,25 @@ OpenNextFile:
                 .ScreenUpdating(1)
                 .AppClose()
             End With
-        ElseIf OutputFormat = outputType.tHTMLHELP Or OutputFormat = outputType.tHTML Then
+        ElseIf OutputFormat = OutputType.tHTMLHELP Or OutputFormat = OutputType.tHTML Then
             FinishHTMLHelpContents()
         End If
-        'UPGRADE_NOTE: Object word may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
         pWordBasic = Nothing
         If IDfile > -1 Then FileClose(IDfile)
         If TotalTruncated > 0 Or TotalRepeated > 0 Then
-            MsgBox("Total Truncated = " & TotalTruncated & vbCr & "Total Repeated = " & TotalRepeated)
+            Logger.Msg("Total Truncated = " & TotalTruncated & vbCr & "Total Repeated = " & TotalRepeated)
         End If
         Status("Conversion Finished")
-        If OutputFormat = outputType.tHELP Then
-            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & BaseName & ".hpj", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
-        ElseIf OutputFormat = outputType.tHTMLHELP Then
-            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & BaseName & ".hhp", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
+        If OutputFormat = OutputType.tHELP Then
+            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & pBaseName & ".hpj", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
+        ElseIf OutputFormat = OutputType.tHTMLHELP Then
+            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & pBaseName & ".hhp", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
         End If
+        Logger.Flush()
         Exit Sub
+
 FileNotFound:
-        If MsgBox("Error opening " & Directory & SourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
+        If Logger.Msg("Error opening " & Directory & SourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
             GoTo OpeningFile
         Else
             GoTo OpenNextFile
@@ -875,7 +862,7 @@ FileNotFound:
     End Sub
 
     Private Sub ParseHSPFsourceLine(ByRef inFile As Integer)
-        Dim buf, buf2 As String
+        Dim buf As String
         Dim SectionDir, SectionNum, SectionDirName, SectionName As String
         Dim parsePos As Integer
         Dim Lenbuf As Integer
@@ -923,7 +910,6 @@ FileNotFound:
                     FileClose(IDfile)
                 End If
                 InPre = False
-                'UPGRADE_NOTE: Object FileKeywords may not be destroyed until it is garbage collected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6E35BFF6-CD74-4B09-9689-3E1A43DF8969"'
                 FileKeywords = Nothing
                 FileKeywords = New Collection
                 parsePos = InStr(buf, " ")
@@ -974,9 +960,7 @@ FileNotFound:
                     SectionDirName = SectionDirName & "\"
                 End If
                 IDfile = FreeFile
-                'If Len(Dir(SaveDirectory & SectionDir, vbDirectory)) = 0 Then MkDir SaveDirectory & SectionDir
-                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-                If Len(Dir(SaveDirectory & SectionDirName, FileAttribute.Directory)) = 0 Then MkDir(SaveDirectory & SectionDirName)
+                If Not IO.Directory.Exists(SaveDirectory & SectionDirName) Then IO.Directory.CreateDirectory(SaveDirectory & SectionDirName)
                 'Debug.Print
                 'Debug.Print SectionDir & SectionNum & ":" & CurrentOutputDirectory & CurrentOutputFilename
                 CurrentOutputDirectory = SaveDirectory & SectionDirName 'SectionDir
@@ -992,10 +976,9 @@ FileNotFound:
 SetFilenameHere:
                 CurrentOutputFilename = SectionLevelName(DirectoryLevels + 1) & ".txt" 'Mid(SectionNum, Len(SectionDir) + 1) & ".txt"
                 If Len(CurrentOutputDirectory & CurrentOutputFilename) > 255 Then
-                    MsgBox("Path longer than 255 characters detected:" & vbCr & CurrentOutputDirectory & vbCr & CurrentOutputFilename)
+                    Logger.Msg("Path longer than 255 characters detected:" & vbCr & CurrentOutputDirectory & vbCr & CurrentOutputFilename)
                 End If
-                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-                If Len(Dir(CurrentOutputDirectory & CurrentOutputFilename)) > 0 Then
+                If IO.File.Exists(CurrentOutputDirectory & CurrentOutputFilename) Then
                     FileRepeat = FileRepeat + 1
                     SectionLevelName(DirectoryLevels + 1) = SectionLevelName(DirectoryLevels + 1) & FileRepeat
                     GoTo SetFilenameHere
@@ -1015,7 +998,7 @@ RetryImage:
                     Try
                         FileCopy(SourceBaseDirectory & "png\" & ImageFilename, CurrentOutputDirectory & ImageFilename)
                     Catch
-                        Select Case MsgBox("Missing Image: " & vbCr & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "Missing")
+                        Select Case Logger.Msg("Missing Image: " & vbCr & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "Missing")
                             Case MsgBoxResult.Retry : GoTo RetryImage
                             Case MsgBoxResult.Ignore
                             Case MsgBoxResult.Abort : Exit Sub
@@ -1042,6 +1025,7 @@ RetryImage:
         End If
         AllCapsStart = 0
         Lenbuf = Len(buf)
+        Dim buf2 As String = ""
         For parsePos = 1 To Lenbuf
             a = Asc(Mid(buf, parsePos, 1))
             If a > 64 And a < 91 Then 'If capital letter, set AllCapsStart
@@ -1075,7 +1059,7 @@ RetryImage:
                         '    Debug.Print("+" & keyword & ";")
                         'End Try
                         'If InHeader Then
-                        buf2 = buf2 & keyword & Chr(a)
+                        buf2 &= keyword & Chr(a)
                         'Else
                         '  buf2 = buf2 & vbcrlf _
                         ''      & "<Object id=hhctrl type=""application/x-oleobject""" & vbcrlf _
@@ -1133,14 +1117,12 @@ NextChar:
 
     Private Sub ConvertTableToWord(ByRef RecursionLevel As Integer)
         Dim TableText As String
-        Dim lTableText As String
         Dim TableCols As Integer
         Dim TableLen As Integer
         Dim ColPos As Integer
         Dim RowEnd As Integer
         Dim HeaderCell(,) As Boolean
         Dim MergeCells As Integer
-        Dim MergeCount As Integer
         With pWordBasic
             .EditBookmark("TableStart" & RecursionLevel)
 FindEnd:
@@ -1153,7 +1135,7 @@ FindEnd:
             .Cancel()
 
             If InStr(LCase(.Selection), "<table") > 0 Then
-                If FindAndDeleteTableStart Then
+                If FindAndDeleteTableStart() Then
                     ConvertTableToWord(RecursionLevel + 1)
                     .EditGoTo("TableStart" & RecursionLevel)
                     GoTo FindEnd
@@ -1384,8 +1366,7 @@ SkipBlanks2:
         Dim fname, path As String
         path = IO.Path.GetDirectoryName(newFilePath)
         fname = Mid(newFilePath, Len(path) + 2)
-        'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-        If Len(Dir(path, FileAttribute.Directory)) = 0 Then MkDir(path)
+        If Not IO.Directory.Exists(path) Then IO.Directory.CreateDirectory(path)
         Dim OutFile As Short
         Dim oldpath As String
         If OutputFormat = outputType.tHTML Or OutputFormat = outputType.tHTMLHELP Then
@@ -1408,20 +1389,18 @@ SkipBlanks2:
         Dim ch, fn As String 'FileName, will be return value
         Dim buf As String
 
-Beginning:
-
-        If NextProjectFileEntry > MaxProjectFileEntry Then
+        If mNextProjectFileEntry >= mProjectFileEntrys.Count Then
             NextSourceFilename = ""
         Else
-            buf = ProjectFileEntry(NextProjectFileEntry)
-            NextProjectFileEntry = NextProjectFileEntry + 1
+            buf = mProjectFileEntrys(mNextProjectFileEntry)
+            mNextProjectFileEntry += +1
             'insert levels of hierarchy for subsections indented two spaces
             fn = ""
             lvl = 1
-            While Left(buf, 2) = "  "
+            While buf.StartsWith("  ")
                 buf = Mid(buf, 3)
-                fn = fn & HeadingWord(lvl) & "\"
-                lvl = lvl + 1
+                fn &= HeadingWord(lvl) & "\"
+                lvl += 1
             End While
             buf = Trim(buf)
             HeadingWord(lvl) = fn
@@ -1445,7 +1424,7 @@ Beginning:
             If Len(fn) > Len(HeadingWord(lvl)) Then
                 HeadingWord(lvl) = Mid(fn, 1 + Len(HeadingWord(lvl)))
                 HeadingLevel = lvl
-                NextSourceFilename = fn & SourceExtension
+                NextSourceFilename = fn & pSourceExtension
             Else
                 NextSourceFilename = ""
             End If
@@ -1491,7 +1470,7 @@ Beginning:
     '    If Len(fn) > Len(HeadingWord(lvl)) Then
     '      HeadingWord(lvl) = Mid(fn, 1 + Len(HeadingWord(lvl)))
     '      HeadingLevel = lvl
-    '      NextSourceFilename = fn & SourceExtension
+    '      NextSourceFilename = fn & pSourceExtension
     '    Else
     '      NextSourceFilename = ""
     '    End If
@@ -1503,12 +1482,12 @@ Beginning:
             If OutputFormat = outputType.tHTML Then
                 HTMLContentsfile = FreeFile
                 FileOpen(HTMLContentsfile, SaveDirectory & "Contents.html", OpenMode.Output)
-                PrintLine(HTMLContentsfile, "<html><head><title>" & BaseName & " Help Contents</title></head>")
+                PrintLine(HTMLContentsfile, "<html><head><title>" & pBaseName & " Help Contents</title></head>")
                 PrintLine(HTMLContentsfile, "<body>")
                 PrintLine(HTMLContentsfile, "<h1>Contents</h1>")
             ElseIf OutputFormat = outputType.tHTMLHELP Then
                 HTMLContentsfile = FreeFile
-                FileOpen(HTMLContentsfile, SaveDirectory & BaseName & ".hhc", OpenMode.Output)
+                FileOpen(HTMLContentsfile, SaveDirectory & pBaseName & ".hhc", OpenMode.Output)
                 PrintLine(HTMLContentsfile, "<html><head><!-- Sitemap 1.0 --></head>")
                 PrintLine(HTMLContentsfile, "<body>")
                 PrintLine(HTMLContentsfile, "<OBJECT type=""text/site properties"">")
@@ -1516,7 +1495,7 @@ Beginning:
                 PrintLine(HTMLContentsfile, "</OBJECT>")
 
                 HTMLIndexfile = FreeFile
-                FileOpen(HTMLIndexfile, SaveDirectory & BaseName & ".hhk", OpenMode.Output)
+                FileOpen(HTMLIndexfile, SaveDirectory & pBaseName & ".hhk", OpenMode.Output)
                 PrintLine(HTMLIndexfile, "<html><head></head>")
                 PrintLine(HTMLIndexfile, "<body>")
                 PrintLine(HTMLIndexfile, "<ul>")
@@ -1525,10 +1504,10 @@ Beginning:
                 With pWordBasic
                     'Header of contents file
                     .FileNewDefault()
-                    .Insert(":Title " & BaseName & " Help" & vbCr)
-                    .Insert(":Base " & BaseName & ".hlp" & vbCr)
+                    .Insert(":Title " & pBaseName & " Help" & vbCr)
+                    .Insert(":Base " & pBaseName & ".hlp" & vbCr)
                     .ChDir(SaveDirectory)
-                    .FileSaveAs(BaseName & ".cnt", 2)
+                    .FileSaveAs(pBaseName & ".cnt", 2)
                     .ChDir(SourceBaseDirectory)
                     ContentsWin = .WindowName()
                 End With
@@ -1546,7 +1525,7 @@ Beginning:
         NotFirstPrintHeader = False
         NotFirstPrintFooter = False
         InsertParagraphsAroundImages = False
-        HelpSourceRTFName = BaseName & ".rtf"
+        HelpSourceRTFName = pBaseName & ".rtf"
         TablePrintFormat = 0
         TablePrintApply = 511
         IDfile = -1
@@ -1556,12 +1535,9 @@ Beginning:
         AlreadyInitialized = True
         PromptForFiles = True
         LinkToImageFiles = 0 '2 ' make soft links with word95 and large document
-        'UPGRADE_NOTE: Variable frmConvert.CmDialog1 was renamed frmConvert.CmDialog1Open. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="94ADAC4D-C65D-414F-A061-8FDC6B83C5EC"'
         frmConvert.CmDialog1Open.DefaultExt = "doc"
-        'UPGRADE_WARNING: Screen property Screen.MousePointer has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6BA9B8D2-2A32-4B6E-8D36-44949974A5B4"'
         System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.WaitCursor
         frmConvert.Show()
-        'UPGRADE_WARNING: Screen property Screen.MousePointer has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6BA9B8D2-2A32-4B6E-8D36-44949974A5B4"'
         System.Windows.Forms.Cursor.Current = System.Windows.Forms.Cursors.Default
         'IconLevel = 999
 
@@ -1715,7 +1691,7 @@ Beginning:
 
 
     Private Sub FormatTag(ByRef tag As String, ByRef OutputFormat As outputType)
-        Dim taggedText, begintag, endtag, insertText As String
+        Dim taggedText, begintag, endtag As String
         Dim closeTag, startTag, lenBeginTag As Integer
         Dim divArgs As String
 
@@ -1764,6 +1740,7 @@ Beginning:
                 startTag = InStr(LCase(TargetText), begintag)
                 While startTag > 0
                     closeTag = InStr(startTag + 2, LCase(TargetText), endtag)
+                    Dim insertText As String = ""
                     If closeTag > 0 Then
                         taggedText = Mid(TargetText, startTag + lenBeginTag, closeTag - (startTag + lenBeginTag))
                         Select Case LCase(tag)
@@ -1795,10 +1772,6 @@ Beginning:
         Dim endtag As Integer
         Dim closeTag As Integer
         Dim CloseTagEnd As Integer
-        Dim IconStart As Integer
-        Dim IconFilenameStart As Integer
-        Dim IconFilenameEnd As Integer
-        Dim IconEnd As Integer
         If OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP Then
             FormatHeadingsWithWord(OutputFormat, targetFilename)
         Else
@@ -1833,7 +1806,7 @@ Beginning:
                 'now we have found the header number (startNumber..endtag-1)
                 Selection = Mid(TargetText, startNumber, endtag - startNumber)
                 If Len(Selection) > 1 Then
-                    If MsgBox("Warning: suspicious header tag '<h" & Selection & ">' " & vbCr & "Found in '" & SourceFilename & "'" & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then Exit Sub
+                    If Logger.Msg("Warning: suspicious header tag '<h" & Selection & ">' " & vbCr & "Found in '" & SourceFilename & "'" & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then Exit Sub
                 End If
                 If IsNumeric(Selection) Then
                     localHeadingLevel = localHeadingLevel + direction * CShort(Selection)
@@ -1881,7 +1854,6 @@ NextHeader:
 
     Private Sub FormatHeadingsWithWord(ByRef OutputFormat As outputType, ByRef targetFilename As String)
         Dim localHeadingLevel, direction As Integer
-        Dim endtag As String
         With pWordBasic
             .StartOfDocument()
             .EditFindClearFormatting()
@@ -1914,7 +1886,7 @@ NextHeader:
 
                 'now we have selected the header number and deleted the <h> from around it
                 If Len(.Selection) > 1 Then
-                    If MsgBox("Warning: suspicious header tag '<h" & .Selection & ">' " & vbCr & "Found in '" & .WindowName & "'." & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then
+                    If Logger.Msg("Warning: suspicious header tag '<h" & .Selection & ">' " & vbCr & "Found in '" & .WindowName & "'." & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then
                         .Insert("</h" & .Selection & ">")
                         Exit Sub
                     End If
@@ -2235,10 +2207,9 @@ NextHeader:
     Private Sub NumberHeaderTags()
         Dim curTag As String
         Dim selStr As String
-        Dim direction, localHeadingLevel, distance As Integer
+        Dim direction, localHeadingLevel As Integer
         Dim IgnoreUnknown As Boolean
         Dim startPos, endPos As Integer
-        Dim hedr As String
         If OutputFormat = outputType.tPRINT Or OutputFormat = outputType.tHELP Then
             NumberHeaderTagsWithWord()
         Else
@@ -2277,7 +2248,7 @@ NextHeader:
                                     'ignore <hr> <hr size=7> etc.
                                 Else
                                     If Not IgnoreUnknown Then
-                                        If MsgBox("Unknown heading tag '<h" & selStr & ">'" & vbCr & "In file " & SourceFilename & vbCr & "Warn about future unknown headers?", MsgBoxStyle.YesNo, "Number Header Tags") = MsgBoxResult.No Then
+                                        If Logger.Msg("Unknown heading tag '<h" & selStr & ">'" & vbCr & "In file " & SourceFilename & vbCr & "Warn about future unknown headers?", MsgBoxStyle.YesNo, "Number Header Tags") = MsgBoxResult.No Then
                                             IgnoreUnknown = True
                                         End If
                                     End If
@@ -2294,7 +2265,7 @@ NextHeader:
     Private Sub NumberHeaderTagsWithWord()
         Dim curTag As String
         Dim selStr As String
-        Dim direction, localHeadingLevel, distance As Integer
+        Dim direction, localHeadingLevel As Integer
         With pWordBasic
             .EditGoTo("CurrentFileStart")
             .EditFind("<h", "", 0)
@@ -2337,7 +2308,7 @@ NextHeader:
                                     .StartOfLine()
                                     .ExtendSelection()
                                     .EndOfLine()
-                                    MsgBox("Suspicious heading " & selStr)
+                                    Logger.Msg("Suspicious heading " & selStr)
                                     Stop
                                 End If
                         End Select
@@ -2357,7 +2328,7 @@ NextHeader:
             path = Left(path, Len(path) - 1)
         End While
         Dim InsertParagraphs As Boolean
-        Dim curpath, curfilename As String
+        Dim curfilename As String
         Dim LinkToThisImageFile As Short
         With pWordBasic
             .EditFind("<IMG ", "", 0)
@@ -2378,7 +2349,7 @@ NextHeader:
                 curfilename = .Selection
                 .EditClear()
                 .EditGoTo("ImgStart")
-                LinkFilename = IO.Path.GetDirectoryName(ProjectFileName) & "\" & path & curfilename
+                LinkFilename = IO.Path.GetDirectoryName(pProjectFileName) & "\" & path & curfilename
                 'While Left(curfilename, 2) = ".."
                 '  curfilename = Right(curfilename, Len(curfilename) - 3)
                 '  curpath = Left(curpath, Len(curpath) - 1)
@@ -2431,7 +2402,6 @@ NextHeader:
 
     Public Sub FormatHeadingHTML(ByRef thisHeadingLevel As Integer, ByRef targetFilename As String, ByRef thisHeadingStart As Integer)
         Static LinkToFirstHeader As String
-        Dim tmp As String
         Dim hn As String
         Dim ht As String
         Dim TextToInsert As String
@@ -2441,7 +2411,7 @@ NextHeader:
         Dim TableStart As Integer
         Dim RuleEnd As Integer
         Dim TableEnd As Integer
-        Dim h, dirstep As Short
+        Dim h As Short
         Dim ParentHT As String 'HeadingText
         If MoveHeadings <> 0 Then
             hn = "h" & (thisHeadingLevel + MoveHeadings) & ">"
@@ -2806,13 +2776,11 @@ foo:
         End With
     End Sub
 
-    'UPGRADE_NOTE: str was upgraded to str_Renamed. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="A9E4979A-37FA-4718-9994-97DD76ED70A7"'
-    Private Function TrimQuotes(ByRef str_Renamed As String) As String
-        Dim retval As String
-        retval = Trim(str_Renamed)
+    Private Function TrimQuotes(ByRef aString As String) As String
+        Dim retval As String = aString.Trim
         If Left(retval, 1) = """" Then retval = Mid(retval, 2)
         If Right(retval, 1) = """" Then retval = Left(retval, Len(retval) - 1)
-        TrimQuotes = retval
+        Return retval
     End Function
 
     Sub HTMLQuotedCharsToPrint()
@@ -3097,7 +3065,6 @@ NoPrevSection:
 
     Private Sub HREFsToHelpHyperlinks()
         Dim topic, LinkRef, LinkLabel, id As String
-        Dim pos As Object
         With pWordBasic
             .StartOfDocument()
             Status("Translating HTML links to Help Hyperlinks")
@@ -3127,9 +3094,9 @@ NoPrevSection:
                 .Cancel()
 
                 'UPGRADE_WARNING: Couldn't resolve default property of object pos. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-                pos = InStr(1, LinkRef, "#")
+                Dim pos As Object = InStr(1, LinkRef, "#")
                 'UPGRADE_WARNING: Use of Null/IsNull() detected. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="2EED02CB-5C0E-4DC1-AE94-4FAA3A30F51A"'
-                If IsDbNull(pos) Then
+                If IsDBNull(pos) Then
                     Status("Warning: Link '" & LinkLabel & " -> " & LinkRef & "' does not contain valid help topic.")
                     'UPGRADE_WARNING: Couldn't resolve default property of object pos. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
                 ElseIf pos = 0 Then
@@ -3147,7 +3114,7 @@ NoPrevSection:
     End Sub
 
     Private Sub AbsoluteToRelative()
-        Dim endtag, startTag, LevelCount As Integer
+        Dim startTag, LevelCount As Integer
         Dim FilePath As String
         startTag = InStr(TargetText, "=""/")
         While startTag > 0
@@ -3165,7 +3132,7 @@ NoPrevSection:
         startTag = InStr(LCase(TargetText), "<toc>")
         If startTag > 0 Then
             TargetText = Left(TargetText, startTag - 1) & SectionContents & Mid(TargetText, startTag + 5)
-            If InStr(LCase(TargetText), "<toc>") Then MsgBox("More than one <toc> in '" & SourceFilename & "'")
+            If InStr(LCase(TargetText), "<toc>") Then Logger.Msg("More than one <toc> in '" & SourceFilename & "'")
         End If
     End Sub
 
@@ -3173,10 +3140,11 @@ NoPrevSection:
         Dim retval As String = ""
         Dim localNextEntry As Integer
         Dim nextLevel, lvl, prevLevel As Integer
-        Dim nextName, nextHref As String
+        Dim nextName As String = ""
+        Dim nextHref As String = ""
         Dim localHeadingWord(10) As String
 
-        localNextEntry = NextProjectFileEntry
+        localNextEntry = mNextProjectFileEntry
         localHeadingWord(HeadingLevel) = HeadingWord(HeadingLevel)
         prevLevel = HeadingLevel
         GetNextEntryLevel(localNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
@@ -3207,11 +3175,11 @@ NoPrevSection:
                                   ByRef nextName As String, _
                                   ByRef nextHref As String, _
                                   ByRef localHeadingWord() As String)
-        If localNextEntry > MaxProjectFileEntry Then
+        If localNextEntry >= mProjectFileEntrys.Count Then
             nextLevel = 0
         Else
-            nextName = LTrim(ProjectFileEntry(localNextEntry))
-            nextLevel = (Len(ProjectFileEntry(localNextEntry)) - Len(nextName)) / 2 + 1
+            nextName = LTrim(mProjectFileEntrys(localNextEntry))
+            nextLevel = (Len(mProjectFileEntrys(localNextEntry)) - Len(nextName)) / 2 + 1
             nextName = RTrim(nextName)
             localHeadingWord(nextLevel) = nextName
             nextHref = ""
@@ -3224,7 +3192,7 @@ NoPrevSection:
     End Sub
 
     Private Sub CopyImages()
-        Dim endPos, startPos, chrPos As Integer
+        Dim endPos, startPos As Integer
         Dim lcaseText As String
         Dim SrcPath, ImageFilename, DstPath As String
         Dim HTMLsafeFilename As String
@@ -3242,22 +3210,20 @@ NoPrevSection:
             If endPos = 0 Then Exit Sub
             ImageFilename = Mid(TargetText, startPos + 6, endPos - startPos - 6)
 CheckForImage:
-            'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-            If Len(Dir(SrcPath & ImageFilename)) > 0 Then
+            If IO.File.Exists(SrcPath & ImageFilename) Then
                 s = IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), DstPath))
-                'UPGRADE_WARNING: Dir has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
-                If Len(Dir(s, FileAttribute.Directory)) = 0 Then System.IO.Directory.CreateDirectory(s) 'MkDirPath(s)
+                If Not IO.Directory.Exists(s) Then System.IO.Directory.CreateDirectory(s) 'MkDirPath(s)
                 FileCopy(SrcPath & ImageFilename, DstPath & ImageFilename)
             ElseIf Not IgnoreAll Then
-                Select Case MsgBox("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc") = MsgBoxResult.Abort
+                Select Case Logger.Msg("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc") = MsgBoxResult.Abort
                     Case MsgBoxResult.Abort : Exit Sub
                     Case MsgBoxResult.Retry : GoTo CheckForImage
                     Case MsgBoxResult.Ignore
-                        If MsgBox("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then IgnoreAll = True
+                        If Logger.Msg("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then IgnoreAll = True
                 End Select
             End If
 
-            If OutputFormat = outputType.tHTML Then
+            If OutputFormat = OutputType.tHTML Then
                 HTMLsafeFilename = ReplaceString(ImageFilename, "\", "/")
                 HTMLsafeFilename = ReplaceString(HTMLsafeFilename, " ", "%20")
                 If HTMLsafeFilename <> ImageFilename Then
@@ -3314,7 +3280,7 @@ CheckForImage:
         End If
     End Sub
     Private Sub HREFsInsureExtensionWithWord()
-        Dim topic, LinkRef, LinkLabel, id As String
+        Dim LinkRef As String
         Dim pos As Integer
         With pWordBasic
             .StartOfDocument()
