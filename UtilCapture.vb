@@ -30,8 +30,8 @@
 '		Dim peFlags As Byte
 '	End Structure
 '	Private Structure LOGPALETTE
-'		Dim palVersion As Short
-'		Dim palNumEntries As Short
+'		Dim palVersion As integer
+'		Dim palNumEntries As integer
 '		<VBFixedArray(255)> Dim palPalEntry() As PALETTEENTRY ' Enough for 256 colors
 
 '		'UPGRADE_TODO: "Initialize" must be called to initialize instances of this structure. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="B4BFF9E0-8631-45CF-910E-62AB3970F27B"'

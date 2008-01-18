@@ -6,11 +6,11 @@ Imports atcUtility
 Friend Class frmConvert
 	Inherits System.Windows.Forms.Form
     'Copyright 2000-2008  by AQUA TERRA Consultants
-	Private TargetFormat As Short
+    Private TargetFormat As Integer
 	Private Const SectionConvert As String = "Convert Window"
 	
 	Private Sub cmdConvert_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles cmdConvert.Click
-		Dim Index As Short = cmdConvert.GetIndex(eventSender)
+        Dim Index As Integer = cmdConvert.GetIndex(eventSender)
         Dim RememberProjectFileName As String = ""
         Dim RememberBaseName As String = ""
         Dim PreviewProjectFile As Integer = 0
@@ -96,7 +96,7 @@ Friend Class frmConvert
 	'UPGRADE_WARNING: Event optTargetFormat.CheckedChanged may fire when form is initialized. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="88B12AE1-6DE0-48A0-86F1-60C0686C026A"'
 	Private Sub optTargetFormat_CheckedChanged(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles optTargetFormat.CheckedChanged
 		If eventSender.Checked Then
-			Dim Index As Short = optTargetFormat.GetIndex(eventSender)
+            Dim Index As Integer = optTargetFormat.GetIndex(eventSender)
 			TargetFormat = Index
 			ContentsCheck.CheckState = System.Windows.Forms.CheckState.Checked
 			ContentsCheck.Enabled = True

@@ -32,10 +32,10 @@ Friend Class frmMain
 	Private SashDragging As Boolean
 	Private Const SectionMainWin As String = "Main Window"
 	Private Const SectionRecentFiles As String = "Recent Files"
-	Private Const MaxRecentFiles As Short = 6
+    Private Const MaxRecentFiles As Integer = 6
 	
 	Private Sub cmdFind_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdFind.KeyPress
-		Dim KeyAscii As Short = Asc(eventArgs.KeyChar)
+        Dim KeyAscii As Integer = Asc(eventArgs.KeyChar)
 		If KeyAscii >= 32 And KeyAscii < 127 Then
 			txtFind.Focus()
 			txtFind.Text = Chr(KeyAscii)
@@ -48,8 +48,8 @@ Friend Class frmMain
 	End Sub
 	
 	Private Sub cmdFind_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdFind.MouseUp
-		Dim Button As Short = eventArgs.Button \ &H100000
-		Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
 		Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
 		Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
 		Static Finding As Boolean
@@ -128,7 +128,7 @@ NextNode:
 	End Function
 	
 	Private Sub cmdReplace_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdReplace.KeyPress
-		Dim KeyAscii As Short = Asc(eventArgs.KeyChar)
+        Dim KeyAscii As Integer = Asc(eventArgs.KeyChar)
 		If KeyAscii >= 32 And KeyAscii < 127 Then
 			txtReplace.Focus()
 			txtReplace.Text = Chr(KeyAscii)
@@ -141,8 +141,8 @@ NextNode:
 	End Sub
 	
 	Private Sub cmdReplace_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdReplace.MouseUp
-		Dim Button As Short = eventArgs.Button \ &H100000
-		Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
 		Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
 		Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
 		Dim startNodeIndex As Integer
@@ -289,8 +289,8 @@ NextReplace:
     End Sub
 
     Private Sub fraFind_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles fraFind.MouseDown
-        Dim Button As Short = eventArgs.Button \ &H100000
-        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         If Button = VB6.MouseButtonConstants.RightButton Or Shift = System.Windows.Forms.Keys.ShiftKey Then
@@ -304,7 +304,7 @@ NextReplace:
     End Sub
 
     Public Sub mnuContext_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuContext.Click
-        Dim Index As Short = mnuContext.GetIndex(eventSender)
+        Dim Index As Integer = mnuContext.GetIndex(eventSender)
         ContextAction(mnuContext(Index).Text)
     End Sub
 
@@ -479,7 +479,7 @@ NextReplace:
     End Sub
 
     Public Sub mnuNewProject_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuNewProject.Click
-        Dim f As Short
+        Dim f As Integer
 
         If QuerySave = MsgBoxResult.Cancel Then Exit Sub
         On Error GoTo ErrNew
@@ -507,7 +507,7 @@ ErrNew:
         Dim nodNum As Integer
         Dim key, ThisName, keypath As String
         Dim filename As String
-        Dim f As Short
+        Dim f As Integer
 
         cdlgOpen.ShowDialog()
         cdlgSave.FileName = cdlgOpen.FileName
@@ -608,7 +608,7 @@ ErrNew:
     End Sub
 
     Public Sub mnuSaveFile_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuSaveFile.Click
-        Dim f As Short 'file handle
+        Dim f As Integer 'file handle
 
         f = FreeFile()
         'Kill pCurrentFilename
@@ -762,16 +762,16 @@ ErrNew:
     End Sub
 
     Private Sub sash_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseDown
-        Dim Button As Short = eventArgs.Button \ &H100000
-        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         SashDragging = True
     End Sub
 
     Private Sub sash_MouseMove(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseMove
-        Dim Button As Short = eventArgs.Button \ &H100000
-        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         Dim newLeftWidth As Integer
@@ -784,8 +784,8 @@ ErrNew:
     End Sub
 
     Private Sub sash_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseUp
-        Dim Button As Short = eventArgs.Button \ &H100000
-        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         SashDragging = False
@@ -895,7 +895,7 @@ ErrNew:
     End Sub
 
     Private Sub ReadFile(ByRef filename As String, ByRef txtBox As System.Windows.Forms.RichTextBox)
-        Dim f As Short 'file handle
+        Dim f As Integer 'file handle
         Dim FileLength As Integer
         f = FreeFile()
         On Error GoTo nofile
@@ -1092,20 +1092,20 @@ endsub:
     End Function
 
     Private Sub txtFind_KeyDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles txtFind.KeyDown
-        Dim KeyCode As Short = eventArgs.KeyCode
-        Dim Shift As Short = eventArgs.KeyData \ &H10000
+        Dim KeyCode As Integer = eventArgs.KeyCode
+        Dim Shift As Integer = eventArgs.KeyData \ &H10000
         If KeyCode = System.Windows.Forms.Keys.Return Then cmdFind_MouseUp(cmdFind, New System.Windows.Forms.MouseEventArgs(VB6.MouseButtonConstants.LeftButton * &H100000, 0, 0, 0, 0))
     End Sub
 
     Private Sub txtMain_KeyUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles txtMain.KeyUp
-        Dim KeyCode As Short = eventArgs.KeyCode
-        Dim Shift As Short = eventArgs.KeyData \ &H10000
+        Dim KeyCode As Integer = eventArgs.KeyCode
+        Dim Shift As Integer = eventArgs.KeyData \ &H10000
         If FormatWhileTyping Then FormatText(txtMain)
     End Sub
 
     Private Sub txtReplace_KeyDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles txtReplace.KeyDown
-        Dim KeyCode As Short = eventArgs.KeyCode
-        Dim Shift As Short = eventArgs.KeyData \ &H10000
+        Dim KeyCode As Integer = eventArgs.KeyCode
+        Dim Shift As Integer = eventArgs.KeyData \ &H10000
         If KeyCode = System.Windows.Forms.Keys.Return Then cmdReplace_MouseUp(cmdReplace, New System.Windows.Forms.MouseEventArgs(VB6.MouseButtonConstants.LeftButton * &H100000, 0, 0, 0, 0))
     End Sub
 
@@ -1177,7 +1177,7 @@ endsub:
     End Sub
 
     Private Sub txtMain_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles txtMain.KeyPress
-        Dim KeyAscii As Short = Asc(eventArgs.KeyChar)
+        Dim KeyAscii As Integer = Asc(eventArgs.KeyChar)
         Dim oldStart As Integer
         Select Case KeyAscii
             Case 26 'Control-Z = undo
@@ -1204,8 +1204,8 @@ endsub:
     End Sub
 
     Private Sub txtMain_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles txtMain.MouseDown
-        Dim Button As Short = eventArgs.Button \ &H100000
-        Dim Shift As Short = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim Button As Integer = eventArgs.Button \ &H100000
+        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         'txtMainButton = Button

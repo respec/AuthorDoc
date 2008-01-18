@@ -28,22 +28,20 @@ Module modConvert
     Private pWordBasic As Word.WordBasic
     Private pWordApp As Microsoft.Office.Interop.Word.Application
 
-    Private Const maxLevels As Short = 9 ' Do you really want sections nested deeper than this?
+    Private Const maxLevels As Integer = 9 ' Do you really want sections nested deeper than this?
 
-    Private ProjectFile As Short
+    Private ProjectFile As Integer
 
     Private SourceWin As String
     Private ContentsWin As String
     Private TargetWin As String
 
-    Private SourceText As String
-    Private TargetText As String
+    Private mTargetText As String
 
-    Private SourceFilename As String
-    Private IconFilename As String
+    Private mSourceFilename As String
 
-    Private SourceBaseDirectory As String
-    Private SaveDirectory As String
+    Private mSourceBaseDirectory As String
+    Private mSaveDirectory As String
 
     Private HelpSourceRTFName As String
     Private Directory As String
@@ -57,7 +55,7 @@ Module modConvert
 
     Private BeforeHTML As String
 
-    Private ContentsEntries(maxLevels) As Short
+    Private ContentsEntries(maxLevels) As Integer
     Private HeaderStyle(maxLevels) As String
     Private FooterStyle(maxLevels) As String
     Private BodyStyle(maxLevels) As String
@@ -80,36 +78,36 @@ Module modConvert
     Private FooterTimestamps As Boolean
     Private UpNext As Boolean
     Private BuildID As Boolean
-    Private IDfile As Short
+    Private IDfile As Integer
     Private IDnum As Integer
     Private AliasSection As String
-    Private HTMLContentsfile As Short
-    Private HTMLHelpProjectfile As Short
-    Private HTMLIndexfile As Short
+    Private HTMLContentsfile As Integer
+    Private HTMLHelpProjectfile As Integer
+    Private HTMLIndexfile As Integer
 
     Private SaveFilename As String
     Private InPre As Boolean
     Private AlreadyInitialized As Boolean
-    Private LastHeadingLevel As Short
-    Private HeadingLevel As Short
-    Private BookLevel As Short
-    Private StyleLevel As Short ', IconLevel%
+    Private LastHeadingLevel As Integer
+    Private HeadingLevel As Integer
+    Private BookLevel As Integer
+    Private StyleLevel As Integer ', IconLevel%
     Private SectionLevelName(99) As String
 
     Private Const CuteButtons As Boolean = False
-    Private Const MoveHeadings As Short = 0
+    Private Const MoveHeadings As Integer = 0
     Private Const MakeBoxyHeaders As Boolean = False
-    Private LinkToImageFiles As Short '0=store data in document, 1=link+store in doc 2=soft links, -1=do not process images (assigned in Init())
+    Private LinkToImageFiles As Integer '0=store data in document, 1=link+store in doc 2=soft links, -1=do not process images (assigned in Init())
 
     Public Const Asterisks80 As String = "********************************************************************************"
     Private Const SixSplats As String = "******"
     Private Const SevenSplats As String = "*******"
     Private Const TensPlace As String = "         1         2         3         4         5         6         7         8"
     Private Const OnesPlace As String = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
-    Private Const MaxRowLength As Short = 80
-    Private Const MaxSectionNameLen As Short = 53
+    Private Const MaxRowLength As Integer = 80
+    Private Const MaxSectionNameLen As Integer = 53
     Private Const TableType As String = "Table-type "
-    Private Const lenTableType As Short = 11
+    Private Const lenTableType As Integer = 11
     Private WholeCardHeader As String
     Private lenWholeCardHeader As Integer
 
@@ -137,9 +135,9 @@ Module modConvert
     End Function
 
     Public Sub CreateHelpProject(ByRef IDfileExists As Boolean)
-        Dim outf As Short
+        Dim outf As Integer
         outf = FreeFile
-        FileOpen(outf, SaveDirectory & pBaseName & ".hpj", OpenMode.Output)
+        FileOpen(outf, mSaveDirectory & pBaseName & ".hpj", OpenMode.Output)
         PrintLine(outf, "[OPTIONS]" & vbCrLf)
         PrintLine(outf, "LCID=0x409 0x0 0x0 ; English (United States)" & vbCrLf)
         PrintLine(outf, "REPORT=Yes" & vbCrLf)
@@ -169,7 +167,7 @@ Module modConvert
     Private Sub OpenHTMLHelpProjectfile()
         'If OutputFormat = tHTMLHELP Then
         HTMLHelpProjectfile = FreeFile
-        FileOpen(HTMLHelpProjectfile, SaveDirectory & pBaseName & ".hhp", OpenMode.Output)
+        FileOpen(HTMLHelpProjectfile, mSaveDirectory & pBaseName & ".hhp", OpenMode.Output)
         Print(HTMLHelpProjectfile, "[OPTIONS]" & vbLf)
         Print(HTMLHelpProjectfile, "Auto Index=Yes" & vbLf)
         Print(HTMLHelpProjectfile, "Compatibility=1.1 Or later" & vbLf)
@@ -189,13 +187,13 @@ Module modConvert
 
     Private Sub CheckStyle()
         Dim startTag, closeTag As Integer
-        startTag = InStr(LCase(TargetText), "<style")
+        startTag = InStr(LCase(mTargetText), "<style")
         If startTag > 0 Then
-            closeTag = InStr(startTag, TargetText, ">")
+            closeTag = InStr(startTag, mTargetText, ">")
             If closeTag < startTag Then
-                Logger.Msg("Style tag not terminated in " & SourceFilename)
+                Logger.Msg("Style tag not terminated in " & mSourceFilename)
             Else
-                ReadStyleFile(Mid(TargetText, startTag + 7, closeTag - startTag - 7), HeadingLevel)
+                ReadStyleFile(Mid(mTargetText, startTag + 7, closeTag - startTag - 7), HeadingLevel)
             End If
         ElseIf HeadingLevel <= StyleLevel Then
             StyleLevel = StyleLevel - 1
@@ -206,82 +204,79 @@ Module modConvert
         End If
     End Sub
 
-    Private Sub ReadStyleFile(ByRef StyleFilename As String, ByRef HeadingLevel As Short)
+    Private Sub ReadStyleFile(ByRef StyleFilename As String, ByRef HeadingLevel As Integer)
         Dim CurrSection As String = ""
-        Dim buf, FirstChar As String
-		Dim level As Short
-		
-		BeforeHTML = ""
-		
+        Dim level As Integer
+
+        BeforeHTML = ""
+
         For level = 1 To maxLevels
             WordStyle(level) = Nothing
-			WordStyle(level) = New Collection
-		Next 
-		
-		If Len(StyleFilename) = 0 Then
-			StyleFilename = StyleFile(HeadingLevel)
-		Else
+            WordStyle(level) = New Collection
+        Next
+
+        If Len(StyleFilename) = 0 Then
+            StyleFilename = StyleFile(HeadingLevel)
+        Else
             If Not IO.File.Exists(StyleFilename) Then
                 If IO.File.Exists(StyleFilename & ".sty") Then
                     StyleFilename = StyleFilename & ".sty"
                 End If
             End If
-			StyleFilename = CurDir() & "\" & StyleFilename
-		End If
-		
+            StyleFilename = CurDir() & "\" & StyleFilename
+        End If
+
         If IO.File.Exists(StyleFilename) Then
-            Dim lStyleReader As New System.IO.BinaryReader(New System.IO.FileStream(StyleFilename, IO.FileMode.Open))
             StyleFile(HeadingLevel) = StyleFilename
             StyleLevel = HeadingLevel
-            buf = NextLine(lStyleReader)
-            Do While Not buf Is Nothing
-                buf = buf.Trim
-                FirstChar = Left(buf, 1)
+            For Each lLine As String In LinesInFile(StyleFilename)
+                lLine = lLine.Trim
+                Dim FirstChar As String = Left(lLine, 1)
                 Select Case FirstChar
                     Case "#", ""
                         'skip comments and blank lines
                     Case "["
-                        CurrSection = LCase(Mid(buf, 2, Len(buf) - 2))
+                        CurrSection = LCase(Mid(lLine, 2, Len(lLine) - 2))
                         level = 0
                     Case Else
                         If IsNumeric(FirstChar) Then
                             level = CShort(FirstChar)
-                            buf = Mid(buf, 2)
-                            While IsNumeric(Left(buf, 1))
-                                level = level * 10 + CShort(Left(buf, 1))
-                                buf = Mid(buf, 2)
+                            lLine = Mid(lLine, 2)
+                            While IsNumeric(Left(lLine, 1))
+                                level = level * 10 + CShort(Left(lLine, 1))
+                                lLine = Mid(lLine, 2)
                             End While
-                            While Left(buf, 1) = " " Or Left(buf, 1) = "="
-                                buf = Mid(buf, 2)
+                            While Left(lLine, 1) = " " Or Left(lLine, 1) = "="
+                                lLine = Mid(lLine, 2)
                             End While
                             'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
                             Select Case CurrSection
                                 Case "beforehtml"
-                                    If level = 0 Then BeforeHTML = BeforeHTML & buf & vbCrLf
-                                Case "printsection" : WordStyle(level).Add(buf)
-                                Case "top" : HeaderStyle(level) = buf
-                                Case "bottom" : FooterStyle(level) = buf
+                                    If level = 0 Then BeforeHTML = BeforeHTML & lLine & vbCrLf
+                                Case "printsection" : WordStyle(level).Add(lLine)
+                                Case "top" : HeaderStyle(level) = lLine
+                                Case "bottom" : FooterStyle(level) = lLine
                                 Case "body"
-                                    If Len(buf) > 0 Then
-                                        BodyStyle(level) = "<body " & buf & ">"
+                                    If lLine.Length > 0 Then
+                                        BodyStyle(level) = "<body " & lLine & ">"
                                     Else
                                         BodyStyle(level) = "<body>"
                                     End If
                             End Select
                         ElseIf CurrSection = "printstart" Then
-                            If OutputFormat = OutputType.tPRINT Then WordCommand(buf, 0)
+                            If OutputFormat = OutputType.tPRINT Then WordCommand(lLine, 0)
                         Else
                             For level = 0 To maxLevels
                                 'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
                                 Select Case CurrSection
                                     Case "beforehtml"
-                                        If level = 0 Then BeforeHTML = BeforeHTML & buf & vbCrLf
-                                    Case "printsection" : WordStyle(level).Add(buf)
-                                    Case "top" : HeaderStyle(level) = buf
-                                    Case "bottom" : FooterStyle(level) = buf
+                                        If level = 0 Then BeforeHTML = BeforeHTML & lLine & vbCrLf
+                                    Case "printsection" : WordStyle(level).Add(lLine)
+                                    Case "top" : HeaderStyle(level) = lLine
+                                    Case "bottom" : FooterStyle(level) = lLine
                                     Case "body"
-                                        If Len(buf) > 0 Then
-                                            BodyStyle(level) = "<body " & buf & ">"
+                                        If Len(lLine) > 0 Then
+                                            BodyStyle(level) = "<body " & lLine & ">"
                                         Else
                                             BodyStyle(level) = "<body>"
                                         End If
@@ -289,9 +284,7 @@ Module modConvert
                             Next level
                         End If
                 End Select
-                buf = NextLine(lStyleReader)
-            Loop
-            lStyleReader.Close()
+            Next
         End If
     End Sub
 
@@ -299,13 +292,13 @@ Module modConvert
         Dim arg, cmd, lValue As String
         Dim isnum As Boolean
         Dim consuming As String
-        Dim intval As Short
+        Dim intval As Integer
 
         System.Windows.Forms.Application.DoEvents()
         On Error GoTo WordCommandErr
         consuming = cmdline
         cmd = StrSplit(consuming, " ", """")
-        Dim posVal, typeVal, firstVal As Short
+        Dim posVal, typeVal, firstVal As Integer
         With pWordBasic
             Select Case LCase(cmd)
                 '      Case "applystyle":
@@ -627,11 +620,10 @@ WordCommandErr:
     End Function
 
     Public Sub Convert(ByRef aOutputAs As OutputType, ByRef makeContents As Boolean, ByRef timestamps As Boolean, ByRef makeUpNext As Boolean, ByRef makeID As Boolean, ByRef makeProject As Boolean)
-        Dim buf As String
         Dim keyword As Object
         Dim replaceSelectionOption As Integer
 
-        Logger.StartToFile(CurDir() & "\logs\authordoc.log", False, True)
+        Logger.StartToFile(CurDir() & "\log\authordoc.log", False, True)
         Logger.Dbg("StartConvert " & aOutputAs)
 
         pKeywords = New Collection
@@ -646,28 +638,23 @@ WordCommandErr:
         If IO.File.Exists(pProjectFileName) Then
             PromptForFiles = False
 
-            Dim lProjectFileReader As New System.IO.BinaryReader(New System.IO.FileStream(pProjectFileName, IO.FileMode.Open))
-            Try
-                Do
-                    buf = NextLine(lProjectFileReader).TrimEnd
-                    If buf.Trim.Length > 0 Then
-                        mProjectFileEntrys.Add(buf)
-                    End If
-                Loop
-            Catch ex As Exception
-                lProjectFileReader.Close()
-            End Try
+            For Each lLine As String In LinesInFile(pProjectFileName)
+                If lLine.Trim.Length > 0 Then
+                    mProjectFileEntrys.Add(lLine)
+                End If
+            Next
             mNextProjectFileEntry = 1
         Else
             Logger.Msg("Could not open project file " & pProjectFileName)
             Exit Sub
         End If
-        'If Not OpenFile("Open list of source files:", pProjectFileName) Then Exit Sub
-        SourceBaseDirectory = IO.Path.GetDirectoryName(pProjectFileName) & "\"
-        ChDriveDir(SourceBaseDirectory)
-        'SaveDirectory = SourceBaseDirectory & pBaseName & "ConversionOutput\"
-        SaveDirectory = SourceBaseDirectory & "Out\"
-        If Not IO.Directory.Exists(SaveDirectory) Then IO.Directory.CreateDirectory(SaveDirectory)
+
+        mSourceBaseDirectory = IO.Path.GetDirectoryName(pProjectFileName) & "\"
+        ChDriveDir(mSourceBaseDirectory)
+        mSaveDirectory = mSourceBaseDirectory & "Out\"
+        If Not IO.Directory.Exists(mSaveDirectory) Then
+            IO.Directory.CreateDirectory(mSaveDirectory)
+        End If
         If BuildProject Then
             If OutputFormat = OutputType.tHELP Then
                 CreateHelpProject(True)
@@ -675,20 +662,20 @@ WordCommandErr:
                 OpenHTMLHelpProjectfile()
             ElseIf OutputFormat = OutputType.tASCII Then
                 HTMLHelpProjectfile = FreeFile()
-                FileOpen(HTMLHelpProjectfile, SaveDirectory & pBaseName & ".txt", OpenMode.Output)
+                FileOpen(HTMLHelpProjectfile, mSaveDirectory & pBaseName & ".txt", OpenMode.Output)
             End If
         End If
 
         If BuildID Then
             IDfile = FreeFile()
-            FileOpen(IDfile, SaveDirectory & pBaseName & ".ID", OpenMode.Output)
+            FileOpen(IDfile, mSaveDirectory & pBaseName & ".ID", OpenMode.Output)
             IDnum = 2
         End If
 
         InitContents()
         PromptForFiles = False
         Dim lastSourceFilename As String = ""
-        SourceFilename = NextSourceFilename()
+        mSourceFilename = NextSourceFilename()
         If OutputFormat = OutputType.tPRINT Or OutputFormat = OutputType.tHELP Then
             'pWordApp = New Microsoft.Office.Interop.Word.Application
             'pWordBasic = pWordApp.WordBasic 
@@ -698,28 +685,27 @@ WordCommandErr:
             With pWordBasic
                 .AppShow()
                 '.ToolsOptionsView PicturePlaceHolders:=1
-                .ChDir(SaveDirectory)
+                .ChDir(mSaveDirectory)
                 If OutputFormat = OutputType.tPRINT Then
                     .FileNewDefault()
                     DefinePrintStyles()
-                    .FileSaveAs(SaveDirectory & pBaseName & ".doc", 0)
+                    .FileSaveAs(mSaveDirectory & pBaseName & ".doc", 0)
                     TargetWin = .WindowName
                 ElseIf OutputFormat = OutputType.tHELP Then
                     .FileNewDefault()
                     .FilePageSetup(PageWidth:="12 in")
-                    .FileSaveAs(SaveDirectory & HelpSourceRTFName, 6)
+                    .FileSaveAs(mSaveDirectory & HelpSourceRTFName, 6)
                     TargetWin = .WindowName
                 End If
-                .ChDir(SourceBaseDirectory)
+                .ChDir(mSourceBaseDirectory)
             End With
         End If
         ReadStyleFile(pBaseName & ".sty", 0)
         LastHeadingLevel = 0
-        Dim dotpos As Integer
-        While Len(SourceFilename) > 0 And SourceFilename <> lastSourceFilename
+        While mSourceFilename.Length > 0 AndAlso mSourceFilename <> lastSourceFilename
 OpeningFile:
-            Status("Opening " & SourceFilename)
-            lastSourceFilename = SourceFilename
+            Status("Opening " & mSourceFilename)
+            lastSourceFilename = mSourceFilename
             FirstHeaderInFile = True
             System.Windows.Forms.Application.DoEvents()
             If OutputFormat = OutputType.tPRINT Or OutputFormat = OutputType.tHELP Then
@@ -728,14 +714,14 @@ OpeningFile:
                     .ScreenUpdating(0) 'comment out to debug (show lots of updates)
                     .EditBookmark("CurrentFileStart")
                     Try
-                        .Insert(WholeFileString(Directory & SourceFilename))
+                        .Insert(WholeFileString(Directory & mSourceFilename))
                     Catch ex As Exception
                         GoTo FileNotFound
                     End Try
                     NumberHeaderTagsWithWord()
                     If LinkToImageFiles >= 0 Then
                         .EditGoTo("CurrentFileStart")
-                        TranslateIMGtags(Directory & SourceFilename)
+                        TranslateIMGtags(Directory & mSourceFilename)
                     End If
                     .EndOfDocument()
                     .ScreenUpdating(1)
@@ -743,7 +729,7 @@ OpeningFile:
             ElseIf OutputFormat = OutputType.tASCII Then
                 Dim i As Integer = FreeFile()
                 Try
-                    FileOpen(i, Directory & SourceFilename, OpenMode.Input) 'SourceBaseDirectory &
+                    FileOpen(i, Directory & mSourceFilename, OpenMode.Input) 'SourceBaseDirectory &
                 Catch ex As Exception
                     GoTo FileNotFound
                 End Try
@@ -759,18 +745,20 @@ OpeningFile:
                 End If
                 FileClose(i)
             ElseIf OutputFormat = OutputType.tHTML Or OutputFormat = OutputType.tHTMLHELP Then
-                'OpenFile SourceFilename, SourceBaseDirectory & SourceFilename
-                SourceText = WholeFileString(SourceBaseDirectory & SourceFilename)
-                TargetText = Trim(SourceText)
+                mTargetText = WholeFileString(mSourceBaseDirectory & mSourceFilename).Trim
 TrimTargetText:
-                Select Case Left(TargetText, 1)
+                Select Case Left(mTargetText, 1)
                     Case vbCr, vbLf, vbTab, " "
-                        TargetText = Mid(TargetText, 2)
+                        mTargetText = Mid(mTargetText, 2)
                         GoTo TrimTargetText
                 End Select
-                If Len(TargetText) = 0 Then TargetText = "<toc>"
-                dotpos = InStrRev(SourceFilename, ".")
-                If dotpos > 1 Then SaveFilename = Left(SourceFilename, dotpos - 1) Else SaveFilename = SourceFilename
+                If mTargetText.Length = 0 Then mTargetText = "<toc>"
+                Dim lDotPos As Integer = InStrRev(mSourceFilename, ".")
+                If lDotPos > 1 Then
+                    SaveFilename = Left(mSourceFilename, lDotPos - 1)
+                Else
+                    SaveFilename = mSourceFilename
+                End If
                 SaveFilename = SaveFilename & ".html"
                 If OutputFormat = OutputType.tHTMLHELP Then
                     FormatTag("b", OutputFormat)
@@ -786,11 +774,11 @@ TrimTargetText:
                 AbsoluteToRelative()
                 CopyImages()
                 'FormatCardGraphic()
-                SaveInNewDir(SaveDirectory & SaveFilename)
+                SaveInNewDir(mSaveDirectory & SaveFilename)
             End If
-            Status("Closing " & SourceFilename)
+            Status("Closing " & mSourceFilename)
 OpenNextFile:
-            SourceFilename = NextSourceFilename()
+            mSourceFilename = NextSourceFilename()
         End While
         If OutputFormat = OutputType.tHTMLHELP And makeProject Then
             Print(HTMLHelpProjectfile, AliasSection & vbLf)
@@ -846,15 +834,15 @@ OpenNextFile:
         End If
         Status("Conversion Finished")
         If OutputFormat = OutputType.tHELP Then
-            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & pBaseName & ".hpj", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
+            ShellExecute(frmConvert.Handle.ToInt32, "Open", mSaveDirectory & pBaseName & ".hpj", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
         ElseIf OutputFormat = OutputType.tHTMLHELP Then
-            ShellExecute(frmConvert.Handle.ToInt32, "Open", SaveDirectory & pBaseName & ".hhp", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
+            ShellExecute(frmConvert.Handle.ToInt32, "Open", mSaveDirectory & pBaseName & ".hhp", vbNullString, vbNullString, 1) 'SW_SHOWNORMAL"
         End If
         Logger.Flush()
         Exit Sub
 
 FileNotFound:
-        If Logger.Msg("Error opening " & Directory & SourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
+        If Logger.Msg("Error opening " & Directory & mSourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
             GoTo OpeningFile
         Else
             GoTo OpenNextFile
@@ -890,7 +878,7 @@ FileNotFound:
                 If Len(buf) > 3 Then GoTo NormalLine
                 keyword = CStr(CInt(Left(buf, 2)) * 2)
                 keyword = New String("0", 3 - Len(keyword)) & keyword
-                keyword = SourceFilename & "_files\image" & keyword & ".png"
+                keyword = mSourceFilename & "_files\image" & keyword & ".png"
                 For parsePos = 1 To DirectoryLevels
                     keyword = "../" & keyword
                 Next
@@ -960,10 +948,10 @@ FileNotFound:
                     SectionDirName = SectionDirName & "\"
                 End If
                 IDfile = FreeFile
-                If Not IO.Directory.Exists(SaveDirectory & SectionDirName) Then IO.Directory.CreateDirectory(SaveDirectory & SectionDirName)
+                If Not IO.Directory.Exists(mSaveDirectory & SectionDirName) Then IO.Directory.CreateDirectory(mSaveDirectory & SectionDirName)
                 'Debug.Print
                 'Debug.Print SectionDir & SectionNum & ":" & CurrentOutputDirectory & CurrentOutputFilename
-                CurrentOutputDirectory = SaveDirectory & SectionDirName 'SectionDir
+                CurrentOutputDirectory = mSaveDirectory & SectionDirName 'SectionDir
                 dummy = MakeValidFilename(SectionName)
                 If Len(dummy) <= MaxSectionNameLen Then
                     SectionLevelName(DirectoryLevels + 1) = dummy
@@ -996,7 +984,7 @@ NormalLine:
                     buf = "<p><img src=""" & ImageFilename & """>"
 RetryImage:
                     Try
-                        FileCopy(SourceBaseDirectory & "png\" & ImageFilename, CurrentOutputDirectory & ImageFilename)
+                        FileCopy(mSourceBaseDirectory & "png\" & ImageFilename, CurrentOutputDirectory & ImageFilename)
                     Catch
                         Select Case Logger.Msg("Missing Image: " & vbCr & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "Missing")
                             Case MsgBoxResult.Retry : GoTo RetryImage
@@ -1367,12 +1355,12 @@ SkipBlanks2:
         path = IO.Path.GetDirectoryName(newFilePath)
         fname = Mid(newFilePath, Len(path) + 2)
         If Not IO.Directory.Exists(path) Then IO.Directory.CreateDirectory(path)
-        Dim OutFile As Short
+        Dim OutFile As Integer
         Dim oldpath As String
         If OutputFormat = outputType.tHTML Or OutputFormat = outputType.tHTMLHELP Then
             OutFile = FreeFile
             FileOpen(OutFile, newFilePath, OpenMode.Output)
-            PrintLine(OutFile, TargetText)
+            PrintLine(OutFile, mTargetText)
             FileClose(OutFile)
         Else
             With pWordBasic
@@ -1481,13 +1469,13 @@ SkipBlanks2:
         If BuildContents Then
             If OutputFormat = outputType.tHTML Then
                 HTMLContentsfile = FreeFile
-                FileOpen(HTMLContentsfile, SaveDirectory & "Contents.html", OpenMode.Output)
+                FileOpen(HTMLContentsfile, mSaveDirectory & "Contents.html", OpenMode.Output)
                 PrintLine(HTMLContentsfile, "<html><head><title>" & pBaseName & " Help Contents</title></head>")
                 PrintLine(HTMLContentsfile, "<body>")
                 PrintLine(HTMLContentsfile, "<h1>Contents</h1>")
             ElseIf OutputFormat = outputType.tHTMLHELP Then
                 HTMLContentsfile = FreeFile
-                FileOpen(HTMLContentsfile, SaveDirectory & pBaseName & ".hhc", OpenMode.Output)
+                FileOpen(HTMLContentsfile, mSaveDirectory & pBaseName & ".hhc", OpenMode.Output)
                 PrintLine(HTMLContentsfile, "<html><head><!-- Sitemap 1.0 --></head>")
                 PrintLine(HTMLContentsfile, "<body>")
                 PrintLine(HTMLContentsfile, "<OBJECT type=""text/site properties"">")
@@ -1495,7 +1483,7 @@ SkipBlanks2:
                 PrintLine(HTMLContentsfile, "</OBJECT>")
 
                 HTMLIndexfile = FreeFile
-                FileOpen(HTMLIndexfile, SaveDirectory & pBaseName & ".hhk", OpenMode.Output)
+                FileOpen(HTMLIndexfile, mSaveDirectory & pBaseName & ".hhk", OpenMode.Output)
                 PrintLine(HTMLIndexfile, "<html><head></head>")
                 PrintLine(HTMLIndexfile, "<body>")
                 PrintLine(HTMLIndexfile, "<ul>")
@@ -1506,9 +1494,9 @@ SkipBlanks2:
                     .FileNewDefault()
                     .Insert(":Title " & pBaseName & " Help" & vbCr)
                     .Insert(":Base " & pBaseName & ".hlp" & vbCr)
-                    .ChDir(SaveDirectory)
+                    .ChDir(mSaveDirectory)
                     .FileSaveAs(pBaseName & ".cnt", 2)
-                    .ChDir(SourceBaseDirectory)
+                    .ChDir(mSourceBaseDirectory)
                     ContentsWin = .WindowName()
                 End With
             End If
@@ -1737,12 +1725,12 @@ SkipBlanks2:
                     End While
                 End With
             Case outputType.tHTML, outputType.tHTMLHELP
-                startTag = InStr(LCase(TargetText), begintag)
+                startTag = InStr(LCase(mTargetText), begintag)
                 While startTag > 0
-                    closeTag = InStr(startTag + 2, LCase(TargetText), endtag)
+                    closeTag = InStr(startTag + 2, LCase(mTargetText), endtag)
                     Dim insertText As String = ""
                     If closeTag > 0 Then
-                        taggedText = Mid(TargetText, startTag + lenBeginTag, closeTag - (startTag + lenBeginTag))
+                        taggedText = Mid(mTargetText, startTag + lenBeginTag, closeTag - (startTag + lenBeginTag))
                         Select Case LCase(tag)
                             Case "b"
                                 If InStr(taggedText, "<") > 0 Then
@@ -1754,11 +1742,11 @@ SkipBlanks2:
                                     If OutputFormat = outputType.tHTMLHELP Then 'Insert bold text in index
                                         insertText = insertText & "<indexword=""" & taggedText & """>"
                                     End If
-                                    TargetText = Left(TargetText, startTag - 1) & insertText & Mid(TargetText, startTag)
+                                    mTargetText = Left(mTargetText, startTag - 1) & insertText & Mid(mTargetText, startTag)
                                 End If
                         End Select
                     End If
-                    startTag = InStr(startTag + Len(insertText) + 2, LCase(TargetText), begintag)
+                    startTag = InStr(startTag + Len(insertText) + 2, LCase(mTargetText), begintag)
                 End While
         End Select
     End Sub
@@ -1777,20 +1765,20 @@ SkipBlanks2:
         Else
 
             BodyTag = BodyStyle(HeadingLevel)
-            startTag = InStr(LCase(TargetText), "<body")
+            startTag = InStr(LCase(mTargetText), "<body")
             If startTag > 0 Then
-                endtag = InStr(startTag, TargetText, ">")
+                endtag = InStr(startTag, mTargetText, ">")
                 If endtag > startTag Then
-                    BodyTag = Mid(TargetText, startTag, endtag - startTag + 1)
-                    TargetText = Left(TargetText, startTag - 1) & Mid(TargetText, endtag + 1)
+                    BodyTag = Mid(mTargetText, startTag, endtag - startTag + 1)
+                    mTargetText = Left(mTargetText, startTag - 1) & Mid(mTargetText, endtag + 1)
                 End If
             End If
 
-            startTag = InStr(LCase(TargetText), "<h")
+            startTag = InStr(LCase(mTargetText), "<h")
             While startTag > 0
                 If localHeadingLevel = 0 Then localHeadingLevel = HeadingLevel
                 direction = 1
-                Select Case Mid(TargetText, startTag + 2, 1)
+                Select Case Mid(mTargetText, startTag + 2, 1)
                     Case ">" : endtag = startTag + 2 : GoTo FindingHend
                         '        Case "+": startNumber = startTag + 3
                         '        Case "-": startNumber = startTag + 3: direction = -1
@@ -1800,13 +1788,13 @@ SkipBlanks2:
                         localHeadingLevel = 0
                     Case Else : GoTo NextHeader
                 End Select
-                endtag = InStr(startTag, TargetText, ">")
+                endtag = InStr(startTag, mTargetText, ">")
                 If endtag = 0 Then Exit Sub
 
                 'now we have found the header number (startNumber..endtag-1)
-                Selection = Mid(TargetText, startNumber, endtag - startNumber)
+                Selection = Mid(mTargetText, startNumber, endtag - startNumber)
                 If Len(Selection) > 1 Then
-                    If Logger.Msg("Warning: suspicious header tag '<h" & Selection & ">' " & vbCr & "Found in '" & SourceFilename & "'" & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then Exit Sub
+                    If Logger.Msg("Warning: suspicious header tag '<h" & Selection & ">' " & vbCr & "Found in '" & mSourceFilename & "'" & vbCr & "Continue processing this section?", MsgBoxStyle.YesNo) = MsgBoxResult.No Then Exit Sub
                 End If
                 If IsNumeric(Selection) Then
                     localHeadingLevel = localHeadingLevel + direction * CShort(Selection)
@@ -1814,15 +1802,15 @@ SkipBlanks2:
                     localHeadingLevel = localHeadingLevel + direction
                 End If
 FindingHend:
-                closeTag = InStr(startTag, LCase(TargetText), "</h")
+                closeTag = InStr(startTag, LCase(mTargetText), "</h")
                 If closeTag = 0 Then Exit Sub
-                CloseTagEnd = InStr(closeTag, TargetText, ">")
+                CloseTagEnd = InStr(closeTag, mTargetText, ">")
 
-                HeadingText(localHeadingLevel) = Trim(Mid(TargetText, endtag + 1, closeTag - endtag - 1))
+                HeadingText(localHeadingLevel) = Trim(Mid(mTargetText, endtag + 1, closeTag - endtag - 1))
                 'If HeadingText(localHeadingLevel) = "Duration" Then Stop
                 HeadingFile(localHeadingLevel) = SaveFilename
 
-                TargetText = Left(TargetText, startTag - 1) & Mid(TargetText, CloseTagEnd + 1)
+                mTargetText = Left(mTargetText, startTag - 1) & Mid(mTargetText, CloseTagEnd + 1)
                 '& localHeadingLevel & ">" & HeadingText(localHeadingLevel) & "</h" & localHeadingLevel & ">"
                 'look for icon
                 '      If IconLevel >= localHeadingLevel Then IconLevel = 999
@@ -1847,7 +1835,7 @@ FindingHend:
                 FormatHeadingHTML(localHeadingLevel, targetFilename, startTag) 'Insert header and adjust startTag to end of header
                 LastHeadingLevel = localHeadingLevel
 NextHeader:
-                startTag = InStr(startTag + 2, LCase(TargetText), "<h")
+                startTag = InStr(startTag + 2, LCase(mTargetText), "<h")
             End While
         End If
     End Sub
@@ -2028,22 +2016,22 @@ NextHeader:
         End If
     End Sub
 
-    Sub TranslateLists(ByRef tag As String, ByRef MarkerType As Short)
+    Sub TranslateLists(ByRef tag As String, ByRef MarkerType As Integer)
         Dim begintag, endtag As String
-        Dim bulletNumber As Short
+        Dim bulletNumber As Integer
 
         begintag = "<" & tag & ">"
         endtag = "</" & tag & ">"
         With pWordBasic
             .StartOfDocument()
             Status("Translating HTML <" & tag & ">")
-            .EditFind(endtag, direction:=0)
+            .EditFind(endtag, Direction:=0)
             While .EditFindFound
                 .EditClear()
                 .Insert(vbCr)
                 .CharLeft()
                 .EditBookmark("ListEnd")
-                .EditFind(begintag, direction:=1)
+                .EditFind(begintag, Direction:=1)
                 If .EditFindFound Then
                     '.Insert vbCr
                     .EditClear()
@@ -2058,7 +2046,7 @@ NextHeader:
                     '        If tag = "ol" Then .FormatNumber StartAt:=bulletNumber: bulletNumber = bulletNumber + 1
                     '        .FormatParagraph LeftIndent:="0.5"""
 
-                    .EditFind("<li>", direction:=0)
+                    .EditFind("<li>", Direction:=0)
                     '        If .EditFindFound Then
                     '          .EditClear
                     '          WordRemoveTrailingWhitespace
@@ -2067,9 +2055,9 @@ NextHeader:
                     While .EditFindFound
                         .Insert(vbCr)
                         WordRemoveTrailingWhitespace()
-                        .FormatBulletsAndNumbering(Hang:=1, preset:=MarkerType)
+                        .FormatBulletsAndNumbering(Hang:=1, Preset:=MarkerType)
                         If tag = "ol" Then
-                            .FormatNumber(startAt:=bulletNumber)
+                            .FormatNumber(StartAt:=bulletNumber)
                             bulletNumber = bulletNumber + 1
                             .FormatParagraph(LeftIndent:="0.5""")
                         End If
@@ -2142,29 +2130,29 @@ NextHeader:
     Private Sub FormatKeywordsHTMLHelp()
         Dim startPos, endPos As Integer
         Dim keyword, KeywordPreamble As String
-        startPos = InStr(LCase(TargetText), "<keyword=")
+        startPos = InStr(LCase(mTargetText), "<keyword=")
         If startPos > 0 Then
             KeywordPreamble = "<p>" & vbCrLf & "Keywords:"
-            TargetText = Left(TargetText, startPos - 1) & KeywordPreamble & Mid(TargetText, startPos)
+            mTargetText = Left(mTargetText, startPos - 1) & KeywordPreamble & Mid(mTargetText, startPos)
             startPos = startPos + Len(KeywordPreamble)
         End If
         While startPos > 0
-            endPos = InStr(startPos, TargetText, ">")
+            endPos = InStr(startPos, mTargetText, ">")
             If endPos > 0 Then
-                keyword = TrimQuotes(Trim(Mid(TargetText, startPos + 9, endPos - startPos - 9)))
-                TargetText = Left(TargetText, startPos - 1) & KeywordAnchor(keyword) & "&nbsp;" & KeywordButton(keyword) & Mid(TargetText, endPos + 1)
+                keyword = TrimQuotes(Trim(Mid(mTargetText, startPos + 9, endPos - startPos - 9)))
+                mTargetText = Left(mTargetText, startPos - 1) & KeywordAnchor(keyword) & "&nbsp;" & KeywordButton(keyword) & Mid(mTargetText, endPos + 1)
             End If
-            startPos = InStr(endPos, LCase(TargetText), "<keyword=")
+            startPos = InStr(endPos, LCase(mTargetText), "<keyword=")
         End While
 
-        startPos = InStr(LCase(TargetText), "<indexword=")
+        startPos = InStr(LCase(mTargetText), "<indexword=")
         While startPos > 0
-            endPos = InStr(startPos, TargetText, ">")
+            endPos = InStr(startPos, mTargetText, ">")
             If endPos > 0 Then
-                keyword = TrimQuotes(Trim(Mid(TargetText, startPos + 11, endPos - startPos - 11)))
-                TargetText = Left(TargetText, startPos - 1) & KeywordAnchor(keyword) & Mid(TargetText, endPos + 1)
+                keyword = TrimQuotes(Trim(Mid(mTargetText, startPos + 11, endPos - startPos - 11)))
+                mTargetText = Left(mTargetText, startPos - 1) & KeywordAnchor(keyword) & Mid(mTargetText, endPos + 1)
             End If
-            startPos = InStr(endPos, LCase(TargetText), "<indexword=")
+            startPos = InStr(endPos, LCase(mTargetText), "<indexword=")
         End While
 
     End Sub
@@ -2214,20 +2202,20 @@ NextHeader:
             NumberHeaderTagsWithWord()
         Else
 
-            startPos = InStr(LCase(TargetText), "<h")
+            startPos = InStr(LCase(mTargetText), "<h")
             If startPos = 0 Then 'need to insert section header
-                TargetText = "<h" & HeadingLevel & ">" & HeadingWord(HeadingLevel) & "</h" & HeadingLevel & "> " & vbLf & TargetText
+                mTargetText = "<h" & HeadingLevel & ">" & HeadingWord(HeadingLevel) & "</h" & HeadingLevel & "> " & vbLf & mTargetText
             End If
             curTag = "<h"
-            startPos = InStr(LCase(TargetText), curTag)
+            startPos = InStr(LCase(mTargetText), curTag)
             localHeadingLevel = HeadingLevel
             While startPos > 0
-                endPos = InStr(startPos, TargetText, ">")
+                endPos = InStr(startPos, mTargetText, ">")
                 If endPos > 0 Then
-                    selStr = Mid(TargetText, startPos + Len(curTag), endPos - startPos - Len(curTag))
+                    selStr = Mid(mTargetText, startPos + Len(curTag), endPos - startPos - Len(curTag))
                     direction = 0
                     If selStr = "" Then
-                        TargetText = Left(TargetText, startPos - 1) & curTag & localHeadingLevel & Mid(TargetText, endPos)
+                        mTargetText = Left(mTargetText, startPos - 1) & curTag & localHeadingLevel & Mid(mTargetText, endPos)
                     Else
                         Select Case Left(selStr, 1)
                             Case "+", "-"
@@ -2238,7 +2226,7 @@ NextHeader:
                                 Else
                                     localHeadingLevel = HeadingLevel + direction
                                 End If
-                                TargetText = Left(TargetText, startPos + 1) & localHeadingLevel & Mid(TargetText, endPos)
+                                mTargetText = Left(mTargetText, startPos + 1) & localHeadingLevel & Mid(mTargetText, endPos)
                             Case Else
                                 If IsNumeric(selStr) Then
                                     localHeadingLevel = CShort(selStr)
@@ -2248,7 +2236,7 @@ NextHeader:
                                     'ignore <hr> <hr size=7> etc.
                                 Else
                                     If Not IgnoreUnknown Then
-                                        If Logger.Msg("Unknown heading tag '<h" & selStr & ">'" & vbCr & "In file " & SourceFilename & vbCr & "Warn about future unknown headers?", MsgBoxStyle.YesNo, "Number Header Tags") = MsgBoxResult.No Then
+                                        If Logger.Msg("Unknown heading tag '<h" & selStr & ">'" & vbCr & "In file " & mSourceFilename & vbCr & "Warn about future unknown headers?", MsgBoxStyle.YesNo, "Number Header Tags") = MsgBoxResult.No Then
                                             IgnoreUnknown = True
                                         End If
                                     End If
@@ -2256,7 +2244,7 @@ NextHeader:
                         End Select
                     End If
                     If curTag = "<h" Then curTag = "</h" Else curTag = "<h"
-                    startPos = InStr(endPos, LCase(TargetText), curTag)
+                    startPos = InStr(endPos, LCase(mTargetText), curTag)
                 End If
             End While
         End If
@@ -2329,7 +2317,7 @@ NextHeader:
         End While
         Dim InsertParagraphs As Boolean
         Dim curfilename As String
-        Dim LinkToThisImageFile As Short
+        Dim LinkToThisImageFile As Integer
         With pWordBasic
             .EditFind("<IMG ", "", 0)
             While .EditFindFound
@@ -2411,11 +2399,11 @@ NextHeader:
         Dim TableStart As Integer
         Dim RuleEnd As Integer
         Dim TableEnd As Integer
-        Dim h As Short
+        Dim h As Integer
         Dim ParentHT As String 'HeadingText
         If MoveHeadings <> 0 Then
             hn = "h" & (thisHeadingLevel + MoveHeadings) & ">"
-            TargetText = Left(TargetText, thisHeadingStart) & "<" & hn & HeadingText(thisHeadingLevel) & "</" & hn & Mid(TargetText, thisHeadingStart + 1)
+            mTargetText = Left(mTargetText, thisHeadingStart) & "<" & hn & HeadingText(thisHeadingLevel) & "</" & hn & Mid(mTargetText, thisHeadingStart + 1)
         Else
             'Dim IconPath$
 
@@ -2457,7 +2445,7 @@ NextHeader:
                 TextToAppend = vbCrLf & "</body>" & vbCrLf & "</html>" & vbCrLf
 
                 If OutputFormat = outputType.tHTMLHELP Then
-                    If InStr(TargetText, "<param name=""Keyword"" value=""" & ht & """>") = 0 Then
+                    If InStr(mTargetText, "<param name=""Keyword"" value=""" & ht & """>") = 0 Then
                         TextToAppend = KeywordAnchor(ht) & TextToAppend
                     End If
                     If thisHeadingLevel = 5 Then
@@ -2467,20 +2455,20 @@ NextHeader:
                     End If
                 End If
             End If
-            TargetText = TextToPrepend & Left(TargetText, thisHeadingStart) & TextToInsert & Mid(TargetText, thisHeadingStart + 1) & TextToAppend
+            mTargetText = TextToPrepend & Left(mTargetText, thisHeadingStart) & TextToInsert & Mid(mTargetText, thisHeadingStart + 1) & TextToAppend
             thisHeadingStart = thisHeadingStart + Len(TextToPrepend) + Len(TextToInsert)
 
             'Move <hr> inserted in a table out of the table
-            RuleInTable = FindWithinTag(TargetText, "table", "<hr ")
+            RuleInTable = FindWithinTag(mTargetText, "table", "<hr ")
             If RuleInTable > 0 Then
-                RuleEnd = InStr(RuleInTable, TargetText, ">")
-                TableStart = InStrRev(TargetText, "<table", RuleInTable) 'move first <hr> above table
-                TargetText = Left(TargetText, TableStart - 1) & Mid(TargetText, RuleInTable, RuleEnd - RuleInTable + 1) & Mid(TargetText, TableStart, RuleInTable - TableStart) & Mid(TargetText, RuleEnd + 1)
-                RuleInTable = FindWithinTag(TargetText, "table", "<hr ", TableStart)
+                RuleEnd = InStr(RuleInTable, mTargetText, ">")
+                TableStart = InStrRev(mTargetText, "<table", RuleInTable) 'move first <hr> above table
+                mTargetText = Left(mTargetText, TableStart - 1) & Mid(mTargetText, RuleInTable, RuleEnd - RuleInTable + 1) & Mid(mTargetText, TableStart, RuleInTable - TableStart) & Mid(mTargetText, RuleEnd + 1)
+                RuleInTable = FindWithinTag(mTargetText, "table", "<hr ", TableStart)
                 If RuleInTable > 0 Then 'move second <hr> below table
-                    RuleEnd = InStr(RuleInTable, TargetText, ">")
-                    TableEnd = InStr(RuleInTable, TargetText, "</table") + 8
-                    TargetText = Left(TargetText, RuleInTable - 1) & Mid(TargetText, RuleEnd + 1, TableEnd - RuleEnd - 1) & Mid(TargetText, RuleInTable, RuleEnd - RuleInTable + 1) & Mid(TargetText, TableEnd + 1)
+                    RuleEnd = InStr(RuleInTable, mTargetText, ">")
+                    TableEnd = InStr(RuleInTable, mTargetText, "</table") + 8
+                    mTargetText = Left(mTargetText, RuleInTable - 1) & Mid(mTargetText, RuleEnd + 1, TableEnd - RuleEnd - 1) & Mid(mTargetText, RuleInTable, RuleEnd - RuleInTable + 1) & Mid(mTargetText, TableEnd + 1)
                 End If
 
             End If
@@ -2831,7 +2819,7 @@ foo:
     Public Sub FormatHeadingHelp(ByRef thisHeadingLevel As Integer)
         Dim topic As String
         Dim id As String
-        Dim h As Short
+        Dim h As Integer
         topic = HeadingText(thisHeadingLevel)
         ' If topic = "Graph" Then Stop
         id = MakeValidHelpID(topic)
@@ -3022,7 +3010,7 @@ NoPrevSection:
     End Function
 
     Sub HelpContentsEntry(ByRef topic As String, ByRef id As String, ByRef thisHeadingLevel As Integer)
-        Dim numlines As Short
+        Dim numlines As Integer
         Dim tmpstr As String
         With pWordBasic
             .Activate(ContentsWin)
@@ -3116,23 +3104,23 @@ NoPrevSection:
     Private Sub AbsoluteToRelative()
         Dim startTag, LevelCount As Integer
         Dim FilePath As String
-        startTag = InStr(TargetText, "=""/")
+        startTag = InStr(mTargetText, "=""/")
         While startTag > 0
             FilePath = ""
             For LevelCount = 1 To HeadingLevel - 1
                 FilePath = FilePath & "../"
             Next
-            TargetText = Left(TargetText, startTag + 1) & FilePath & Mid(TargetText, startTag + 3)
-            startTag = InStr(TargetText, "=""/")
+            mTargetText = Left(mTargetText, startTag + 1) & FilePath & Mid(mTargetText, startTag + 3)
+            startTag = InStr(mTargetText, "=""/")
         End While
     End Sub
 
     Private Sub MakeLocalTOCs()
         Dim startTag As Integer
-        startTag = InStr(LCase(TargetText), "<toc>")
+        startTag = InStr(LCase(mTargetText), "<toc>")
         If startTag > 0 Then
-            TargetText = Left(TargetText, startTag - 1) & SectionContents & Mid(TargetText, startTag + 5)
-            If InStr(LCase(TargetText), "<toc>") Then Logger.Msg("More than one <toc> in '" & SourceFilename & "'")
+            mTargetText = Left(mTargetText, startTag - 1) & SectionContents & Mid(mTargetText, startTag + 5)
+            If InStr(LCase(mTargetText), "<toc>") Then Logger.Msg("More than one <toc> in '" & mSourceFilename & "'")
         End If
     End Sub
 
@@ -3192,34 +3180,33 @@ NoPrevSection:
     End Sub
 
     Private Sub CopyImages()
-        Dim endPos, startPos As Integer
-        Dim lcaseText As String
+        Dim endPos, lStartPos As Integer
         Dim SrcPath, ImageFilename, DstPath As String
         Dim HTMLsafeFilename As String
-        Dim IgnoreAll As Boolean
 
-        lcaseText = LCase(TargetText)
-        If OutputFormat = outputType.tHELP Or OutputFormat = outputType.tPRINT Then Exit Sub
+        If OutputFormat = OutputType.tHELP OrElse OutputFormat = OutputType.tPRINT Then
+            Exit Sub
+        End If
         Status("Copying Images")
-        SrcPath = IO.Path.GetDirectoryName(SourceBaseDirectory & SourceFilename) & "\"
-        DstPath = IO.Path.GetDirectoryName(SaveDirectory & SaveFilename) & "\"
-        startPos = InStr(lcaseText, " src=""")
-        Dim s As String
-        While startPos > 0
-            endPos = InStr(startPos + 6, lcaseText, """")
+        SrcPath = IO.Path.GetDirectoryName(mSourceBaseDirectory & mSourceFilename) & "\"
+        DstPath = IO.Path.GetDirectoryName(mSaveDirectory & SaveFilename) & "\"
+        Dim lIgnoreAll As Boolean = False
+        While Assign(lStartPos, mTargetText.IndexOf(" src=""", StringComparison.OrdinalIgnoreCase)) > 0
+            endPos = mTargetText.IndexOf("""", lStartPos + 6)
             If endPos = 0 Then Exit Sub
-            ImageFilename = Mid(TargetText, startPos + 6, endPos - startPos - 6)
+            ImageFilename = Mid(mTargetText, lStartPos + 6, endPos - lStartPos - 6)
 CheckForImage:
             If IO.File.Exists(SrcPath & ImageFilename) Then
-                s = IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), DstPath))
-                If Not IO.Directory.Exists(s) Then System.IO.Directory.CreateDirectory(s) 'MkDirPath(s)
+                MkDirPath(IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), DstPath)))
                 FileCopy(SrcPath & ImageFilename, DstPath & ImageFilename)
-            ElseIf Not IgnoreAll Then
-                Select Case Logger.Msg("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc") = MsgBoxResult.Abort
+            ElseIf Not lIgnoreAll Then
+                Select Case Logger.Msg("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc")
                     Case MsgBoxResult.Abort : Exit Sub
                     Case MsgBoxResult.Retry : GoTo CheckForImage
                     Case MsgBoxResult.Ignore
-                        If Logger.Msg("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then IgnoreAll = True
+                        If Logger.Msg("Ignore all missing images?", MsgBoxStyle.YesNo, "AuthorDoc") = MsgBoxResult.Yes Then
+                            lIgnoreAll = True
+                        End If
                 End Select
             End If
 
@@ -3227,12 +3214,9 @@ CheckForImage:
                 HTMLsafeFilename = ReplaceString(ImageFilename, "\", "/")
                 HTMLsafeFilename = ReplaceString(HTMLsafeFilename, " ", "%20")
                 If HTMLsafeFilename <> ImageFilename Then
-                    TargetText = Left(TargetText, startPos + 5) & HTMLsafeFilename & Mid(TargetText, endPos)
-                    lcaseText = LCase(TargetText)
+                    mTargetText = Left(mTargetText, lStartPos + 5) & HTMLsafeFilename & Mid(mTargetText, endPos)
                 End If
             End If
-
-            startPos = InStr(endPos, lcaseText, " src=""")
         End While
     End Sub
 
@@ -3240,17 +3224,17 @@ CheckForImage:
         Dim LinkFile, LinkRef, LinkTopic As String
         Dim endPos, startPos, pos As Integer
 
-        If OutputFormat = outputType.tHELP Then
+        If OutputFormat = OutputType.tHELP Then
             HREFsInsureExtensionWithWord()
-        ElseIf OutputFormat = outputType.tPRINT Then
+        ElseIf OutputFormat = OutputType.tPRINT Then
             'We don't preserve links in printable, so skip this step
         Else
             Status("HREFsInsureExtension")
-            startPos = InStr(LCase(TargetText), "<a href=""")
+            startPos = InStr(LCase(mTargetText), "<a href=""")
             While startPos > 0
-                endPos = InStr(startPos + 9, TargetText, """")
+                endPos = InStr(startPos + 9, mTargetText, """")
                 If endPos = 0 Then Exit Sub
-                LinkRef = Mid(TargetText, startPos + 9, endPos - startPos - 9)
+                LinkRef = Mid(mTargetText, startPos + 9, endPos - startPos - 9)
                 pos = InStr(LinkRef, "#")
                 If pos = 0 Then
                     LinkFile = LinkRef
@@ -3267,18 +3251,19 @@ CheckForImage:
                             LinkFile = LinkFile & ".html"
                         End If
                     End If
-                    If OutputFormat = outputType.tHTML Then
+                    If OutputFormat = OutputType.tHTML Then
                         LinkFile = ReplaceString(LinkFile, "\", "/")
                         LinkFile = ReplaceString(LinkFile, " ", "%20")
                     End If
                 End If
                 If LinkFile & LinkTopic <> LinkRef Then
-                    TargetText = Left(TargetText, startPos + 8) & LinkFile & LinkTopic & Mid(TargetText, endPos)
+                    mTargetText = Left(mTargetText, startPos + 8) & LinkFile & LinkTopic & Mid(mTargetText, endPos)
                 End If
-                startPos = InStr(endPos, LCase(TargetText), "<a href=""")
+                startPos = InStr(endPos, LCase(mTargetText), "<a href=""")
             End While
         End If
     End Sub
+
     Private Sub HREFsInsureExtensionWithWord()
         Dim LinkRef As String
         Dim pos As Integer
@@ -3318,14 +3303,10 @@ CheckForImage:
         End With
     End Sub
 
-    Private Sub DebugMsg(ByRef s As String)
-        Debug.Print(s)
-    End Sub
-
-    Private Sub Status(ByRef s As String)
-        frmConvert.Text1.Text = s
+    Private Sub Status(ByRef aMessage As String)
+        Logger.Dbg(aMessage)
+        frmConvert.Text1.Text = aMessage
         System.Windows.Forms.Application.DoEvents()
-        'DebugMsg "Status: " & s
     End Sub
 
     'Public Sub FormatCardGraphic()
