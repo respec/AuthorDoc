@@ -13,7 +13,7 @@ Module modFileIO
 	Private Declare Function OpenProcess Lib "kernel32" (ByVal dwDesiredAccess As Integer, ByVal bInheritHandle As Integer, ByVal dwProcessId As Integer) As Integer
 	
 	
-	Private Const INFINITE As Short = -1
+    Private Const INFINITE As Integer = -1
 	Private Const SYNCHRONIZE As Integer = &H100000
 	Private NconvertPath As String
 	
@@ -40,7 +40,7 @@ Module modFileIO
     End Sub
 	
 	Sub OpenProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
-		Dim f As Short 'file handle
+        Dim f As Integer 'file handle
 		Dim buf As String 'input buffer, contains current line
 		Dim ThisName As String 'file name of current source file, minus extension
 		Dim key As String 'unique ID for tree control
@@ -72,7 +72,6 @@ Module modFileIO
             End If
         Else
             'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-
             pProjectFileName = filename
             pBaseName = FilenameOnly(filename)
             t.Nodes.Clear()
@@ -118,7 +117,7 @@ skip:
     End Sub
 	
 	Public Sub SaveProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
-		Dim outfile As Short 'file handle
+        Dim outfile As Integer 'file handle
 		Dim nodNum As Integer 'Node number (we go sequentially through nodes)
 		Dim nod As ComctlLib.Node 'Node of the tree being written
 		
@@ -138,34 +137,34 @@ skip:
 		FileClose(outfile)
 	End Sub
 	
-	Private Sub WriteProjectSection(ByRef nod As ComctlLib.Node, ByRef outfile As Short)
-		Dim ThisName As String 'file name of current source file, minus extension
-		Dim pos As Integer 'position of directory delimiter '\' in node key for counting levels
-		Dim kid As ComctlLib.Node 'nod's child
-		
-		If nod.tag Then
-			If Not nod.Parent Is Nothing Then
-				If nod.Parent.tag Then
-					WriteProjectSection(nod.Parent, outfile) 'Write parent first
-					Exit Sub 'Writing parent will lead to doing this node, so we are done
-				End If
-			End If
-			nod.tag = False
-			ThisName = ""
-			pos = InStr(nod.key, "\")
-			While pos > 0 And pos < Len(nod.key)
-				ThisName = ThisName & "  "
-				pos = InStr(pos + 1, nod.key, "\")
-			End While
-			
-			ThisName = ThisName & nod.Text
-			PrintLine(outfile, ThisName)
-			kid = nod.Child
-			For pos = 1 To nod.Children
-				WriteProjectSection(kid, outfile)
-				kid = kid.Next
-			Next 
+    Private Sub WriteProjectSection(ByRef nod As ComctlLib.Node, ByRef outfile As Integer)
+        Dim ThisName As String 'file name of current source file, minus extension
+        Dim pos As Integer 'position of directory delimiter '\' in node key for counting levels
+        Dim kid As ComctlLib.Node 'nod's child
+
+        If nod.Tag Then
+            If Not nod.Parent Is Nothing Then
+                If nod.Parent.Tag Then
+                    WriteProjectSection(nod.Parent, outfile) 'Write parent first
+                    Exit Sub 'Writing parent will lead to doing this node, so we are done
+                End If
+            End If
+            nod.Tag = False
+            ThisName = ""
+            pos = InStr(nod.Key, "\")
+            While pos > 0 And pos < Len(nod.Key)
+                ThisName = ThisName & "  "
+                pos = InStr(pos + 1, nod.Key, "\")
+            End While
+
+            ThisName = ThisName & nod.Text
+            PrintLine(outfile, ThisName)
+            kid = nod.Child
+            For pos = 1 To nod.Children
+                WriteProjectSection(kid, outfile)
+                kid = kid.Next
+            Next
             kid = Nothing
-		End If
-	End Sub
+        End If
+    End Sub
 End Module
