@@ -44,7 +44,6 @@ Module modConvert
     Private mSaveDirectory As String
 
     Private HelpSourceRTFName As String
-    Private Directory As String
 
     Private mProjectFileEntrys As New Collection
     Private mNextProjectFileEntry As Integer
@@ -89,7 +88,7 @@ Module modConvert
     Private InPre As Boolean
     Private AlreadyInitialized As Boolean
     Private LastHeadingLevel As Integer
-    Private HeadingLevel As Integer
+    Private mHeadingLevel As Integer
     Private BookLevel As Integer
     Private StyleLevel As Integer ', IconLevel%
     Private SectionLevelName(99) As String
@@ -193,9 +192,9 @@ Module modConvert
             If closeTag < startTag Then
                 Logger.Msg("Style tag not terminated in " & mSourceFilename)
             Else
-                ReadStyleFile(Mid(mTargetText, startTag + 7, closeTag - startTag - 7), HeadingLevel)
+                ReadStyleFile(Mid(mTargetText, startTag + 7, closeTag - startTag - 7), mHeadingLevel)
             End If
-        ElseIf HeadingLevel <= StyleLevel Then
+        ElseIf mHeadingLevel <= StyleLevel Then
             StyleLevel = StyleLevel - 1
             While Len(StyleFile(StyleLevel)) = 0
                 StyleLevel = StyleLevel - 1
@@ -714,14 +713,14 @@ OpeningFile:
                     .ScreenUpdating(0) 'comment out to debug (show lots of updates)
                     .EditBookmark("CurrentFileStart")
                     Try
-                        .Insert(WholeFileString(Directory & mSourceFilename))
+                        .Insert(WholeFileString(mSourceFilename))
                     Catch ex As Exception
                         GoTo FileNotFound
                     End Try
                     NumberHeaderTagsWithWord()
                     If LinkToImageFiles >= 0 Then
                         .EditGoTo("CurrentFileStart")
-                        TranslateIMGtags(Directory & mSourceFilename)
+                        TranslateIMGtags(PathNameOnly(AbsolutePath(mSourceFilename, CurDir)))
                     End If
                     .EndOfDocument()
                     .ScreenUpdating(1)
@@ -729,7 +728,7 @@ OpeningFile:
             ElseIf OutputFormat = OutputType.tASCII Then
                 Dim i As Integer = FreeFile()
                 Try
-                    FileOpen(i, Directory & mSourceFilename, OpenMode.Input) 'SourceBaseDirectory &
+                    FileOpen(i, mSourceFilename, OpenMode.Input) 'SourceBaseDirectory &
                 Catch ex As Exception
                     GoTo FileNotFound
                 End Try
@@ -772,7 +771,9 @@ TrimTargetText:
                 MakeLocalTOCs()
                 HREFsInsureExtension()
                 AbsoluteToRelative()
-                CopyImages()
+                If OutputFormat <> OutputType.tHELP AndAlso OutputFormat <> OutputType.tPRINT Then
+                    CopyImages()
+                End If
                 'FormatCardGraphic()
                 SaveInNewDir(mSaveDirectory & SaveFilename)
             End If
@@ -842,7 +843,7 @@ OpenNextFile:
         Exit Sub
 
 FileNotFound:
-        If Logger.Msg("Error opening " & Directory & mSourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
+        If Logger.Msg("Error opening " & mSourceFilename & " (" & Err.Description & ")", MsgBoxStyle.RetryCancel, "Help Convert") = MsgBoxResult.Retry Then
             GoTo OpeningFile
         Else
             GoTo OpenNextFile
@@ -1087,11 +1088,13 @@ NextChar:
     Private Function FindAndDeleteTableStart() As Boolean
         With pWordBasic
             .EditFind("<table", "", 0)
-            If Not .EditFindFound Then Exit Function
+            If Not .EditFindFound Then
+                Exit Function
+            End If
             .ExtendSelection()
             .EditFind(">")
             If .EditFindFound Then
-                If InStr(LCase(.Selection), "border=0") > 0 Then
+                If .Selection.ToLower.IndexOf("border=0") > -1 Then
                     TableLines = False
                 Else
                     TableLines = True
@@ -1099,47 +1102,44 @@ NextChar:
                 .EditClear() 'delete <table...>
             End If
             .Cancel()
-            FindAndDeleteTableStart = .EditFindFound
+            Return .EditFindFound
         End With
     End Function
 
-    Private Sub ConvertTableToWord(ByRef RecursionLevel As Integer)
-        Dim TableText As String
-        Dim TableCols As Integer
-        Dim TableLen As Integer
-        Dim ColPos As Integer
-        Dim RowEnd As Integer
-        Dim HeaderCell(,) As Boolean
-        Dim MergeCells As Integer
+    Private Sub ConvertTableToWord(ByRef aRecursionLevel As Integer)
         With pWordBasic
-            .EditBookmark("TableStart" & RecursionLevel)
+            .EditBookmark("TableStart" & aRecursionLevel)
 FindEnd:
             .EditFind("</table>")
-            If Not .EditFindFound Then Exit Sub
+            If Not .EditFindFound Then
+                Logger.Dbg("  EndTableNotFound")
+                Exit Sub
+            End If
 
-            .EditBookmark("TableEnd" & RecursionLevel)
+            .EditBookmark("TableEnd" & aRecursionLevel)
             .ExtendSelection()
-            .EditGoTo("TableStart" & RecursionLevel)
+            .EditGoTo("TableStart" & aRecursionLevel)
             .Cancel()
 
-            If InStr(LCase(.Selection), "<table") > 0 Then
+            If .Selection.ToLower.IndexOf("<table") > -1 Then
                 If FindAndDeleteTableStart() Then
-                    ConvertTableToWord(RecursionLevel + 1)
-                    .EditGoTo("TableStart" & RecursionLevel)
+                    Logger.Dbg("RecursiveTable " & aRecursionLevel + 1)
+                    ConvertTableToWord(aRecursionLevel + 1)
+                    .EditGoTo("TableStart" & aRecursionLevel)
                     GoTo FindEnd
                 Else
-                    .EditGoTo("TableEnd" & RecursionLevel)
+                    .EditGoTo("TableEnd" & aRecursionLevel)
                 End If
             Else
-                .EditGoTo("TableEnd" & RecursionLevel)
+                .EditGoTo("TableEnd" & aRecursionLevel)
             End If
 
             .EditClear() 'delete </table>
-            .EditBookmark("TableEnd" & RecursionLevel)
+            .EditBookmark("TableEnd" & aRecursionLevel)
             .ExtendSelection()
-            .EditGoTo("TableStart" & RecursionLevel)
+            .EditGoTo("TableStart" & aRecursionLevel)
 
-            TableLen = Len(.Selection)
+            Dim lTableLen As Integer = .Selection.Length
             'skip leading blanks and newlines
 SkipBlanks:
             Select Case Asc(.Selection)
@@ -1151,36 +1151,41 @@ SkipBlanks:
             .EditBookmark("TableAll")
 
             'Count columns = # <th> + # <td> in first row
-            TableText = LCase(.Selection)
+            Dim lTableText As String = .Selection.ToLower
 
-            If InStr(TableText, "<table") > 0 Then
-                .EditGoTo("TableEnd" & RecursionLevel)
-                .EditBookmark("TableEnd" & RecursionLevel)
+            If lTableText.IndexOf("<table") > -1 Then
+                .EditGoTo("TableEnd" & aRecursionLevel)
+                .EditBookmark("TableEnd" & aRecursionLevel)
             End If
 
-            TableCols = 0
-            ColPos = InStr(TableText, "<tr")
-            RowEnd = InStr(ColPos + 2, TableText, "tr>")
-            If RowEnd = 0 Then RowEnd = Len(TableText)
-            While ColPos > 0 And ColPos < RowEnd
-                TableCols = TableCols + 1
-                ColPos = InStr(ColPos + 1, TableText, "<th")
-                If Mid(TableText, ColPos + 3, 8) = " colspan" Then
-                    ColPos = ColPos + 12
-                    While Not IsNumeric(Mid(TableText, ColPos, 1))
-                        ColPos = ColPos + 1
+            Dim lTableCols As Integer = 0
+            Dim lColPos As Integer = lTableText.IndexOf("<tr")
+            Dim lRowEnd As Integer = lTableText.IndexOf("tr>", lColPos + 2)
+            If lRowEnd = -1 Then
+                lRowEnd = lTableText.Length
+            End If
+            While lColPos >= 0 And lColPos < lRowEnd
+                lTableCols += 1
+                lColPos = lTableText.IndexOf("<th", lColPos + 1)
+                If Mid(lTableText, lColPos + 3, 8) = " colspan" Then
+                    lColPos += 12
+                    While Not IsNumeric(Mid(lTableText, lColPos, 1))
+                        lColPos += 1
                     End While
-                    TableCols = TableCols + CShort(Mid(TableText, ColPos, 1)) - 1
+                    lTableCols += CShort(Mid(lTableText, lColPos, 1)) - 1
                 End If
             End While
-            ColPos = InStr(TableText, "<tr")
-            ColPos = InStr(ColPos + 1, TableText, "<td")
-            While ColPos > 0 And ColPos < RowEnd
-                TableCols = TableCols + 1
-                ColPos = InStr(ColPos + 1, TableText, "<td")
+            lColPos = lTableText.IndexOf("<tr")
+            lColPos = InStr(lColPos + 1, lTableText, "<td")
+            While lColPos > 0 And lColPos < lRowEnd
+                lTableCols += 1
+                lColPos = InStr(lColPos + 1, lTableText, "<td")
             End While
-            If TableCols > 1 Then TableCols = TableCols - 1
-            ReDim HeaderCell(500, TableCols)
+            If lTableCols > 1 Then
+                lTableCols -= 1
+            End If
+            'Dim lHeaderCell(500, lTableCols) As Boolean
+            Logger.Dbg("Table " & aRecursionLevel & " Length:" & lTableLen & " Columns:" & lTableCols)
 
             .EditGoTo("TableAll")
             .EditFind("<tr ", "", 0)
@@ -1223,28 +1228,43 @@ SkipBlanks:
 
             .EditGoTo("TableAll")
             .EditReplace("^p^w", "^p", ReplaceAll:=True)
+            .EditGoTo("TableAll")
             .EditReplace("^w^p", "^p", ReplaceAll:=True)
+            .EditGoTo("TableAll")
             .EditReplace("^p", " ", ReplaceAll:=True)
+            .EditGoTo("TableAll")
             .FormatTabs("2""", Align:=0, Set:=1)
             .EditReplace("<tr><th>", "^p", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<tr><td>", "^p", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
             .EditGoTo("TableAll")
             .EditReplace("<tr>^w<th>", "^p", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<tr>^w<td>", "^p", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<tr>", "^p", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<td>", vbTab, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<th>", vbTab, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<td ", vbTab, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<th ", vbTab, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<p>", "", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("</tr>", "", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("</td>", "", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("</thead>", "", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
+            .EditGoTo("TableAll")
             .EditReplace("<thead>", "", 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0)
 
-            .EditGoTo("TableEnd" & RecursionLevel)
+            .EditGoTo("TableEnd" & aRecursionLevel)
             .ExtendSelection()
-            .EditGoTo("TableStart" & RecursionLevel)
+            .EditGoTo("TableStart" & aRecursionLevel)
 SkipBlanks2:
             Select Case Asc(.Selection)
                 Case 10, 13, 32
@@ -1252,38 +1272,43 @@ SkipBlanks2:
                     GoTo SkipBlanks2
             End Select
 
-            .TableInsertTable(ConvertFrom:=1, NumColumns:=TableCols, Format:=TablePrintFormat, Apply:=TablePrintApply)
-            .EditBookmark("TableAll")
-            .TableColumnWidth(AutoFit:=1)
+            If lTableCols = 0 Then
+                Dim lPrintLength As Integer = Math.Min(.Selection.Length, 500)
+                Logger.Dbg("--------TableProblem:" & .Selection.Substring(0, lPrintLength - 1))
+            Else
+                .TableInsertTable(ConvertFrom:=1, NumColumns:=lTableCols, Format:=TablePrintFormat, Apply:=TablePrintApply)
+                .EditBookmark("TableAll")
+                .TableColumnWidth(AutoFit:=1)
 
-            If Not TableLines Then
-                '.TableGridlines 0
-                .BorderBottom(0)
-                .BorderInside(0)
-                .BorderLeft(0)
-                .BorderOutside(0)
-                .BorderRight(0)
-                .BorderTop(0)
-            End If
-            .EditFind("colspan=")
-            While .EditFindFound
-                .EditClear()
-                .ExtendSelection()
-                .CharRight() 'Want to merge more than 9 columns? probably not.
-                MergeCells = CInt(.Selection)
-                .CharRight() '>
-                .EditClear()
-                .NextCell()
-                .CharLeft()
-                .ExtendSelection()
-                'For MergeCount = 2 To MergeCells
-                .CharRight(MergeCells)
-                'Next
-                .TableMergeCells()
-                .EditGoTo("TableAll")
+                If Not TableLines Then
+                    '.TableGridlines 0
+                    .BorderBottom(0)
+                    .BorderInside(0)
+                    .BorderLeft(0)
+                    .BorderOutside(0)
+                    .BorderRight(0)
+                    .BorderTop(0)
+                End If
                 .EditFind("colspan=")
-            End While
-            .CharRight()
+                While .EditFindFound
+                    .EditClear()
+                    .ExtendSelection()
+                    .CharRight() 'Want to merge more than 9 columns? probably not.
+                    Dim lMergeCells As Integer = CInt(.Selection)
+                    .CharRight() '>
+                    .EditClear()
+                    .NextCell()
+                    .CharLeft()
+                    .ExtendSelection()
+                    'For MergeCount = 2 To MergeCells
+                    .CharRight(lMergeCells)
+                    'Next
+                    .TableMergeCells()
+                    .EditGoTo("TableAll")
+                    .EditFind("colspan=")
+                End While
+                .CharRight()
+            End If
         End With
     End Sub
 
@@ -1350,24 +1375,18 @@ SkipBlanks2:
         End With
     End Sub
 
-    Private Sub SaveInNewDir(ByRef newFilePath As String)
-        Dim fname, path As String
-        path = IO.Path.GetDirectoryName(newFilePath)
-        fname = Mid(newFilePath, Len(path) + 2)
-        If Not IO.Directory.Exists(path) Then IO.Directory.CreateDirectory(path)
-        Dim OutFile As Integer
-        Dim oldpath As String
-        If OutputFormat = outputType.tHTML Or OutputFormat = outputType.tHTMLHELP Then
-            OutFile = FreeFile
-            FileOpen(OutFile, newFilePath, OpenMode.Output)
-            PrintLine(OutFile, mTargetText)
-            FileClose(OutFile)
+    Private Sub SaveInNewDir(ByRef aNewFilePath As String)
+        Dim lPath As String = IO.Path.GetDirectoryName(aNewFilePath)
+        MkDirPath(lPath)
+
+        If OutputFormat = OutputType.tHTML OrElse OutputFormat = OutputType.tHTMLHELP Then
+            SaveFileString(aNewFilePath, mTargetText)
         Else
             With pWordBasic
-                oldpath = .DefaultDir(14)
-                .ChDir(path)
-                .FileSaveAs(fname, 2, AddToMRU:=False)
-                .ChDir(oldpath)
+                Dim lOldPath As String = .DefaultDir(14)
+                .ChDir(lPath)
+                .FileSaveAs(FilenameNoPath(aNewFilePath), 2, AddToMru:=False)
+                .ChDir(lOldPath)
             End With
         End If
     End Sub
@@ -1411,7 +1430,7 @@ SkipBlanks2:
             End While
             If Len(fn) > Len(HeadingWord(lvl)) Then
                 HeadingWord(lvl) = Mid(fn, 1 + Len(HeadingWord(lvl)))
-                HeadingLevel = lvl
+                mHeadingLevel = lvl
                 NextSourceFilename = fn & pSourceExtension
             Else
                 NextSourceFilename = ""
@@ -1764,7 +1783,7 @@ SkipBlanks2:
             FormatHeadingsWithWord(OutputFormat, targetFilename)
         Else
 
-            BodyTag = BodyStyle(HeadingLevel)
+            BodyTag = BodyStyle(mHeadingLevel)
             startTag = InStr(LCase(mTargetText), "<body")
             If startTag > 0 Then
                 endtag = InStr(startTag, mTargetText, ">")
@@ -1776,7 +1795,7 @@ SkipBlanks2:
 
             startTag = InStr(LCase(mTargetText), "<h")
             While startTag > 0
-                If localHeadingLevel = 0 Then localHeadingLevel = HeadingLevel
+                If localHeadingLevel = 0 Then localHeadingLevel = mHeadingLevel
                 direction = 1
                 Select Case Mid(mTargetText, startTag + 2, 1)
                     Case ">" : endtag = startTag + 2 : GoTo FindingHend
@@ -1852,7 +1871,7 @@ NextHeader:
                 .EditBookmark("Hstart")
                 .ExtendSelection()
                 .CharRight()
-                If localHeadingLevel = 0 Then localHeadingLevel = HeadingLevel
+                If localHeadingLevel = 0 Then localHeadingLevel = mHeadingLevel
                 direction = 1
                 Select Case .Selection
                     Case ">"
@@ -2204,11 +2223,11 @@ NextHeader:
 
             startPos = InStr(LCase(mTargetText), "<h")
             If startPos = 0 Then 'need to insert section header
-                mTargetText = "<h" & HeadingLevel & ">" & HeadingWord(HeadingLevel) & "</h" & HeadingLevel & "> " & vbLf & mTargetText
+                mTargetText = "<h" & mHeadingLevel & ">" & HeadingWord(mHeadingLevel) & "</h" & mHeadingLevel & "> " & vbLf & mTargetText
             End If
             curTag = "<h"
             startPos = InStr(LCase(mTargetText), curTag)
-            localHeadingLevel = HeadingLevel
+            localHeadingLevel = mHeadingLevel
             While startPos > 0
                 endPos = InStr(startPos, mTargetText, ">")
                 If endPos > 0 Then
@@ -2222,9 +2241,9 @@ NextHeader:
                                 If Left(selStr, 1) = "+" Then direction = 1 Else direction = -1
                                 selStr = Mid(selStr, 2)
                                 If IsNumeric(selStr) Then
-                                    localHeadingLevel = HeadingLevel + direction * CShort(selStr)
+                                    localHeadingLevel = mHeadingLevel + direction * CShort(selStr)
                                 Else
-                                    localHeadingLevel = HeadingLevel + direction
+                                    localHeadingLevel = mHeadingLevel + direction
                                 End If
                                 mTargetText = Left(mTargetText, startPos + 1) & localHeadingLevel & Mid(mTargetText, endPos)
                             Case Else
@@ -2259,7 +2278,7 @@ NextHeader:
             .EditFind("<h", "", 0)
             If Not .EditFindFound Then 'need to insert section header
                 .EditGoTo("CurrentFileStart")
-                .Insert("<h" & HeadingLevel & ">" & HeadingWord(HeadingLevel) & "</h" & HeadingLevel & "> " & vbLf)
+                .Insert("<h" & mHeadingLevel & ">" & HeadingWord(mHeadingLevel) & "</h" & mHeadingLevel & "> " & vbLf)
             End If
             curTag = "<h"
             .EditGoTo("CurrentFileStart")
@@ -2268,7 +2287,7 @@ NextHeader:
                 .CharRight()
                 .ExtendSelection()
                 .EditFind(">", "", 0)
-                localHeadingLevel = HeadingLevel
+                localHeadingLevel = mHeadingLevel
                 If .EditFindFound Then
                     selStr = Left(.Selection, Len(.Selection) - 1)
                     .CharLeft()
@@ -2283,9 +2302,9 @@ NextHeader:
                                 If Left(selStr, 1) = "+" Then direction = 1 Else direction = -1
                                 selStr = Mid(selStr, 2)
                                 If IsNumeric(selStr) Then
-                                    localHeadingLevel = HeadingLevel + direction * CShort(selStr)
+                                    localHeadingLevel = mHeadingLevel + direction * CShort(selStr)
                                 Else
-                                    localHeadingLevel = HeadingLevel + direction
+                                    localHeadingLevel = mHeadingLevel + direction
                                 End If
                                 .Insert(CStr(localHeadingLevel))
                             Case "r", "R" : curTag = "</h" 'ignore <hr>
@@ -2309,35 +2328,33 @@ NextHeader:
         End With
     End Sub
 
-    Private Sub TranslateIMGtags(ByRef sourcefile As String)
-        Dim LinkFilename, path As String
-        path = sourcefile
-        While path <> "" And Right(path, 1) <> "\"
-            path = Left(path, Len(path) - 1)
-        End While
-        Dim InsertParagraphs As Boolean
-        Dim curfilename As String
-        Dim LinkToThisImageFile As Integer
+    Private Sub TranslateIMGtags(ByRef aPath As String)
         With pWordBasic
             .EditFind("<IMG ", "", 0)
             While .EditFindFound
-                InsertParagraphs = InsertParagraphsAroundImages
-                LinkToThisImageFile = LinkToImageFiles
+                Dim lInsertParagraphs As Boolean = InsertParagraphsAroundImages
+                Dim lLinkToThisImageFile As Integer = LinkToImageFiles
                 .EditClear()
-                .EditBookmark("ImgStart")
+                '.EditBookmark("ImgStart")
                 .EditFind("SRC=""", "", 0)
                 .EditClear()
                 .EditBookmark("LinkStart")
                 .EditFind("""")
-                If Not .EditFindFound Then Exit Sub
+                If Not .EditFindFound Then
+                    Exit Sub
+                End If
                 .EditClear()
                 .ExtendSelection()
                 .EditGoTo("LinkStart")
                 'curpath = path
-                curfilename = .Selection
+                Dim lCurrentFilename As String = .Selection
                 .EditClear()
-                .EditGoTo("ImgStart")
-                LinkFilename = IO.Path.GetDirectoryName(pProjectFileName) & "\" & path & curfilename
+                'If .ExistingBookmark("ImgStart") <> 0 Then
+                '    .EditGoTo("ImgStart")
+                'Else
+                '    Logger.Dbg("No ImgStart Bookmark for " & lCurrentFilename)
+                'End If
+                Dim lLinkFilename As String = aPath & "\" & lCurrentFilename
                 'While Left(curfilename, 2) = ".."
                 '  curfilename = Right(curfilename, Len(curfilename) - 3)
                 '  curpath = Left(curpath, Len(curpath) - 1)
@@ -2348,15 +2365,21 @@ NextHeader:
                 'LinkFilename = curpath & curfilename
                 .ExtendSelection()
                 .EditFind(">")
-                If InStr(1, LinkFilename, "icon", 1) > 0 Then
-                    InsertParagraphs = False
+                If InStr(1, lLinkFilename, "icon", 1) > 0 Then
+                    lInsertParagraphs = False
                     'LinkToThisImageFile = 0
                 End If
-                If Len(.Selection) > 1 Then InsertParagraphs = False 'probably said ALIGN=LEFT in img tag
+                If .Selection.Length > 1 Then
+                    lInsertParagraphs = False 'probably said ALIGN=LEFT in img tag
+                End If
                 .EditClear()
                 .Cancel()
-                If InsertParagraphs Then .Insert("<p>")
-                .InsertPicture(LinkFilename, LinkToThisImageFile)
+                If lInsertParagraphs Then .Insert("<p>")
+                Try
+                    .InsertPicture(lLinkFilename, lLinkToThisImageFile)
+                Catch lEx As Exception
+                    Logger.Dbg("InsertPictureProblem:File:" & lLinkFilename & ":Message:" & lEx.Message)
+                End Try
 
                 '.Insert "{ INCLUDEPICTURE """ & LinkFilename & """ \* MERGEFORMAT \D }"
                 '.CharLeft 1, 1
@@ -2376,13 +2399,15 @@ NextHeader:
                 'End If
                 '.CharRight
 
-                If InStr(1, LinkFilename, "icon", 1) > 0 Then
+                If InStr(1, lLinkFilename, "icon", 1) > 0 Then
                     .CharLeft(1, 1)
                     .FormatFont(Position:=-12) 'half-point units
                     .CharRight()
                 End If
 
-                If InsertParagraphs Then .Insert("<p>")
+                If lInsertParagraphs Then
+                    .Insert("<p>")
+                End If
                 .EditFind("<IMG ")
             End While
         End With
@@ -2905,7 +2930,7 @@ NoPrevSection:
 
     Sub FinishHTMLHelpContents()
         Dim lvl As Integer
-        For lvl = HeadingLevel To 1 Step -1
+        For lvl = mHeadingLevel To 1 Step -1
             PrintLine(HTMLContentsfile, Space((lvl - 1) * 4) & "</ul>")
         Next lvl
         PrintLine(HTMLContentsfile, "</body>")
@@ -3107,7 +3132,7 @@ NoPrevSection:
         startTag = InStr(mTargetText, "=""/")
         While startTag > 0
             FilePath = ""
-            For LevelCount = 1 To HeadingLevel - 1
+            For LevelCount = 1 To mHeadingLevel - 1
                 FilePath = FilePath & "../"
             Next
             mTargetText = Left(mTargetText, startTag + 1) & FilePath & Mid(mTargetText, startTag + 3)
@@ -3125,82 +3150,76 @@ NoPrevSection:
     End Sub
 
     Private Function SectionContents() As String
-        Dim retval As String = ""
-        Dim localNextEntry As Integer
+        Dim lSectionContents As String = ""
+        Dim lLocalNextEntry As Integer = mNextProjectFileEntry
         Dim nextLevel, lvl, prevLevel As Integer
         Dim nextName As String = ""
         Dim nextHref As String = ""
         Dim localHeadingWord(10) As String
 
-        localNextEntry = mNextProjectFileEntry
-        localHeadingWord(HeadingLevel) = HeadingWord(HeadingLevel)
-        prevLevel = HeadingLevel
-        GetNextEntryLevel(localNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
-        If nextLevel > HeadingLevel Then
-            While nextLevel > HeadingLevel
+        localHeadingWord(mHeadingLevel) = HeadingWord(mHeadingLevel)
+        prevLevel = mHeadingLevel
+        GetNextEntryLevel(lLocalNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
+        If nextLevel > mHeadingLevel Then
+            While nextLevel > mHeadingLevel
 
                 If nextLevel > prevLevel Then
                     For lvl = prevLevel To (nextLevel - 1)
-                        retval &= "<ul>" & vbCr
+                        lSectionContents &= "<ul>" & vbCr
                     Next
                 ElseIf nextLevel < prevLevel Then
                     For lvl = nextLevel To (prevLevel - 1)
-                        retval &= "</ul>" & vbCr
+                        lSectionContents &= "</ul>" & vbCr
                     Next
                 End If
 
-                retval &= "<li><a href=""" & nextHref & """>" & nextName & "</a>" & vbCr
+                lSectionContents &= "<li><a href=""" & nextHref & """>" & nextName & "</a>" & vbCr
                 prevLevel = nextLevel
-                GetNextEntryLevel(localNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
+                GetNextEntryLevel(lLocalNextEntry, nextLevel, nextName, nextHref, localHeadingWord)
             End While
-            retval &= "</ul>" & vbCr
+            lSectionContents &= "</ul>" & vbCr
         End If
-        SectionContents = retval
+        Return lSectionContents
     End Function
 
-    Private Sub GetNextEntryLevel(ByRef localNextEntry As Integer, _
-                                  ByRef nextLevel As Integer, _
-                                  ByRef nextName As String, _
-                                  ByRef nextHref As String, _
-                                  ByRef localHeadingWord() As String)
-        If localNextEntry >= mProjectFileEntrys.Count Then
-            nextLevel = 0
+    Private Sub GetNextEntryLevel(ByRef aLocalNextEntry As Integer, _
+                                  ByRef aNextLevel As Integer, _
+                                  ByRef aNextName As String, _
+                                  ByRef aNextHref As String, _
+                                  ByRef aLocalHeadingWord() As String)
+        If aLocalNextEntry >= mProjectFileEntrys.Count Then
+            aNextLevel = 0
         Else
-            nextName = LTrim(mProjectFileEntrys(localNextEntry))
-            nextLevel = (Len(mProjectFileEntrys(localNextEntry)) - Len(nextName)) / 2 + 1
-            nextName = RTrim(nextName)
-            localHeadingWord(nextLevel) = nextName
-            nextHref = ""
-            For lvl As Integer = HeadingLevel To nextLevel - 1
-                nextHref = nextHref & localHeadingWord(lvl) & "\"
+            aNextName = mProjectFileEntrys(aLocalNextEntry).ToString.TrimStart
+            aNextLevel = (mProjectFileEntrys(aLocalNextEntry).ToString.Length - aNextName.ToString.Length) / 2 + 1
+            aNextName = aNextName.TrimEnd
+            aLocalHeadingWord(aNextLevel) = aNextName
+            aNextHref = ""
+            For lLevel As Integer = mHeadingLevel To aNextLevel - 1
+                aNextHref = aNextHref & aLocalHeadingWord(lLevel) & "\"
             Next
-            nextHref = nextHref & nextName & ".html"
-            localNextEntry = localNextEntry + 1
+            aNextHref &= aNextName & ".html"
+            aLocalNextEntry += 1
         End If
     End Sub
 
     Private Sub CopyImages()
-        Dim endPos, lStartPos As Integer
-        Dim SrcPath, ImageFilename, DstPath As String
-        Dim HTMLsafeFilename As String
-
-        If OutputFormat = OutputType.tHELP OrElse OutputFormat = OutputType.tPRINT Then
-            Exit Sub
-        End If
         Status("Copying Images")
-        SrcPath = IO.Path.GetDirectoryName(mSourceBaseDirectory & mSourceFilename) & "\"
-        DstPath = IO.Path.GetDirectoryName(mSaveDirectory & SaveFilename) & "\"
+        Dim lSrcPath As String = IO.Path.GetDirectoryName(mSourceBaseDirectory & mSourceFilename) & "\"
+        Dim lDstPath As String = IO.Path.GetDirectoryName(mSaveDirectory & SaveFilename) & "\"
         Dim lIgnoreAll As Boolean = False
-        While Assign(lStartPos, mTargetText.IndexOf(" src=""", StringComparison.OrdinalIgnoreCase)) > 0
-            endPos = mTargetText.IndexOf("""", lStartPos + 6)
-            If endPos = 0 Then Exit Sub
-            ImageFilename = Mid(mTargetText, lStartPos + 6, endPos - lStartPos - 6)
+        Dim lEndPos As Integer
+        Dim lStartPos As Integer = -1
+        While Assign(lStartPos, mTargetText.IndexOf(" src=""", lStartPos + 1, StringComparison.OrdinalIgnoreCase)) > 0
+            lEndPos = mTargetText.IndexOf("""", lStartPos + 6)
+            If lEndPos = 0 Then Exit Sub
+            Dim ImageFilename As String = mTargetText.Substring(lStartPos + 6, lEndPos - lStartPos - 6)
 CheckForImage:
-            If IO.File.Exists(SrcPath & ImageFilename) Then
-                MkDirPath(IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), DstPath)))
-                FileCopy(SrcPath & ImageFilename, DstPath & ImageFilename)
+            If IO.File.Exists(lSrcPath & ImageFilename) Then
+                MkDirPath(IO.Path.GetDirectoryName(AbsolutePath(ReplaceString(ImageFilename, "/", "\"), lDstPath)))
+                FileCopy(lSrcPath & ImageFilename, lDstPath & ImageFilename)
             ElseIf Not lIgnoreAll Then
-                Select Case Logger.Msg("Missing image: " & vbCr & SrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc")
+                Select Case Logger.Msg("Missing image: " & vbCr & lSrcPath & ImageFilename, MsgBoxStyle.AbortRetryIgnore, "AuthorDoc")
                     Case MsgBoxResult.Abort : Exit Sub
                     Case MsgBoxResult.Retry : GoTo CheckForImage
                     Case MsgBoxResult.Ignore
@@ -3211,10 +3230,10 @@ CheckForImage:
             End If
 
             If OutputFormat = OutputType.tHTML Then
-                HTMLsafeFilename = ReplaceString(ImageFilename, "\", "/")
-                HTMLsafeFilename = ReplaceString(HTMLsafeFilename, " ", "%20")
-                If HTMLsafeFilename <> ImageFilename Then
-                    mTargetText = Left(mTargetText, lStartPos + 5) & HTMLsafeFilename & Mid(mTargetText, endPos)
+                Dim lHTMLSafeFilename As String = ReplaceString(ImageFilename, "\", "/")
+                lHTMLSafeFilename = ReplaceString(lHTMLSafeFilename, " ", "%20")
+                If lHTMLSafeFilename <> lHTMLSafeFilename Then
+                    mTargetText = Left(mTargetText, lStartPos + 5) & lHTMLSafeFilename & Mid(mTargetText, lEndPos)
                 End If
             End If
         End While
