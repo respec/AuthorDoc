@@ -56,11 +56,10 @@ Friend Class frmConvert
     End Sub
 
     Private Sub frmConvert_Load(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Load
-        Dim setting As Object
         SetUnInitialized()
         Text1.Text = ""
         'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-        setting = GetSetting(pAppName, SectionConvert, "TargetFormat", CStr(modConvert.OutputType.tPRINT))
+        Dim setting As Object = GetSetting(pAppName, SectionConvert, "TargetFormat", CStr(modConvert.OutputType.tPRINT))
         If IsNumeric(setting) Then
             optTargetFormat(setting).Checked = True
             'UPGRADE_WARNING: Couldn't resolve default property of object setting. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
@@ -90,7 +89,6 @@ Friend Class frmConvert
             Case CStr(True) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Checked
             Case CStr(False) : ProjectCheck.CheckState = System.Windows.Forms.CheckState.Unchecked
         End Select
-
     End Sub
 	
 	'UPGRADE_WARNING: Event optTargetFormat.CheckedChanged may fire when form is initialized. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="88B12AE1-6DE0-48A0-86F1-60C0686C026A"'
