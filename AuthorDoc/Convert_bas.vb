@@ -775,12 +775,14 @@ OpenNextFile:
         End If
         If (pOutputFormat = OutputType.tPRINT Or pOutputFormat = OutputType.tHELP) Then
             With pWordBasic
+                Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
                 Dim lReplaceSelectionOption As Integer
                 .ToolsOptionsEdit((lReplaceSelectionOption)) 'save current value of this option
                 .ToolsOptionsEdit((1)) 'be sure option is on
                 .ScreenUpdating(0) 'comment out to debug (show lots of updates)
                 .Activate(mTargetWindowName)
                 ConvertTablesToWord()
+                Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
                 ConvertTagsToWord()
                 If aMakeContents Then
                     If pOutputFormat = OutputType.tHTMLHELP Or pOutputFormat = OutputType.tHTML Then
@@ -1097,7 +1099,7 @@ NextChar:
 FindEnd:
             .EditFind("</table>")
             If Not .EditFindFound Then
-                Logger.Dbg("  EndTableNotFound")
+                Logger.Msg("  EndTableNotFound")
                 Exit Sub
             End If
 
@@ -1301,28 +1303,44 @@ SkipBlanks2:
         With pWordBasic
             Status("Removing HTML Headers")
             RemoveStuffOutsideBody()
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
             Status("Translating Paragraph Marks")
             InsertParagraphsInPRE(pOutputFormat)
             .StartOfDocument()
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Removing Whitespace After Paragraph Marks")
             .EditReplace("^p^w", "^p", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Removing Whitespace Before Paragraph Marks")
             .EditReplace("^w^p", "^p", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Removing Non-HTML Paragraphs")
             .EditReplace("^p", " ", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
             TranslateLists("ul", 1)
             TranslateLists("ol", 7)
 
             Status("Replacing HTML Paragraphs")
             .EditReplace("<p>", "^p", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Replacing HTML Line Breaks")
             .EditReplace("<br>", "^l", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Removing Whitespace After Paragraph Marks")
             .EditReplace("^p^w", "^p", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Removing Whitespace Before Paragraph Marks")
             .EditReplace("^w^p", "^p", ReplaceAll:=True)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Replacing HTML Page Breaks")
             .EditReplace("<page>", "^m", ReplaceAll:=True)
 
@@ -1332,6 +1350,8 @@ SkipBlanks2:
             .Cancel()
             Status("Translating Buttons")
             TranslateButtons(pOutputFormat)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
+
             Status("Formatting Headings")
             FormatHeadings(pOutputFormat, mTargetWindowName)
             FormatTag("div", pOutputFormat)
@@ -1342,10 +1362,12 @@ SkipBlanks2:
             FormatTag("i", pOutputFormat)
             FormatTag("sub", pOutputFormat)
             FormatTag("sup", pOutputFormat)
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
             If pOutputFormat = outputType.tHELP Then HREFsToHelpHyperlinks()
             Status("Removing Remaining HTML Tags")
             HTMLQuotedCharsToPrint()
+            Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
             'Once more, replace the few places where unwanted whitespace has crept back in
             .EditReplace("^p^w", "^p", ReplaceAll:=True)
@@ -1609,6 +1631,7 @@ SkipBlanks2:
         Dim lBeginTagLength As Integer = lBegintag.Length
 
         Status("Formatting HTML " & lBegintag)
+        Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
         Select Case aOutputFormat
             Case outputType.tPRINT, outputType.tHELP
