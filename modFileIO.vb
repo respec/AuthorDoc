@@ -15,26 +15,25 @@ Module modFileIO
 	
     Private Const INFINITE As Integer = -1
 	Private Const SYNCHRONIZE As Integer = &H100000
-	Private NconvertPath As String
-	
-	Sub RunNconvert(ByRef cmdline As String)
-		Dim ret, iTask, pHandle As Integer
-		
-		If NconvertPath = "" Then FindNconvert()
-		
-		iTask = Shell(NconvertPath & " " & cmdline, AppWinStyle.Hide)
-		pHandle = OpenProcess(SYNCHRONIZE, False, iTask)
-		ret = WaitForSingleObject(pHandle, INFINITE)
-		ret = CloseHandle(pHandle)
-		
-	End Sub
-	
-	Sub FindNconvert()
-		NconvertPath = GetSetting("Nconvert", "Paths", "ExePath", "")
-        If Not IO.File.Exists(NconvertPath) Then
-            NconvertPath = FindFile("Find Nconvert.exe to perform conversion", "Nconvert.exe")
-            If IO.File.Exists(NconvertPath) Then
-                SaveSetting("Nconvert", "Paths", "ExePath", NconvertPath)
+    Private mNconvertPath As String
+
+    Sub RunNconvert(ByRef aCommandLine As String)
+        Dim ret, iTask, pHandle As Integer
+
+        If mNconvertPath = "" Then FindNconvert()
+
+        iTask = Shell(mNconvertPath & " " & aCommandLine, AppWinStyle.Hide)
+        pHandle = OpenProcess(SYNCHRONIZE, False, iTask)
+        ret = WaitForSingleObject(pHandle, INFINITE)
+        ret = CloseHandle(pHandle)
+    End Sub
+
+    Sub FindNconvert()
+        mNconvertPath = GetSetting("Nconvert", "Paths", "ExePath", "")
+        If Not IO.File.Exists(mNconvertPath) Then
+            mNconvertPath = FindFile("Find Nconvert.exe to perform conversion", "Nconvert.exe")
+            If IO.File.Exists(mNconvertPath) Then
+                SaveSetting("Nconvert", "Paths", "ExePath", mNconvertPath)
             End If
         End If
     End Sub

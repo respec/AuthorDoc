@@ -13,38 +13,34 @@ Friend Class frmSample
 	Private Const SW_MAXIMIZE As Short = 3 'Maximized Window
 	Private Const SW_MINIMIZE As Short = 6 'Minimized Window
 	
-	Public Sub SetImage(ByRef Filename As String)
-		
-		Dim tempFilename As String
-		Dim cmdline As String
-		
-		Me.Text = Filename
-		Select Case UCase(VB.Right(Filename, 3))
-			Case "BMP", "GIF"
-				img.Image = System.Drawing.Image.FromFile(Filename)
-			Case Else
-                tempFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(Filename) & ".bmp")
-				' -D = delete original, -quiet = no output, -o = output filename
-				cmdline = "-o """ & tempFilename & """ -out bmp """ & Filename & """"
-				RunNconvert(cmdline)
-				On Error GoTo ErrLoad
-				img.Image = System.Drawing.Image.FromFile(tempFilename)
-				Kill(tempFilename)
-		End Select
-		img.Visible = True
-		txt.Visible = False
-		frmMain.Visible = True
-		Me.Show()
-		Me.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(frmMain.Left) + VB6.PixelsToTwipsX(frmMain.Width))
-		frmMain.Activate()
-		'Me.Width = img.Width
-		'Me.Height = img.Height
-		Exit Sub
-		
-ErrLoad: 
-		Debug.Print(Err.Description)
-		Resume Next
-	End Sub
+    Public Sub SetImage(ByRef aFilename As String)
+        Dim lFilename As String
+
+        Me.Text = aFilename
+        Select Case UCase(VB.Right(aFilename, 3))
+            Case "BMP", "GIF"
+                img.Image = System.Drawing.Image.FromFile(aFilename)
+            Case Else
+                lFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(aFilename) & ".bmp")
+                ' -D = delete original, -quiet = no output, -o = output filename
+                Dim lCmdline As String = "-o """ & lFilename & """ -out bmp """ & aFilename & """"
+                RunNconvert(lCmdline)
+                On Error GoTo ErrLoad
+                img.Image = System.Drawing.Image.FromFile(lFilename)
+                Kill(lFilename)
+        End Select
+        img.Visible = True
+        txt.Visible = False
+        frmMain.Visible = True
+        Me.Show()
+        Me.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(frmMain.Left) + VB6.PixelsToTwipsX(frmMain.Width))
+        frmMain.Activate()
+        Exit Sub
+
+ErrLoad:
+        Debug.Print(Err.Description)
+        Resume Next
+    End Sub
 	
 	Public Sub SetText(ByRef fullpath As String)
 		Dim dotpos As Integer

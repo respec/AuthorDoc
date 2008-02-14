@@ -4,6 +4,7 @@ Option Explicit On
 Imports atcUtility
 Imports MapWinUtility
 Imports Microsoft.Office.Interop.Word
+Imports System.Text
 
 Module modConvert
     'Copyright 2000-2008 by AQUA TERRA Consultants
@@ -110,29 +111,33 @@ Module modConvert
     Declare Function ShellExecute Lib "shell32.dll" Alias "ShellExecuteA" (ByVal hwnd As Integer, ByVal lpOperation As String, ByVal lpFile As String, ByVal lpParameters As String, ByVal lpDirectory As String, ByVal nShowCmd As Integer) As Integer
 
     Public Sub CreateHelpProject(ByRef aIDfileExists As Boolean)
-        Dim lOutFileNumber As Integer
-        lOutFileNumber = FreeFile
-        FileOpen(lOutFileNumber, mSaveDirectory & pBaseName & ".hpj", OpenMode.Output)
-        PrintLine(lOutFileNumber, "[OPTIONS]" & vbCrLf)
-        PrintLine(lOutFileNumber, "LCID=0x409 0x0 0x0 ; English (United States)" & vbCrLf)
-        PrintLine(lOutFileNumber, "REPORT=Yes" & vbCrLf)
-        PrintLine(lOutFileNumber, "CNT=" & pBaseName & ".cnt" & vbCrLf & vbCrLf)
-        PrintLine(lOutFileNumber, "HLP=" & pBaseName & ".hlp" & vbCrLf & vbCrLf)
+        Dim lSB As New StringBuilder
+        lSB.AppendLine("[OPTIONS]")
+        lSB.AppendLine("LCID=0x409 0x0 0x0 ; English (United States)")
+        lSB.AppendLine("REPORT=Yes")
+        lSB.AppendLine("CNT=" & pBaseName & ".cnt")
+        lSB.AppendLine("")
+        lSB.AppendLine("HLP=" & pBaseName & ".hlp")
+        lSB.AppendLine("")
 
-        PrintLine(lOutFileNumber, "[FILES]" & vbCrLf)
-        PrintLine(lOutFileNumber, mHelpSourceRTFName & vbCrLf & vbCrLf)
+        lSB.AppendLine("[FILES]")
+        lSB.AppendLine(mHelpSourceRTFName)
+        lSB.AppendLine("")
 
         If aIDfileExists Then
-            PrintLine(lOutFileNumber, "[MAP]" & vbCrLf)
-            PrintLine(lOutFileNumber, "#include <" & pBaseName & ".ID>" & vbCrLf & vbCrLf)
+            lSB.AppendLine("[MAP]")
+            lSB.AppendLine("#include <" & pBaseName & ".ID>")
+            lSB.AppendLine("")
         End If
 
-        PrintLine(lOutFileNumber, "[WINDOWS]" & vbCrLf)
-        PrintLine(lOutFileNumber, "Main=" & Chr(34) & pBaseName & " Manual" & Chr(34) & ", , 60672, (r14876671), (r12632256), f2; " & vbCrLf & vbCrLf & "")
+        lSB.AppendLine("[WINDOWS]")
+        lSB.AppendLine("Main=" & Chr(34) & pBaseName & " Manual" & Chr(34) & ", , 60672, (r14876671), (r12632256), f2; ")
+        lSB.AppendLine("")
 
-        PrintLine(lOutFileNumber, "[CONFIG]" & vbCrLf)
-        PrintLine(lOutFileNumber, "BrowseButtons()" & vbCrLf)
-        FileClose(lOutFileNumber)
+        lSB.AppendLine("[CONFIG]")
+        lSB.AppendLine("BrowseButtons()")
+
+        SaveFileString(mSaveDirectory & pBaseName & ".hpj", lSB.ToString)
     End Sub
 
     Public Function HTMLRelativeFilename(ByRef aWinFilename As String, ByRef aWinStartPath As String) As String
@@ -667,6 +672,7 @@ Module modConvert
 
             With pWordBasic
                 .AppShow()
+                pWordApp.ActiveWindow.View.Type = WdViewType.wdPrintView 'ensures all commands available
                 '.ToolsOptionsView PicturePlaceHolders:=1
                 .ChDir(mSaveDirectory)
                 If pOutputFormat = OutputType.tPRINT Then
@@ -1625,20 +1631,23 @@ SkipBlanks2:
     End Sub
 
     Private Sub FormatTag(ByRef aTag As String, ByRef aOutputFormat As outputType)
-        Dim lBegintag As String = "<" & aTag & ">"
+        Dim lBeginTag As String
+        If aTag = "div" Then
+            lBeginTag = "<" & aTag & " "
+        Else
+            lBegintag = "<" & aTag & ">"
+        End If
         Dim lEndtag As String = "</" & aTag & ">"
-        If aTag = "div" Then lBegintag = "<" & aTag & " "
-        Dim lBeginTagLength As Integer = lBegintag.Length
 
         Status("Formatting HTML " & lBegintag)
-        Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
 
         Select Case aOutputFormat
             Case outputType.tPRINT, outputType.tHELP
                 With pWordBasic
+                    Logger.Dbg("WordCount:" & pWordApp.ActiveDocument.Words.Count)
                     .StartOfDocument()
                     .EditFindClearFormatting()
-                    .EditFind(lBegintag, "", 0)
+                    .EditFind(lBeginTag, "", 0)
                     While .EditFindFound
                         .EditClear() 'delete beginTag
                         .EditBookmark("Hstart")
@@ -1649,7 +1658,7 @@ SkipBlanks2:
                             .EditClear()
                             .ExtendSelection()
                             .EditGoTo("Hstart")
-                            lDivArgs = LCase(Trim(.Selection))
+                            lDivArgs = .Selection.Trim.ToLower
                             .EditClear()
                             .Insert(vbCr)
                             .EditBookmark("Hstart")
@@ -1665,32 +1674,33 @@ SkipBlanks2:
                         .Cancel()
                         ApplyWordFormat(aTag, aOutputFormat, lDivArgs)
                         .CharRight()
-                        .EditFind(lBegintag, "", 0)
+                        .EditFind(lBeginTag, "", 0)
                     End While
                 End With
             Case outputType.tHTML, outputType.tHTMLHELP
-                Dim lStartTag As Integer = InStr(LCase(mTargetText), lBegintag)
+                Dim lStartTag As Integer = InStr(mTargetText.ToLower, lBeginTag)
                 While lStartTag > 0
-                    Dim lCloseTag As Integer = InStr(lStartTag + 2, LCase(mTargetText), lEndtag)
+                    Dim lCloseTag As Integer = InStr(lStartTag + 2, mTargetText.ToLower, lEndtag)
                     Dim lInsertText As String = ""
                     If lCloseTag > 0 Then
-                        Dim taggedText As String = Mid(mTargetText, lStartTag + lBeginTagLength, lCloseTag - (lStartTag + lBeginTagLength))
+                        Dim lBeginTagLength As Integer = lBegintag.Length
+                        Dim lTaggedText As String = Mid(mTargetText, lStartTag + lBeginTagLength, lCloseTag - (lStartTag + lBeginTagLength))
                         Select Case LCase(aTag)
                             Case "b"
-                                If InStr(taggedText, "<") > 0 Then
+                                If InStr(lTaggedText, "<") > 0 Then
                                     lInsertText = ""
-                                ElseIf InStr(taggedText, ">") > 0 Then
+                                ElseIf InStr(lTaggedText, ">") > 0 Then
                                     lInsertText = ""
                                 Else
-                                    lInsertText = "<a name=""" & taggedText & """>" 'Insert link target for bold text
+                                    lInsertText = "<a name=""" & lTaggedText & """>" 'Insert link target for bold text
                                     If aOutputFormat = outputType.tHTMLHELP Then 'Insert bold text in index
-                                        lInsertText = lInsertText & "<indexword=""" & taggedText & """>"
+                                        lInsertText = lInsertText & "<indexword=""" & lTaggedText & """>"
                                     End If
                                     mTargetText = Left(mTargetText, lStartTag - 1) & lInsertText & Mid(mTargetText, lStartTag)
                                 End If
                         End Select
                     End If
-                    lStartTag = InStr(lStartTag + Len(lInsertText) + 2, LCase(mTargetText), lBegintag)
+                    lStartTag = InStr(lStartTag + lInsertText.Length + 2, mTargetText.ToLower, lBeginTag)
                 End While
         End Select
     End Sub

@@ -9,170 +9,165 @@ Friend Class frmMain
 	Inherits System.Windows.Forms.Form
     'Copyright 2000-2008 by AQUA TERRA Consultants
 
-    Dim mnuRecent As New ArrayList
-    Dim path As String
-    Dim CurrentFileContents As String 'What was last saved or retrieved from pCurrentFilename
-    Dim MaxUndo As Integer = 10
-    Dim Undos(MaxUndo) As String
-    Dim UndoCursor(MaxUndo) As Integer
-	Dim UndoPos As Integer
-	Dim UndosAvail As Integer
-    Dim Undoing As Boolean
-	Dim Changed As Boolean 'True if txtMain.Text has been edited
-	Dim ProjectChanged As Boolean
-	Dim ViewFormatting As Boolean
-	Dim FormatWhileTyping As Boolean
-	Dim txtMainButton As Integer
-	Dim AbortAction As Boolean
-	
-	Dim tagName As String
-	Dim openTagPos, closeTagPos As Integer 'current tag being edited
-	Dim NodeLinking As Integer 'Index in tree of file containing link being edited
-	
-	Private SashDragging As Boolean
-	Private Const SectionMainWin As String = "Main Window"
-	Private Const SectionRecentFiles As String = "Recent Files"
+    Private mMnuRecent As New ArrayList
+    Private mPath As String
+    Private mCurrentFileContents As String 'What was last saved or retrieved from pCurrentFilename
+    Private mMaxUndo As Integer = 10
+    Private mUndos(mMaxUndo) As String
+    Private mUndoCursor(mMaxUndo) As Integer
+    Private mUndoPos As Integer
+    Private mUndosAvail As Integer
+    Private mUndoing As Boolean
+    Private mChanged As Boolean 'True if txtMain.Text has been edited
+    Private mProjectChanged As Boolean
+    Private mViewFormatting As Boolean
+    Private mFormatWhileTyping As Boolean
+    Private mAbortAction As Boolean
+
+    Private mTagName As String
+    Private mOpenTagPos, mCloseTagPos As Integer 'current tag being edited
+    Private mNodeLinking As Integer 'Index in tree of file containing link being edited
+
+    Private mSashDragging As Boolean
+    Private Const SectionMainWin As String = "Main Window"
+    Private Const SectionRecentFiles As String = "Recent Files"
     Private Const MaxRecentFiles As Integer = 6
-	
-	Private Sub cmdFind_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdFind.KeyPress
-        Dim KeyAscii As Integer = Asc(eventArgs.KeyChar)
-		If KeyAscii >= 32 And KeyAscii < 127 Then
-			txtFind.Focus()
-			txtFind.Text = Chr(KeyAscii)
-			txtFind.SelectionStart = 1
-		End If
-		eventArgs.KeyChar = Chr(KeyAscii)
-		If KeyAscii = 0 Then
-			eventArgs.Handled = True
-		End If
-	End Sub
-	
-	Private Sub cmdFind_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdFind.MouseUp
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-		Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-		Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-		Static Finding As Boolean
-		Dim searchThrough, SearchFor As String
-		Dim searchPos, selStart, startNodeIndex As Integer
-		If Button = VB6.MouseButtonConstants.RightButton Then
-			fraFind.Visible = False
-			frmMain_Resize(Me, New System.EventArgs())
-		ElseIf cmdFind.Text = "Stop" Then 
-			Finding = False
-		Else
-			'Dim StartTime As Single
-			Finding = True
-			cmdFind.Text = "Stop"
-			'StartTime = Timer
-			searchThrough = txtMain.Text
-			If txtFind.Text = "" And txtMain.SelectionLength > 0 Then txtFind.Text = txtMain.SelectedText
-			If txtFind.Text <> "" Then
-				SearchFor = UnEscape(txtFind.Text)
-				selStart = txtMain.SelectionStart
-				searchPos = txtMain.SelectionStart + txtMain.SelectionLength
-                searchPos = txtMain.Find(SearchFor, searchPos, RichTextBoxFinds.None)
-				startNodeIndex = tree1.SelectedItem.Index
-				If searchPos < 0 And Finding Then
-					If QuerySave <> MsgBoxResult.Cancel Then
-NextNode: 
-						If tree1.SelectedItem Is Nothing Then
-							tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
-						ElseIf tree1.SelectedItem.Index < tree1.Nodes.Count Then 
-							tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(tree1.SelectedItem.Index + 1)))
-						Else
-							tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
-						End If
-						searchPos = txtMain.Find(SearchFor, 0)
-						If searchPos < 0 And tree1.SelectedItem.Index <> startNodeIndex Then
-							'If Timer - StartTime < FindTimeout Then
-							System.Windows.Forms.Application.DoEvents()
-							If Finding Then GoTo NextNode
-						End If
-					End If
-				End If
-			End If
-		End If
-		cmdFind.Text = "Find"
-	End Sub
-	
-	Private Function UnEscape(ByVal Source As String) As String
-        Dim retval As String = ""
-		Dim ch As String
-		Dim chpos, lastchpos As Integer
-		chpos = 1
-		lastchpos = Len(Source)
-		While chpos <= lastchpos
-			ch = Mid(Source, chpos, 1)
-			If ch = "\" Then
-				chpos = chpos + 1
-				If chpos > lastchpos Then
-                    retval &= ch
+
+    Private Sub cmdFind_KeyPress(ByVal aEventSender As System.Object, _
+                                 ByVal aEventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdFind.KeyPress
+        Dim lKeyAscii As Integer = Asc(aEventArgs.KeyChar)
+        If lKeyAscii >= 32 And lKeyAscii < 127 Then
+            txtFind.Focus()
+            txtFind.Text = Chr(lKeyAscii)
+            txtFind.SelectionStart = 1
+        End If
+        aEventArgs.KeyChar = Chr(lKeyAscii)
+        If lKeyAscii = 0 Then
+            aEventArgs.Handled = True
+        End If
+    End Sub
+
+    Private Sub cmdFind_MouseUp(ByVal aEventSender As System.Object, _
+                                ByVal aEventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdFind.MouseUp
+        Dim lButton As Integer = aEventArgs.Button \ &H100000
+        Dim lShift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim lX As Single = VB6.PixelsToTwipsX(aEventArgs.X)
+        Dim lY As Single = VB6.PixelsToTwipsY(aEventArgs.Y)
+        Static lFinding As Boolean
+        Dim lSearchThrough, lSearchFor As String
+        Dim lSearchPos, lSelStart, lStartNodeIndex As Integer
+        If lButton = VB6.MouseButtonConstants.RightButton Then
+            fraFind.Visible = False
+            frmMain_Resize(Me, New System.EventArgs())
+        ElseIf cmdFind.Text = "Stop" Then
+            lFinding = False
+        Else
+            lFinding = True
+            cmdFind.Text = "Stop"
+            lSearchThrough = txtMain.Text
+            If txtFind.Text = "" And txtMain.SelectionLength > 0 Then txtFind.Text = txtMain.SelectedText
+            If txtFind.Text <> "" Then
+                lSearchFor = UnEscape(txtFind.Text)
+                lSelStart = txtMain.SelectionStart
+                lSearchPos = txtMain.SelectionStart + txtMain.SelectionLength
+                lSearchPos = txtMain.Find(lSearchFor, lSearchPos, RichTextBoxFinds.None)
+                lStartNodeIndex = tree1.SelectedItem.Index
+                If lSearchPos < 0 And lFinding Then
+                    If QuerySave() <> MsgBoxResult.Cancel Then
+NextNode:
+                        If tree1.SelectedItem Is Nothing Then
+                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+                        ElseIf tree1.SelectedItem.Index < tree1.Nodes.Count Then
+                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(tree1.SelectedItem.Index + 1)))
+                        Else
+                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+                        End If
+                        lSearchPos = txtMain.Find(lSearchFor, 0)
+                        If lSearchPos < 0 And tree1.SelectedItem.Index <> lStartNodeIndex Then
+                            System.Windows.Forms.Application.DoEvents()
+                            If lFinding Then GoTo NextNode
+                        End If
+                    End If
+                End If
+            End If
+        End If
+        cmdFind.Text = "Find"
+    End Sub
+
+    Private Function UnEscape(ByVal aSource As String) As String
+        Dim lRetVal As String = ""
+        Dim lCharPos As Integer = 1
+        Dim lLastCharPos As Integer = aSource.Length
+        While lCharPos <= lLastCharPos
+            Dim lChar As String = Mid(aSource, lCharPos, 1)
+            If lChar = "\" Then
+                lCharPos += 1
+                If lCharPos > lLastCharPos Then
+                    lRetVal &= lChar
                 Else
-                    ch = Mid(Source, chpos, 1)
-                    Select Case LCase(ch)
-                        Case "c" : retval &= vbCrLf
-                        Case "n" : retval &= vbLf
-                        Case "r" : retval &= vbCr
-                        Case "t" : retval &= vbTab
-                        Case "\" : retval &= ch
-                        Case Else : retval &= "^" & ch
+                    lChar = Mid(aSource, lCharPos, 1)
+                    Select Case LCase(lChar)
+                        Case "c" : lRetVal &= vbCrLf
+                        Case "n" : lRetVal &= vbLf
+                        Case "r" : lRetVal &= vbCr
+                        Case "t" : lRetVal &= vbTab
+                        Case "\" : lRetVal &= lChar
+                        Case Else : lRetVal &= "^" & lChar
                     End Select
                 End If
             Else
-                retval &= ch
-			End If
-			chpos = chpos + 1
-		End While
-		UnEscape = retval
-	End Function
-	
-	Private Sub cmdReplace_KeyPress(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdReplace.KeyPress
-        Dim KeyAscii As Integer = Asc(eventArgs.KeyChar)
-		If KeyAscii >= 32 And KeyAscii < 127 Then
-			txtReplace.Focus()
-			txtReplace.Text = Chr(KeyAscii)
-			txtReplace.SelectionStart = 1
-		End If
-		eventArgs.KeyChar = Chr(KeyAscii)
-		If KeyAscii = 0 Then
-			eventArgs.Handled = True
-		End If
-	End Sub
-	
-	Private Sub cmdReplace_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdReplace.MouseUp
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-		Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-		Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-		Dim startNodeIndex As Integer
-		Dim searchedBeyondStart As Boolean
-		Dim FindText, ReplaceText As String
-		If Button = VB6.MouseButtonConstants.RightButton Then
-			fraFind.Visible = False
-			frmMain_Resize(Me, New System.EventArgs())
-		Else
-			FindText = LCase(UnEscape(txtFind.Text))
-			ReplaceText = UnEscape(txtReplace.Text)
-			startNodeIndex = tree1.SelectedItem.Index
-			searchedBeyondStart = False
-			If LCase(txtMain.SelectedText) = FindText Then
-NextReplace: 
-				txtMain.SelectedText = ReplaceText
-			End If
-			cmdFind_MouseUp(cmdFind, New System.Windows.Forms.MouseEventArgs(Button * &H100000, 0, VB6.TwipsToPixelsX(x), VB6.TwipsToPixelsY(y), 0))
-			If startNodeIndex <> tree1.SelectedItem.Index Then searchedBeyondStart = True
-			If Shift > 0 Then
-				If Not searchedBeyondStart Or startNodeIndex <> tree1.SelectedItem.Index Then
-					If LCase(txtMain.SelectedText) = FindText Then GoTo NextReplace
-				End If
-			End If
-		End If
+                lRetVal &= lChar
+            End If
+            lCharPos += 1
+        End While
+        Return lRetVal
+    End Function
+
+    Private Sub cmdReplace_KeyPress(ByVal aEventSender As System.Object, _
+                                    ByVal aEventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdReplace.KeyPress
+        Dim lKeyAscii As Integer = Asc(aEventArgs.KeyChar)
+        If lKeyAscii >= 32 And lKeyAscii < 127 Then
+            txtReplace.Focus()
+            txtReplace.Text = Chr(lKeyAscii)
+            txtReplace.SelectionStart = 1
+        End If
+        aEventArgs.KeyChar = Chr(lKeyAscii)
+        If lKeyAscii = 0 Then
+            aEventArgs.Handled = True
+        End If
     End Sub
 
-    Private Sub frmMain_Load(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Load
-        Dim setting As Object
-        Dim rf As Integer
+    Private Sub cmdReplace_MouseUp(ByVal aEventSender As System.Object, _
+                                   ByVal aEventArgs As System.Windows.Forms.MouseEventArgs) Handles cmdReplace.MouseUp
+        Dim lButton As Integer = aEventArgs.Button \ &H100000
+        Dim lShift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        Dim lX As Single = VB6.PixelsToTwipsX(aEventArgs.X)
+        Dim lY As Single = VB6.PixelsToTwipsY(aEventArgs.Y)
+
+        If lButton = VB6.MouseButtonConstants.RightButton Then
+            fraFind.Visible = False
+            frmMain_Resize(Me, New System.EventArgs())
+        Else
+            Dim lFindText As String = UnEscape(txtFind.Text).ToLower
+            Dim lReplaceText As String = UnEscape(txtReplace.Text)
+            Dim lStartNodeIndex As Integer = tree1.SelectedItem.Index
+            Dim lSearchedBeyondStart As Boolean = False
+            If txtMain.SelectedText.ToLower = lFindText Then
+NextReplace:
+                txtMain.SelectedText = lReplaceText
+            End If
+            cmdFind_MouseUp(cmdFind, New System.Windows.Forms.MouseEventArgs(lButton * &H100000, 0, VB6.TwipsToPixelsX(lx), VB6.TwipsToPixelsY(lY), 0))
+            If lStartNodeIndex <> tree1.SelectedItem.Index Then lSearchedBeyondStart = True
+            If lShift > 0 Then
+                If Not lSearchedBeyondStart Or lStartNodeIndex <> tree1.SelectedItem.Index Then
+                    If LCase(txtMain.SelectedText) = lFindText Then GoTo NextReplace
+                End If
+            End If
+        End If
+    End Sub
+
+    Private Sub frmMain_Load(ByVal aEventSender As System.Object, _
+                             ByVal aEventArgs As System.EventArgs) Handles MyBase.Load
         BrowseImage = "Use Other Image (File)"
         ViewImage = "View image"
         SelectLink = "Link to Page (select)"
@@ -183,38 +178,39 @@ NextReplace:
         'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
         'App.HelpFile = GetSetting(pAppName, "Files", "Help", My.Application.Info.DirectoryPath & "\AuthorDoc.chm")
         pBaseName = GetSetting(pAppName, "Defaults", "BaseName", "")
-        path = GetSetting(pAppName, "Defaults", "Path", CurDir())
-        ViewFormatting = CBool(GetSetting(pAppName, "Defaults", "ViewFormatting", CStr(True)))
-        FormatWhileTyping = CBool(GetSetting(pAppName, "Defaults", "FormatWhileTyping", CStr(False)))
+        mPath = GetSetting(pAppName, "Defaults", "Path", CurDir())
+        mViewFormatting = CBool(GetSetting(pAppName, "Defaults", "ViewFormatting", CStr(True)))
+        mFormatWhileTyping = CBool(GetSetting(pAppName, "Defaults", "FormatWhileTyping", CStr(False)))
         mnuAutoParagraph.Checked = CBool(GetSetting(pAppName, "Defaults", "AutoParagraph", CStr(False)))
-        setting = GetSetting(pAppName, "Defaults", "FindTimeout", CStr(2))
-        If IsNumeric(setting) Then FindTimeout = setting
-        setting = GetSetting(pAppName, SectionMainWin, "Width")
-        If IsNumeric(setting) Then Width = VB6.TwipsToPixelsX(setting)
-        setting = GetSetting(pAppName, SectionMainWin, "Height")
-        If IsNumeric(setting) Then Height = VB6.TwipsToPixelsY(setting)
-        setting = GetSetting(pAppName, SectionMainWin, "Left")
-        If IsNumeric(setting) Then Left = VB6.TwipsToPixelsX(setting)
-        setting = GetSetting(pAppName, SectionMainWin, "Top")
-        If IsNumeric(setting) Then Top = VB6.TwipsToPixelsY(setting)
-        setting = GetSetting(pAppName, SectionMainWin, "TreeWidth")
-        If IsNumeric(setting) Then
-            sash.Left = VB6.TwipsToPixelsX(setting)
-            SashDragging = True
-            sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
-            SashDragging = False
-        End If
-        For rf = MaxRecentFiles To 1 Step -1
-            setting = GetSetting(pAppName, SectionRecentFiles, CStr(rf), "")
-            If IO.File.Exists(setting) Then AddRecentFile(CStr(setting))
-        Next rf
 
-        mnuFormatting.Checked = ViewFormatting
-        mnuFormatWhileTyping.Checked = FormatWhileTyping
-        cdlgOpen.FileName = path & "\" & pBaseName & pSourceExtension
-        cdlgSave.FileName = path & "\" & pBaseName & pSourceExtension
-        cdlgImageOpen.FileName = path
-        If IO.Directory.Exists(path) Then ChDir(path)
+        Dim lSetting As Object = GetSetting(pAppName, "Defaults", "FindTimeout", CStr(2))
+        If IsNumeric(lSetting) Then FindTimeout = lSetting
+        lSetting = GetSetting(pAppName, SectionMainWin, "Width")
+        If IsNumeric(lSetting) Then Width = VB6.TwipsToPixelsX(lSetting)
+        lSetting = GetSetting(pAppName, SectionMainWin, "Height")
+        If IsNumeric(lSetting) Then Height = VB6.TwipsToPixelsY(lSetting)
+        lSetting = GetSetting(pAppName, SectionMainWin, "Left")
+        If IsNumeric(lSetting) Then Left = VB6.TwipsToPixelsX(lSetting)
+        lSetting = GetSetting(pAppName, SectionMainWin, "Top")
+        If IsNumeric(lSetting) Then Top = VB6.TwipsToPixelsY(lSetting)
+        lSetting = GetSetting(pAppName, SectionMainWin, "TreeWidth")
+        If IsNumeric(lSetting) Then
+            sash.Left = VB6.TwipsToPixelsX(lSetting)
+            mSashDragging = True
+            sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
+            mSashDragging = False
+        End If
+        For lRecentFileIndex As Integer = MaxRecentFiles To 1 Step -1
+            lSetting = GetSetting(pAppName, SectionRecentFiles, CStr(lRecentFileIndex), "")
+            If IO.File.Exists(lSetting) Then AddRecentFile(CStr(lSetting))
+        Next lRecentFileIndex
+
+        mnuFormatting.Checked = mViewFormatting
+        mnuFormatWhileTyping.Checked = mFormatWhileTyping
+        cdlgOpen.FileName = mPath & "\" & pBaseName & pSourceExtension
+        cdlgSave.FileName = mPath & "\" & pBaseName & pSourceExtension
+        cdlgImageOpen.FileName = mPath
+        If IO.Directory.Exists(mPath) Then ChDir(mPath)
         If IO.File.Exists(cdlgOpen.FileName) Then
             Me.Show()
             Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
@@ -224,48 +220,34 @@ NextReplace:
         End If
     End Sub
 
-    Private Sub frmMain_Resize(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Resize
-        Dim newWidth As Integer
-        If VB6.PixelsToTwipsY(Height) > 800 Then sash.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(Height) - 753) 'menu height
+    Private Sub frmMain_Resize(ByVal aEventSender As System.Object, _
+                               ByVal aEventArgs As System.EventArgs) Handles MyBase.Resize
+        If VB6.PixelsToTwipsY(Height) > 800 Then
+            sash.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(Height) - 753) 'menu height
+        End If
         tree1.Height = sash.Height
-        'If fraFind.Visible Then
-        '	txtMain.Top = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(fraFind.Top) + VB6.PixelsToTwipsY(fraFind.Height))
-        'Else
-        '	txtMain.Top = fraFind.Top
-        'End If
-        'If VB6.PixelsToTwipsY(sash.Height) > VB6.PixelsToTwipsY(txtMain.Top) Then txtMain.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(sash.Height) - VB6.PixelsToTwipsY(txtMain.Top))
 
         txtMain.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(sash.Left) + VB6.PixelsToTwipsX(sash.Width))
-        'fraFind.Left = txtMain.Left
-        newWidth = VB6.PixelsToTwipsX(Width) - VB6.PixelsToTwipsX(txtMain.Left) - 100
-        If newWidth > 0 Then
-            txtMain.Width = VB6.TwipsToPixelsX(newWidth)
-            'If fraFind.Visible Then
-            '	fraFind.Width = VB6.TwipsToPixelsX(newWidth)
-            '	If (newWidth - 324 - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width)) > 100 Then
-            '		txtFind.Width = VB6.TwipsToPixelsX((newWidth - VB6.PixelsToTwipsX(cmdFind.Width) - VB6.PixelsToTwipsX(cmdReplace.Width) - 324) / 2)
-            '		cmdReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(txtFind.Left) + VB6.PixelsToTwipsX(txtFind.Width) + 108)
-            '		txtReplace.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(cmdReplace.Left) + VB6.PixelsToTwipsX(cmdReplace.Width) + 108)
-            '		txtReplace.Width = txtFind.Width
-            '	End If
-            'End If
+        Dim lNewWidth As Integer = VB6.PixelsToTwipsX(Width) - VB6.PixelsToTwipsX(txtMain.Left) - 100
+        If lNewWidth > 0 Then
+            txtMain.Width = VB6.TwipsToPixelsX(lNewWidth)
         End If
     End Sub
 
-    Private Sub frmMain_FormClosing(ByVal sender As Object, ByVal e As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
+    Private Sub frmMain_FormClosing(ByVal aSender As Object, _
+                                    ByVal aE As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
         If QuerySave() = MsgBoxResult.Cancel Then
-            e.Cancel = True
+            aE.Cancel = True
         ElseIf QuerySaveProject() = MsgBoxResult.Cancel Then
-            e.Cancel = True
+            aE.Cancel = True
         Else
             'UPGRADE_ISSUE: App property App.HelpFile was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="076C26E5-B7A9-4E77-B69C-B4448DF39E58"'
             'SaveSetting(pAppName, "Files", "Help", App.HelpFile)
-
             SaveSetting(pAppName, "Defaults", "BaseName", pBaseName)
-            SaveSetting(pAppName, "Defaults", "Path", path)
+            SaveSetting(pAppName, "Defaults", "Path", mPath)
             SaveSetting(pAppName, "Defaults", "FindTimeout", CStr(FindTimeout))
-            SaveSetting(pAppName, "Defaults", "ViewFormatting", CStr(ViewFormatting))
-            SaveSetting(pAppName, "Defaults", "FormatWhileTyping", CStr(FormatWhileTyping))
+            SaveSetting(pAppName, "Defaults", "ViewFormatting", CStr(mViewFormatting))
+            SaveSetting(pAppName, "Defaults", "FormatWhileTyping", CStr(mFormatWhileTyping))
             SaveSetting(pAppName, "Defaults", "AutoParagraph", CStr(mnuAutoParagraph.Checked))
 
             SaveSetting(pAppName, SectionMainWin, "Width", CStr(VB6.PixelsToTwipsX(Width)))
@@ -273,13 +255,13 @@ NextReplace:
             SaveSetting(pAppName, SectionMainWin, "Left", CStr(VB6.PixelsToTwipsX(Left)))
             SaveSetting(pAppName, SectionMainWin, "Top", CStr(VB6.PixelsToTwipsY(Top)))
             SaveSetting(pAppName, SectionMainWin, "TreeWidth", CStr(VB6.PixelsToTwipsX(sash.Left)))
-            Dim rf As Integer
-            For rf = mnuRecent.Count - 1 To 1 Step -1
-                SaveSetting(pAppName, SectionRecentFiles, CStr(rf), mnuRecent(rf).Tag)
-            Next rf
-            While GetSetting(pAppName, SectionRecentFiles, CStr(rf)) <> ""
-                SaveSetting(pAppName, SectionRecentFiles, CStr(rf), "")
-                rf += 1
+            Dim lRecentFileIndex As Integer
+            For lRecentFileIndex = mMnuRecent.Count - 1 To 1 Step -1
+                SaveSetting(pAppName, SectionRecentFiles, CStr(lRecentFileIndex), mMnuRecent(lRecentFileIndex).Tag)
+            Next lRecentFileIndex
+            While GetSetting(pAppName, SectionRecentFiles, CStr(lRecentFileIndex)) <> ""
+                SaveSetting(pAppName, SectionRecentFiles, CStr(lRecentFileIndex), "")
+                lRecentFileIndex += 1
             End While
 
             For Each lOpenForm As Form In My.Application.OpenForms
@@ -288,75 +270,80 @@ NextReplace:
         End If
     End Sub
 
-    Private Sub fraFind_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles fraFind.MouseDown
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-        Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-        Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        If Button = VB6.MouseButtonConstants.RightButton Or Shift = System.Windows.Forms.Keys.ShiftKey Then
+    Private Sub fraFind_MouseDown(ByVal aEventSender As System.Object, _
+                                  ByVal aEventArgs As System.Windows.Forms.MouseEventArgs) Handles fraFind.MouseDown
+        Dim lButton As Integer = aEventArgs.Button \ &H100000
+        Dim lShift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
+        If lButton = VB6.MouseButtonConstants.RightButton Or lShift = System.Windows.Forms.Keys.ShiftKey Then
             fraFind.Visible = False
             frmMain_Resize(Me, New System.EventArgs())
         End If
     End Sub
 
-    Public Sub mnuAutoSave_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuAutoSave.Click
+    Public Sub mnuAutoSave_Click(ByVal aEventSender As System.Object, _
+                                 ByVal aEventArgs As System.EventArgs) Handles mnuAutoSave.Click
         mnuAutoSave.Checked = Not mnuAutoSave.Checked
     End Sub
 
-    Public Sub mnuContext_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuContext.Click
-        Dim Index As Integer = mnuContext.GetIndex(eventSender)
+    Public Sub mnuContext_Click(ByVal aEventSender As System.Object, _
+                                ByVal aEventArgs As System.EventArgs) Handles mnuContext.Click
+        Dim Index As Integer = mnuContext.GetIndex(aEventSender)
         ContextAction(mnuContext(Index).Text)
     End Sub
 
-    Public Sub ContextAction(ByRef cmd As String)
-        Dim filename, PathName As String
-        Select Case cmd
+    Public Sub ContextAction(ByRef aCommand As String)
+        Dim lFilename, lPathName As String
+        Select Case aCommand
             Case pCaptureReplace
-                filename = ReplaceString(SubTagValue("src"), "/", "\")
-                filename = IO.Path.GetDirectoryName(path & "\" & NodeFile()) & "\" & filename
-                frmCapture.Filename = filename
+                lFilename = ReplaceString(SubTagValue("src"), "/", "\")
+                lFilename = IO.Path.GetDirectoryName(mPath & "\" & NodeFile()) & "\" & lFilename
+                frmCapture.Filename = lFilename
                 frmCapture.Show()
             Case pCaptureNew, BrowseImage
                 cdlgOpen.ShowDialog()
                 cdlgSave.FileName = cdlgOpen.FileName
-                filename = cdlgOpen.FileName
-                If Len(filename) > 0 Then
-                    PathName = IO.Path.GetDirectoryName(path & "\" & NodeFile())
-                    filename = HTMLRelativeFilename(filename, PathName)
+                lFilename = cdlgOpen.FileName
+                If Len(lFilename) > 0 Then
+                    lPathName = IO.Path.GetDirectoryName(mPath & "\" & NodeFile())
+                    lFilename = HTMLRelativeFilename(lFilename, lPathName)
                 End If
-                If closeTagPos > openTagPos + 4 Then
-                    EditSubTag("src", filename)
+                If mCloseTagPos > mOpenTagPos + 4 Then
+                    EditSubTag("src", lFilename)
                 Else
-                    txtMain.Text = VB.Left(txtMain.Text, txtMain.SelectionStart) & "<img src=""" & filename & """>" & Mid(txtMain.Text, txtMain.SelectionStart + 1)
+                    txtMain.Text = VB.Left(txtMain.Text, txtMain.SelectionStart) & "<img src=""" & lFilename & """>" & Mid(txtMain.Text, txtMain.SelectionStart + 1)
                 End If
-                If cmd = pCaptureNew Then
-                    frmCapture.Filename = filename
+                If aCommand = pCaptureNew Then
+                    frmCapture.Filename = lFilename
                     frmCapture.Show()
                 End If
             Case ViewImage
-                filename = ReplaceString(SubTagValue("src"), "/", "\")
-                filename = IO.Path.GetDirectoryName(path & "\" & NodeFile()) & "\" & filename
-                If IO.File.Exists(filename) Then OpenFile(filename)
+                lFilename = ReplaceString(SubTagValue("src"), "/", "\")
+                lFilename = IO.Path.GetDirectoryName(mPath & "\" & NodeFile()) & "\" & lFilename
+                If IO.File.Exists(lFilename) Then OpenFile(lFilename)
             Case DeleteTag
-                If closeTagPos > openTagPos + 4 Then txtMain.Text = VB.Left(txtMain.Text, openTagPos - 1) & Mid(txtMain.Text, closeTagPos + 1)
+                If mCloseTagPos > mOpenTagPos + 4 Then txtMain.Text = VB.Left(txtMain.Text, mOpenTagPos - 1) & Mid(txtMain.Text, mCloseTagPos + 1)
             Case SelectLink
-                NodeLinking = tree1.SelectedItem.Index
+                mNodeLinking = tree1.SelectedItem.Index
                 Me.Cursor = System.Windows.Forms.Cursors.UpArrow
-            Case Else : MsgBox("Unrecognized menu item: " & cmd, MsgBoxStyle.OkOnly, "AuthorDoc")
+            Case Else
+                Logger.Msg("Unrecognized menu item: " & aCommand, MsgBoxStyle.OkOnly, "AuthorDoc")
         End Select
     End Sub
 
-    Public Sub mnuConvert_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuConvert.Click
+    Public Sub mnuConvert_Click(ByVal aEventSender As System.Object, _
+                                ByVal aEventArgs As System.EventArgs) Handles mnuConvert.Click
         If QuerySave() <> MsgBoxResult.Cancel Then
             If QuerySaveProject() <> MsgBoxResult.Cancel Then frmConvert.Show()
         End If
     End Sub
 
-    Public Sub mnuCopy_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuCopy.Click
+    Public Sub mnuCopy_Click(ByVal aEventSender As System.Object, _
+                             ByVal aEventArgs As System.EventArgs) Handles mnuCopy.Click
         My.Computer.Clipboard.SetText(txtMain.SelectedText)
     End Sub
 
-    Public Sub mnuCut_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuCut.Click
+    Public Sub mnuCut_Click(ByVal aEventSender As System.Object, _
+                            ByVal aEventArgs As System.EventArgs) Handles mnuCut.Click
         My.Computer.Clipboard.SetText(txtMain.SelectedText)
         txtMain.SelectedText = ""
     End Sub
@@ -370,12 +357,13 @@ NextReplace:
         Else
             If QuerySave() <> MsgBoxResult.Cancel Then
                 tree1.Visible = True
-                mnuRecent_Click(mnuRecent.Item(1), New System.EventArgs())
+                mnuRecent_Click(mMnuRecent.Item(1), New System.EventArgs())
             End If
         End If
     End Sub
 
-    Public Sub mnuExit_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuExit.Click
+    Public Sub mnuExit_Click(ByVal aEventSender As System.Object, _
+                             ByVal aEventArgs As System.EventArgs) Handles mnuExit.Click
         Close()
     End Sub
 
@@ -422,8 +410,8 @@ NextReplace:
 
     Public Sub mnuFormatting_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuFormatting.Click
         mnuFormatting.Checked = Not mnuFormatting.Checked
-        ViewFormatting = mnuFormatting.Checked
-        If ViewFormatting Then
+        mViewFormatting = mnuFormatting.Checked
+        If mViewFormatting Then
             FormatText(txtMain)
         Else
             txtMain.Text = txtMain.Text
@@ -433,9 +421,9 @@ NextReplace:
 
     Public Sub mnuFormatWhileTyping_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuFormatWhileTyping.Click
         mnuFormatWhileTyping.Checked = Not mnuFormatWhileTyping.Checked
-        FormatWhileTyping = mnuFormatWhileTyping.Checked
-        If FormatWhileTyping Then
-            If Not ViewFormatting Then
+        mFormatWhileTyping = mnuFormatWhileTyping.Checked
+        If mFormatWhileTyping Then
+            If Not mViewFormatting Then
                 mnuFormatting_Click(mnuFormatting, New System.EventArgs())
             Else
                 FormatText(txtMain)
@@ -469,8 +457,8 @@ NextReplace:
 
     Public Sub mnuLinkSection_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuLinkSection.Click
         GetCurrentTag()
-        If tagName = "a" Then
-            txtMain.SelectionStart = openTagPos + 9
+        If mTagName = "a" Then
+            txtMain.SelectionStart = mOpenTagPos + 9
         Else
             mnuLink_Click(mnuLink, New System.EventArgs())
             GetCurrentTag()
@@ -479,27 +467,25 @@ NextReplace:
     End Sub
 
     Public Sub mnuNewProject_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuNewProject.Click
-        Dim f As Integer
-
-        If QuerySave = MsgBoxResult.Cancel Then Exit Sub
-        On Error GoTo ErrNew
-        cdlgSave.ShowDialog()
-        cdlgOpen.FileName = cdlgSave.FileName
-        If Len(cdlgOpen.FileName) > 0 Then
-            path = IO.Path.GetDirectoryName((cdlgOpen.FileName))
-            ChDir(path)
-            If Not IO.Directory.Exists(path) Then MkDir(path)
-            f = FreeFile()
-            FileOpen(f, cdlgOpen.FileName, OpenMode.Output)
-            FileClose(f)
-            OpenProject((cdlgOpen.FileName), tree1)
-            mnuNewSection.Enabled = True
-            ProjectChanged = False
-            If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
-        End If
-        Exit Sub
-ErrNew:
-        MsgBox("Error creating new project:" & vbCr & Err.Description)
+        If QuerySave() = MsgBoxResult.Cancel Then Exit Sub
+        Try
+            cdlgSave.ShowDialog()
+            cdlgOpen.FileName = cdlgSave.FileName
+            If cdlgOpen.FileName.Length > 0 Then
+                mPath = IO.Path.GetDirectoryName((cdlgOpen.FileName))
+                ChDir(mPath)
+                If Not IO.Directory.Exists(mPath) Then MkDir(mPath)
+                Dim f As Integer = FreeFile()
+                FileOpen(f, cdlgOpen.FileName, OpenMode.Output)
+                FileClose(f)
+                OpenProject((cdlgOpen.FileName), tree1)
+                mnuNewSection.Enabled = True
+                mProjectChanged = False
+                If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+            End If
+        Catch ex As Exception
+            Logger.Msg("Error creating new project:" & vbCr & ex.Message)
+        End Try
     End Sub
 
     Public Sub mnuNewSection_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuNewSection.Click
@@ -512,8 +498,8 @@ ErrNew:
         cdlgOpen.ShowDialog()
         cdlgSave.FileName = cdlgOpen.FileName
         filename = cdlgOpen.FileName
-        If Len(filename) > Len(path) Then
-            If UCase(VB.Left(filename, Len(path))) <> UCase(path) Then
+        If Len(filename) > Len(mPath) Then
+            If UCase(VB.Left(filename, Len(mPath))) <> UCase(mPath) Then
                 MsgBox("Files must be in the same directory as or a subdirectory of the project file's directory.", MsgBoxStyle.OKOnly)
             Else
                 If UCase(VB.Right(filename, Len(pSourceExtension))) <> UCase(pSourceExtension) Then
@@ -530,7 +516,7 @@ ErrNew:
 
                 ThisName = FilenameOnly(filename)
                 key = VB.Left(filename, Len(filename) - Len(pSourceExtension)) 'trim extension .txt
-                key = "N" & Mid(key, Len(path) + 2)
+                key = "N" & Mid(key, Len(mPath) + 2)
                 keypath = IO.Path.GetDirectoryName(Mid(key, 2))
                 If tree1.Nodes.Count = 0 Then 'This is the first node
                     tree1.Nodes.Add(, , key, ThisName)
@@ -549,7 +535,7 @@ ErrNew:
                     If Not found Then tree1.Nodes.Add(tree1.SelectedItem, ComctlLib.TreeRelationshipConstants.tvwChild, key, ThisName)
                 End If
                 pCurrentFilename = cdlgOpen.FileName
-                ProjectChanged = True
+                mProjectChanged = True
                 tree1.Nodes(key).EnsureVisible()
             End If
         End If
@@ -564,8 +550,8 @@ ErrNew:
     End Function
 
     Public Sub mnuOpenProject_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuOpenProject.Click
-        If IO.Directory.Exists(path) Then
-            ChDriveDir(path)
+        If IO.Directory.Exists(mPath) Then
+            ChDriveDir(mPath)
         End If
 
         cdlgOpen.FileName = ""
@@ -574,7 +560,7 @@ ErrNew:
         cdlgSave.FileName = cdlgOpen.FileName
         If Len(cdlgOpen.FileName) > 0 Then
             AddRecentFile((cdlgOpen.FileName))
-            mnuRecent_Click(mnuRecent.Item(0), New System.EventArgs())
+            mnuRecent_Click(mMnuRecent.Item(0), New System.EventArgs())
         End If
     End Sub
 
@@ -591,11 +577,11 @@ ErrNew:
         If newFilePath.Length > 0 Then
             If QuerySaveProject() <> MsgBoxResult.Cancel Then
                 If QuerySave() <> MsgBoxResult.Cancel Then
-                    path = IO.Path.GetDirectoryName(newFilePath)
+                    mPath = IO.Path.GetDirectoryName(newFilePath)
                     Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
                     OpenProject(newFilePath, tree1)
                     mnuNewSection.Enabled = True
-                    ProjectChanged = False
+                    mProjectChanged = False
                     If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
                     Me.Cursor = System.Windows.Forms.Cursors.Default
                 End If
@@ -604,7 +590,7 @@ ErrNew:
     End Sub
 
     Public Sub mnuRevert_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuRevert.Click
-        txtMain.Text = CurrentFileContents
+        txtMain.Text = mCurrentFileContents
     End Sub
 
     Public Sub mnuSaveFile_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuSaveFile.Click
@@ -643,7 +629,7 @@ ErrNew:
         cdlgImageOpen.ShowDialog()
         filename = cdlgImageOpen.FileName
         If Len(filename) > 0 Then
-            PathName = IO.Path.GetDirectoryName(path & "\" & NodeFile)
+            PathName = IO.Path.GetDirectoryName(mPath & "\" & NodeFile)
             filename = HTMLRelativeFilename(filename, PathName)
         End If
         txtMain.SelectedText = filename
@@ -766,7 +752,7 @@ ErrNew:
         Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        SashDragging = True
+        mSashDragging = True
     End Sub
 
     Private Sub sash_MouseMove(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseMove
@@ -775,7 +761,7 @@ ErrNew:
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
         Dim newLeftWidth As Integer
-        If SashDragging And (VB6.PixelsToTwipsX(sash.Left) + x) > 100 And (VB6.PixelsToTwipsX(sash.Left) + x < VB6.PixelsToTwipsX(Width) - 100) Then
+        If mSashDragging And (VB6.PixelsToTwipsX(sash.Left) + x) > 100 And (VB6.PixelsToTwipsX(sash.Left) + x < VB6.PixelsToTwipsX(Width) - 100) Then
             sash.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(sash.Left) + x)
             newLeftWidth = VB6.PixelsToTwipsX(sash.Left)
             If newLeftWidth > 1000 Then tree1.Width = VB6.TwipsToPixelsX(newLeftWidth)
@@ -788,7 +774,7 @@ ErrNew:
         Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        SashDragging = False
+        mSashDragging = False
     End Sub
 
     Private Sub Timer1_Tick(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles Timer1.Tick
@@ -803,13 +789,13 @@ ErrNew:
 
     Private Sub TimerSlowAction_Tick(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles TimerSlowAction.Tick
         TimerSlowAction.Enabled = False
-        AbortAction = True
+        mAbortAction = True
     End Sub
 
     Private Sub tree1_AfterLabelEdit(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_AfterLabelEditEvent) Handles tree1.AfterLabelEdit
         Dim OldFilePath As String
         With tree1.SelectedItem
-            OldFilePath = path & "\" & Mid(.Key, 2) & pSourceExtension
+            OldFilePath = mPath & "\" & Mid(.Key, 2) & pSourceExtension
             If IO.File.Exists(OldFilePath) Then
                 Select Case MsgBox("Rename file '" & OldFilePath & "' to '" & eventArgs.newString & "?", MsgBoxStyle.YesNoCancel)
                     Case MsgBoxResult.No : .Text = eventArgs.newString : .Key = "N" & .FullPath
@@ -844,19 +830,19 @@ ErrNew:
         Dim inClick As Boolean
         If Not inClick And Not Timer1.Enabled Then
             inClick = True
-            If NodeLinking > 0 Then
-                fullpath = "c:\" & IO.Path.GetDirectoryName(NodeFile(NodeLinking))
+            If mNodeLinking > 0 Then
+                fullpath = "c:\" & IO.Path.GetDirectoryName(NodeFile(mNodeLinking))
                 filename = HTMLRelativeFilename("c:\" & Mid(eventArgs.node.Key, 2), fullpath)
                 EditSubTag("href", filename)
-                DelaySetNode(NodeLinking)
-                NodeLinking = 0
+                DelaySetNode(mNodeLinking)
+                mNodeLinking = 0
                 Me.Cursor = System.Windows.Forms.Cursors.Default
             Else
                 filename = Mid(eventArgs.node.Key, 2)
                 If QuerySave() = MsgBoxResult.Cancel Then 'Should move focus back to old node here
                     DelaySetNode(1)
                 Else
-                    LoadTextboxFromFile(path, filename, pSourceExtension, txtMain)
+                    LoadTextboxFromFile(mPath, filename, pSourceExtension, txtMain)
                     If tree1.SelectedItem Is Nothing Then
                         tree1.SelectedItem = eventArgs.node
                     ElseIf tree1.SelectedItem.Index <> eventArgs.node.Index Then
@@ -880,7 +866,7 @@ ErrNew:
                     ext = pSourceExtension
                 Else
                     If LastAnswer = 0 Then
-                        thisAnswer = MsgBox("File " & filename & pSourceExtension & " was not found, use " & filename & ".html instead?", MsgBoxStyle.YesNoCancel, path)
+                        thisAnswer = MsgBox("File " & filename & pSourceExtension & " was not found, use " & filename & ".html instead?", MsgBoxStyle.YesNoCancel, mPath)
                         If thisAnswer = MsgBoxResult.Cancel Then Exit Sub
                         LastAnswer = MsgBox("Treat other missing files the same way?", MsgBoxStyle.YesNo)
                         If LastAnswer = MsgBoxResult.Yes Then LastAnswer = thisAnswer Else LastAnswer = 0
@@ -906,9 +892,9 @@ OpenFile:
         If txtBox.Name = "txtMain" Then
             pCurrentFilename = filename
             Text = pCurrentFilename
-            CurrentFileContents = InputString(f, FileLength)
-            txtBox.Text = CurrentFileContents
-            If ViewFormatting Then FormatText(txtBox)
+            mCurrentFileContents = InputString(f, FileLength)
+            txtBox.Text = mCurrentFileContents
+            If mViewFormatting Then FormatText(txtBox)
         Else
             txtBox.Text = InputString(f, FileLength)
         End If
@@ -942,10 +928,10 @@ endsub:
     End Sub
 
     Private Sub SetFileChanged(ByRef newValue As Boolean)
-        If Changed <> newValue Then
-            Changed = newValue
-            mnuSaveFile.Enabled = Changed
-            If Changed Then
+        If mChanged <> newValue Then
+            mChanged = newValue
+            mnuSaveFile.Enabled = mChanged
+            If mChanged Then
                 Text = pCurrentFilename & " (edited)"
             Else
                 Text = pCurrentFilename
@@ -980,7 +966,7 @@ endsub:
         Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
         selStart = txtBox.SelectionStart
         SelLength = txtBox.SelectionLength
-        AbortAction = False
+        mAbortAction = False
         TimerSlowAction.Enabled = True
         txt = txtBox.Text
 
@@ -994,7 +980,7 @@ endsub:
 
         maxch = Len(txt)
 
-        While nextch < maxch And Not AbortAction
+        While nextch < maxch And Not mAbortAction
             nextch = InStr(nextch + 1, txt, "<")
             If nextch = 0 Then
                 nextch = maxch
@@ -1013,7 +999,7 @@ endsub:
                 End If
             End If
         End While
-        If AbortAction Then
+        If mAbortAction Then
             If InStr(Text, "(formatting aborted)") = 0 Then Text = Text & " (formatting aborted)"
         End If
         txtBox.SelectionStart = selStart
@@ -1071,10 +1057,10 @@ endsub:
     Private Function QuerySaveProject() As MsgBoxResult
         Dim retval As MsgBoxResult
         retval = MsgBoxResult.Yes
-        If ProjectChanged Then
+        If mProjectChanged Then
             retval = MsgBox("Save changes to " & pProjectFileName & "?", MsgBoxStyle.YesNoCancel)
             If retval = MsgBoxResult.Yes Then SaveProject(pProjectFileName, tree1)
-            ProjectChanged = False
+            mProjectChanged = False
         End If
         QuerySaveProject = retval
     End Function
@@ -1082,7 +1068,7 @@ endsub:
     Private Function QuerySave() As MsgBoxResult
         Dim retval As MsgBoxResult
         retval = MsgBoxResult.Yes
-        If Changed Then
+        If mChanged Then
             If Not mnuAutoSave.Checked Then
                 retval = MsgBox("Save changes to " & pCurrentFilename & "?", MsgBoxStyle.YesNoCancel)
             End If
@@ -1100,7 +1086,7 @@ endsub:
     Private Sub txtMain_KeyUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles txtMain.KeyUp
         Dim KeyCode As Integer = eventArgs.KeyCode
         Dim Shift As Integer = eventArgs.KeyData \ &H10000
-        If FormatWhileTyping Then FormatText(txtMain)
+        If mFormatWhileTyping Then FormatText(txtMain)
     End Sub
 
     Private Sub txtReplace_KeyDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles txtReplace.KeyDown
@@ -1111,21 +1097,21 @@ endsub:
 
     Private Sub txtMain_TextChanged(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtMain.TextChanged
         Static InChange As Boolean
-        If Not InChange And Not Undoing Then
+        If Not InChange And Not mUndoing Then
             InChange = True
 
-            Undos(UndoPos) = txtMain.Text
-            UndoCursor(UndoPos) = txtMain.SelectionStart
-            UndoPos = UndoPos + 1
-            If UndoPos > MaxUndo Then UndoPos = 0
-            If UndosAvail < MaxUndo Then UndosAvail = UndosAvail + 1
+            mUndos(mUndoPos) = txtMain.Text
+            mUndoCursor(mUndoPos) = txtMain.SelectionStart
+            mUndoPos = mUndoPos + 1
+            If mUndoPos > mMaxUndo Then mUndoPos = 0
+            If mUndosAvail < mMaxUndo Then mUndosAvail = mUndosAvail + 1
 
-            If CurrentFileContents <> txtMain.Text Then
-                If Not Changed Then SetFileChanged(True)
+            If mCurrentFileContents <> txtMain.Text Then
+                If Not mChanged Then SetFileChanged(True)
             Else
-                If Changed Then SetFileChanged(False)
+                If mChanged Then SetFileChanged(False)
             End If
-            mnuSaveFile.Enabled = Changed
+            mnuSaveFile.Enabled = mChanged
             If mnuTextImage.Checked Then testTextImage()
             InChange = False
         End If
@@ -1142,8 +1128,8 @@ endsub:
         Next mnuItem
         GetCurrentTag() 'txt, txtMain.SelStart, tagName, openTagPos, closeTagPos
         Dim hashPos As Integer
-        If openTagPos < closeTagPos Then
-            Select Case tagName
+        If mOpenTagPos < mCloseTagPos Then
+            Select Case mTagName
                 Case "img"
                     AddContextMenuItem(pCaptureReplace)
                     AddContextMenuItem(pCaptureNew)
@@ -1161,9 +1147,9 @@ endsub:
                     If Len(filename) > 0 Then
                         filename = ReplaceString(filename, "/", "\")
                         If VB.Left(filename, 1) = "\" Then
-                            PathName = path & filename
+                            PathName = mPath & filename
                         Else
-                            PathName = IO.Path.GetDirectoryName(path & "\" & NodeFile()) & "\" & filename
+                            PathName = IO.Path.GetDirectoryName(mPath & "\" & NodeFile()) & "\" & filename
                         End If
                         If IO.File.Exists(PathName) Then
                             frmSample.SetText(PathName)
@@ -1172,7 +1158,6 @@ endsub:
                         End If
                     End If
             End Select
-            'If txtMainButton = vbRightButton Then PopupMenu mnuContextTop
         End If
     End Sub
 
@@ -1181,14 +1166,14 @@ endsub:
         Dim oldStart As Integer
         Select Case KeyAscii
             Case 26 'Control-Z = undo
-                If UndosAvail > 0 Then
-                    Undoing = True
-                    UndoPos = UndoPos - 1
-                    If UndoPos < 0 Then UndoPos = MaxUndo
-                    txtMain.Text = Undos(UndoPos)
-                    txtMain.SelectionStart = UndoCursor(UndoPos)
-                    UndosAvail = UndosAvail - 1
-                    Undoing = False
+                If mUndosAvail > 0 Then
+                    mUndoing = True
+                    mUndoPos = mUndoPos - 1
+                    If mUndoPos < 0 Then mUndoPos = mMaxUndo
+                    txtMain.Text = mUndos(mUndoPos)
+                    txtMain.SelectionStart = mUndoCursor(mUndoPos)
+                    mUndosAvail = mUndosAvail - 1
+                    mUndoing = False
                 End If
             Case 13
                 If mnuAutoParagraph.Checked Then
@@ -1208,7 +1193,6 @@ endsub:
         Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
         Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        'txtMainButton = Button
     End Sub
 
     'Search in string txt for a tag that encloses start character position
@@ -1220,22 +1204,22 @@ endsub:
         txt = txtMain.Text
         start = txtMain.SelectionStart
         If start < 1 Then Exit Sub
-        openTagPos = InStrRev(txt, "<", start)
-        If openTagPos > 0 Then
-            closeTagPos = InStrRev(txt, ">", start)
-            If closeTagPos < openTagPos Then 'we are in a tag
-                closeTagPos = InStr(start, txt, ">")
+        mOpenTagPos = InStrRev(txt, "<", start)
+        If mOpenTagPos > 0 Then
+            mCloseTagPos = InStrRev(txt, ">", start)
+            If mCloseTagPos < mOpenTagPos Then 'we are in a tag
+                mCloseTagPos = InStr(start, txt, ">")
             End If
         End If
         Dim endNamePos As Integer
-        If openTagPos > 0 And openTagPos <= start And closeTagPos >= start Then
-            endNamePos = InStr(openTagPos, txt, " ")
-            If endNamePos = 0 Or endNamePos > closeTagPos Then endNamePos = closeTagPos
-            tagName = LCase(Mid(txt, openTagPos + 1, endNamePos - openTagPos - 1))
+        If mOpenTagPos > 0 And mOpenTagPos <= start And mCloseTagPos >= start Then
+            endNamePos = InStr(mOpenTagPos, txt, " ")
+            If endNamePos = 0 Or endNamePos > mCloseTagPos Then endNamePos = mCloseTagPos
+            mTagName = LCase(Mid(txt, mOpenTagPos + 1, endNamePos - mOpenTagPos - 1))
         Else
-            openTagPos = 0
-            closeTagPos = 0
-            tagName = ""
+            mOpenTagPos = 0
+            mCloseTagPos = 0
+            mTagName = ""
         End If
     End Sub
 
@@ -1280,7 +1264,7 @@ endsub:
         Dim txt, lTag As String
         txt = txtMain.Text
         selStart = txtMain.SelectionStart
-        lTag = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
+        lTag = LCase(Mid(txt, mOpenTagPos, mCloseTagPos - mOpenTagPos + 1))
         subtagStart = InStr(1, lTag, LCase(subtagName))
         If subtagStart = 0 Then
             retval = ""
@@ -1307,10 +1291,10 @@ endsub:
         Dim valueEnd, valueStart, subtagStart As Integer
         Dim txt, lTag As String
         txt = txtMain.Text
-        lTag = LCase(Mid(txt, openTagPos, closeTagPos - openTagPos + 1))
+        lTag = LCase(Mid(txt, mOpenTagPos, mCloseTagPos - mOpenTagPos + 1))
         subtagStart = InStr(1, lTag, LCase(subtagName))
         If subtagStart = 0 Then
-            txtMain.Text = VB.Left(txt, closeTagPos - 1) & " " & LCase(subtagName) & "=" & newValue & Mid(txt, closeTagPos)
+            txtMain.Text = VB.Left(txt, mCloseTagPos - 1) & " " & LCase(subtagName) & "=" & newValue & Mid(txt, mCloseTagPos)
         Else
             'subtagStart = subtagStart + openTagPos
             valueStart = subtagStart + Len(subtagName) + 1
@@ -1320,12 +1304,12 @@ endsub:
                 valueEnd = InStr(valueStart + 1, lTag, " ")
                 If valueEnd = 0 Then valueEnd = Len(lTag)
             End If
-            txtMain.Text = VB.Left(txt, openTagPos + valueStart - 1) & newValue & Mid(txt, openTagPos + valueEnd - 1)
-            closeTagPos = InStr(openTagPos + 1, txtMain.Text, ">")
+            txtMain.Text = VB.Left(txt, mOpenTagPos + valueStart - 1) & newValue & Mid(txt, mOpenTagPos + valueEnd - 1)
+            mCloseTagPos = InStr(mOpenTagPos + 1, txtMain.Text, ">")
         End If
-        txtMain.SelectionStart = openTagPos + 1
+        txtMain.SelectionStart = mOpenTagPos + 1
         txtMain_Click(txtMain, New System.EventArgs())
-        txtMain.SelectionStart = closeTagPos + 1
+        txtMain.SelectionStart = mCloseTagPos + 1
     End Sub
 
     Private Sub AddContextMenuItem(ByRef newItem As String)
@@ -1347,7 +1331,7 @@ endsub:
         Dim rf, rfMove As Integer
         Dim match As Boolean = False
         rf = 0
-        For Each lRecent As ToolStripMenuItem In mnuRecent 'as While Not match And rf <= mnuRecent.Count - 1
+        For Each lRecent As ToolStripMenuItem In mMnuRecent 'as While Not match And rf <= mnuRecent.Count - 1
             If lRecent.Tag.ToString.ToUpper = FilePath.ToUpper Then
                 match = True
                 Exit For
@@ -1356,11 +1340,11 @@ endsub:
         Next ' End While
         If match Then 'move file to top of list
             For rfMove = rf To 1 Step -1
-                mnuRecent(rfMove).Tag = mnuRecent(rfMove - 1).Tag
-                mnuRecent(rfMove).Text = "&" & rfMove + 1 & " " & FilenameOnly(mnuRecent(rfMove).Tag)
+                mMnuRecent(rfMove).Tag = mMnuRecent(rfMove - 1).Tag
+                mMnuRecent(rfMove).Text = "&" & rfMove + 1 & " " & FilenameOnly(mMnuRecent(rfMove).Tag)
             Next rfMove
-            mnuRecent(0).tag = FilePath
-            mnuRecent(0).text = "&1 " & FilenameOnly(FilePath)
+            mMnuRecent(0).tag = FilePath
+            mMnuRecent(0).text = "&1 " & FilenameOnly(FilePath)
         Else 'Add file to list
             mnuRecentSeparator.Visible = True
             Dim lToolStripMenuItem As New ToolStripMenuItem
@@ -1368,17 +1352,17 @@ endsub:
                 .Tag = FilePath
                 .Visible = True
             End With
-            mnuRecent.Insert(0, lToolStripMenuItem)
+            mMnuRecent.Insert(0, lToolStripMenuItem)
             mnuFile.DropDownItems.Insert(mnuFile.DropDownItems.IndexOf(mnuRecentSeparator) + 1, lToolStripMenuItem)
             AddHandler lToolStripMenuItem.Click, AddressOf mnuRecent_Click
 
             Dim lRecentIndex As Integer = 1
-            For lRecentIndex = mnuRecent.Count - 1 To 0 Step -1
+            For lRecentIndex = mMnuRecent.Count - 1 To 0 Step -1
                 If lRecentIndex >= MaxRecentFiles Then
-                    mnuFile.DropDownItems.Remove(mnuRecent.Item(lRecentIndex))
-                    mnuRecent.RemoveAt(lRecentIndex)
+                    mnuFile.DropDownItems.Remove(mMnuRecent.Item(lRecentIndex))
+                    mMnuRecent.RemoveAt(lRecentIndex)
                 Else
-                    mnuRecent(lRecentIndex).Text = "&" & lRecentIndex + 1 & " " & FilenameOnly(mnuRecent(lRecentIndex).Tag)
+                    mMnuRecent(lRecentIndex).Text = "&" & lRecentIndex + 1 & " " & FilenameOnly(mMnuRecent(lRecentIndex).Tag)
                 End If
             Next
         End If
