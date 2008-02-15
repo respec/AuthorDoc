@@ -1,7 +1,7 @@
 Option Strict Off
 Option Explicit On
-Imports VB = Microsoft.VisualBasic
 Imports atcUtility
+Imports MapWinUtility
 
 Module modFileIO
     'Copyright 2000-2008 by AQUA TERRA Consultants
@@ -18,14 +18,12 @@ Module modFileIO
     Private mNconvertPath As String
 
     Sub RunNconvert(ByRef aCommandLine As String)
-        Dim ret, iTask, pHandle As Integer
-
         If mNconvertPath = "" Then FindNconvert()
 
-        iTask = Shell(mNconvertPath & " " & aCommandLine, AppWinStyle.Hide)
-        pHandle = OpenProcess(SYNCHRONIZE, False, iTask)
-        ret = WaitForSingleObject(pHandle, INFINITE)
-        ret = CloseHandle(pHandle)
+        Dim iTask As Integer = Shell(mNconvertPath & " " & aCommandLine, AppWinStyle.Hide)
+        Dim lHandle As Integer = OpenProcess(SYNCHRONIZE, False, iTask)
+        Dim lResult As Integer = WaitForSingleObject(lHandle, INFINITE)
+        lResult = CloseHandle(lHandle)
     End Sub
 
     Sub FindNconvert()
@@ -38,132 +36,99 @@ Module modFileIO
         End If
     End Sub
 	
-	Sub OpenProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
-        Dim f As Integer 'file handle
-		Dim buf As String 'input buffer, contains current line
-		Dim ThisName As String 'file name of current source file, minus extension
-		Dim key As String 'unique ID for tree control
-		Dim SectionName(50) As String 'Array of current section names for each level
-		Dim SectionLevel As Integer 'Level of current source file, according to indentation
-		Dim lvl As Integer 'Level in loop that constructs keys
-		Dim nod As ComctlLib.Node 'Node inserted into tree control
-		Dim dotpos As Integer 'position of . in filename
-		Dim StartTime As Integer
-		StartTime = VB.Timer()
-		
-		On Error GoTo OpenError
-		
-		f = FreeFile()
-		frmMain.Cursor = System.Windows.Forms.Cursors.WaitCursor
-		t.Visible = False
-        If Not IO.File.Exists(filename) Then
-            If MsgBox("File not found. Create new project file '" & filename & "'?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
-                'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-
-                pProjectFileName = filename
-                pBaseName = FilenameOnly(filename)
-                t.Nodes.Clear()
-                t.Nodes.Add(, , "N" & pBaseName, pBaseName)
-                t.Nodes(1).Expanded = True
-
-                FileOpen(f, filename, OpenMode.Output)
-                FileClose(f)
+    Sub OpenProject(ByRef aFileName As String, ByRef aTreeView As AxComctlLib.AxTreeView)
+        frmMain.Cursor = System.Windows.Forms.Cursors.WaitCursor
+        aTreeView.Visible = False
+        If Not IO.File.Exists(aFileName) Then
+            If Logger.Msg("File not found. Create new project file '" & aFileName & "'?", MsgBoxStyle.YesNo) = MsgBoxResult.Yes Then
+                IO.File.Create(aFileName)
             End If
-        Else
-            'UPGRADE_ISSUE: GoSub statement is not supported. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="C5A1A479-AB8B-4D40-AAF4-DB19A2E5E77F"'
-            pProjectFileName = filename
-            pBaseName = FilenameOnly(filename)
-            t.Nodes.Clear()
-            t.Nodes.Add(, , "N" & pBaseName, pBaseName)
-            t.Nodes(1).Expanded = True
+        End If
+        If IO.File.Exists(aFileName) Then
+            pProjectFileName = aFileName
+            pBaseName = FilenameOnly(aFileName)
+            aTreeView.Nodes.Clear()
+            aTreeView.Nodes.Add(, , "N" & pBaseName, pBaseName)
+            aTreeView.Nodes(1).Expanded = True
 
-            FileOpen(f, filename, OpenMode.Input)
-            While Not EOF(f) ' Loop until end of file.
-                buf = LineInput(f)
-                ThisName = LTrim(buf)
-                If ThisName <> "" Then
-                    SectionLevel = (Len(buf) - Len(ThisName)) / 2 + 1 '2 spaces indentation per level
-                    ThisName = RTrim(ThisName)
-                    key = ThisName
-                    SectionName(SectionLevel) = ThisName
-                    If SectionLevel = 1 Then
-                        nod = t.Nodes.Add("N" & pBaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
+            Dim lSectionName(50) As String 'Array of current section names for each level
+            Dim lSectionLevel As Integer 'Level of current source file, according to indentation
+            Dim lLevel As Integer 'Level in loop that constructs keys
+
+            For Each lLine As String In LinesInFile(aFileName)
+                Dim lThisName As String = lLine.TrimStart  'file name of current source file, minus extension
+                If lThisName.Length > 0 Then
+                    lSectionLevel = (lLine.Length - lThisName.Length) / 2 + 1 '2 spaces indentation per level
+                    lThisName = lThisName.TrimEnd
+                    Dim lKey As String = lThisName 'unique ID for tree control
+                    lSectionName(lSectionLevel) = lThisName
+                    Dim lNode As ComctlLib.Node 'Node inserted into tree control
+                    If lSectionLevel = 1 Then
+                        lNode = aTreeView.Nodes.Add("N" & pBaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & lKey, lThisName)
                     Else
-                        For lvl = SectionLevel - 1 To 1 Step -1
-                            key = SectionName(lvl) & "\" & key
-                        Next lvl
-                        On Error GoTo skip
-                        nod = t.Nodes.Add("N" & Left(key, Len(key) - Len(ThisName) - 1), ComctlLib.TreeRelationshipConstants.tvwChild, "N" & key, ThisName)
-                        If Not nod.Parent.Expanded Then nod.Parent.Expanded = True
+                        For lLevel = lSectionLevel - 1 To 1 Step -1
+                            lKey = lSectionName(lLevel) & "\" & lKey
+                        Next lLevel
+                        Try
+                            lNode = aTreeView.Nodes.Add("N" & Left(lKey, Len(lKey) - Len(lThisName) - 1), ComctlLib.TreeRelationshipConstants.tvwChild, "N" & lKey, lThisName)
+                            If Not lNode.Parent.Expanded Then lNode.Parent.Expanded = True
+                        Catch
+                            Debug.Print("Duplicate key in tree: " & lKey)
+                        End Try
                     End If
                 End If
-            End While
-            FileClose(f)
+            Next
+            frmMain.AddRecentFile(pProjectFileName)
         End If
-        frmMain.AddRecentFile(pProjectFileName)
-		t.Visible = True
-		frmMain.Cursor = System.Windows.Forms.Cursors.Default
-		If t.Nodes.Count > 0 Then t.Nodes(1).EnsureVisible()
-		Exit Sub
-		
-OpenError: 
-		MsgBox("Error reading project file '" & filename & "'" & vbCr & Err.Description)
-		On Error Resume Next
-		FileClose(f)
-skip: 
-		Debug.Print("Duplicate key in tree: " & key)
-		Resume Next
+        aTreeView.Visible = True
+        frmMain.Cursor = System.Windows.Forms.Cursors.Default
+        If aTreeView.Nodes.Count > 0 Then aTreeView.Nodes(1).EnsureVisible()
+        Exit Sub
     End Sub
 	
-	Public Sub SaveProject(ByRef filename As String, ByRef t As AxComctlLib.AxTreeView)
-        Dim outfile As Integer 'file handle
-		Dim nodNum As Integer 'Node number (we go sequentially through nodes)
-		Dim nod As ComctlLib.Node 'Node of the tree being written
-		
-		'Mark all as need to be saved
-		For nodNum = 1 To t.Nodes.Count
-			t.Nodes.Item(nodNum).tag = True
-		Next 
-		t.Nodes.Item(1).tag = False
-		
-		outfile = FreeFile()
-		FileOpen(outfile, filename, OpenMode.Output)
-		nod = t.Nodes.Item(1).Child
-		While Not nod Is Nothing
-			WriteProjectSection(nod, outfile)
-			nod = nod.Next
-		End While
-		FileClose(outfile)
-	End Sub
-	
-    Private Sub WriteProjectSection(ByRef nod As ComctlLib.Node, ByRef outfile As Integer)
-        Dim ThisName As String 'file name of current source file, minus extension
-        Dim pos As Integer 'position of directory delimiter '\' in node key for counting levels
-        Dim kid As ComctlLib.Node 'nod's child
+    Public Sub SaveProject(ByRef aFileName As String, ByRef aTreeView As AxComctlLib.AxTreeView)
+        Dim lNode As ComctlLib.Node 'Node of the tree being written
 
-        If nod.Tag Then
-            If Not nod.Parent Is Nothing Then
-                If nod.Parent.Tag Then
-                    WriteProjectSection(nod.Parent, outfile) 'Write parent first
+        'Mark all except first as need to be saved
+        For Each lNode In aTreeView.Nodes
+            If Not lNode Is Nothing Then lNode.Tag = True
+        Next
+        aTreeView.Nodes.Item(1).Tag = False
+
+        Dim lOutWriter As IO.StreamWriter = New IO.StreamWriter(aFileName)
+        lNode = aTreeView.Nodes.Item(1).Child
+        While Not lNode Is Nothing
+            WriteProjectSection(lNode, lOutWriter)
+            lNode = lNode.Next
+        End While
+        lOutWriter.Close()
+    End Sub
+	
+    Private Sub WriteProjectSection(ByRef aNode As ComctlLib.Node, ByRef aOutWriter As IO.StreamWriter)
+        If aNode.Tag Then
+            If Not aNode.Parent Is Nothing Then
+                If aNode.Parent.Tag Then
+                    WriteProjectSection(aNode.Parent, aOutWriter) 'Write parent first
                     Exit Sub 'Writing parent will lead to doing this node, so we are done
                 End If
             End If
-            nod.Tag = False
-            ThisName = ""
-            pos = InStr(nod.Key, "\")
-            While pos > 0 And pos < Len(nod.Key)
-                ThisName = ThisName & "  "
-                pos = InStr(pos + 1, nod.Key, "\")
+            aNode.Tag = False
+            Dim lThisName As String = "" 'file name of current source file, minus extension
+            Dim lPosition As Integer 'position of directory delimiter '\' in node key for counting levels
+            lPosition = InStr(aNode.Key, "\")
+            While lPosition > 0 And lPosition < aNode.Key.Length
+                lThisName &= "  "
+                lPosition = InStr(lPosition + 1, aNode.Key, "\")
             End While
 
-            ThisName = ThisName & nod.Text
-            PrintLine(outfile, ThisName)
-            kid = nod.Child
-            For pos = 1 To nod.Children
-                WriteProjectSection(kid, outfile)
-                kid = kid.Next
+            lThisName = lThisName & aNode.Text
+            aOutWriter.WriteLine(lThisName)
+            Dim lChild As ComctlLib.Node = aNode.Child
+            For lPosition = 1 To aNode.Children
+                WriteProjectSection(lChild, aOutWriter)
+                lChild = lChild.Next
             Next
-            kid = Nothing
+            lChild = Nothing
         End If
     End Sub
 End Module
