@@ -662,7 +662,7 @@ Module modConvert
 
         InitContents()
         'mPromptForFiles = False
-        Dim lastSourceFilename As String = ""
+        Dim lLastSourceFilename As String = ""
         mSourceFilename = NextSourceFilename()
         If pOutputFormat = OutputType.tPRINT Or pOutputFormat = OutputType.tHELP Then
             'pWordApp = New Microsoft.Office.Interop.Word.Application
@@ -672,29 +672,27 @@ Module modConvert
 
             With pWordBasic
                 .AppShow()
-                pWordApp.ActiveWindow.View.Type = WdViewType.wdPrintView 'ensures all commands available
                 '.ToolsOptionsView PicturePlaceHolders:=1
                 .ChDir(mSaveDirectory)
+                .FileNewDefault()
                 If pOutputFormat = OutputType.tPRINT Then
-                    .FileNewDefault()
                     DefinePrintStyles()
                     .FileSaveAs(mSaveDirectory & pBaseName & ".doc", 0)
-                    mTargetWindowName = .WindowName
                 ElseIf pOutputFormat = OutputType.tHELP Then
-                    .FileNewDefault()
                     .FilePageSetup(PageWidth:="12 in")
                     .FileSaveAs(mSaveDirectory & mHelpSourceRTFName, 6)
-                    mTargetWindowName = .WindowName
                 End If
+                mTargetWindowName = .WindowName
+                pWordApp.ActiveWindow.View.Type = WdViewType.wdPrintView 'ensures all commands available
                 .ChDir(mSourceBaseDirectory)
             End With
         End If
         ReadStyleFile(pBaseName & ".sty", 0)
         mLastHeadingLevel = 0
-        While mSourceFilename.Length > 0 AndAlso mSourceFilename <> lastSourceFilename
+        While mSourceFilename.Length > 0 AndAlso mSourceFilename <> lLastSourceFilename
 OpeningFile:
             Status("Opening " & mSourceFilename)
-            lastSourceFilename = mSourceFilename
+            lLastSourceFilename = mSourceFilename
             mFirstHeaderInFile = True
             System.Windows.Forms.Application.DoEvents()
             If pOutputFormat = OutputType.tPRINT Or pOutputFormat = OutputType.tHELP Then
@@ -883,8 +881,8 @@ FileNotFound:
                 InHeader = True
                 If mIDfile > 0 Then
                     If mInPre Then Print(mIDfile, vbCrLf & "</pre>" & vbCrLf)
-                    If FileKeywords.Count() > 0 Then
-                        For Each v In FileKeywords
+                    If pFileKeywords.Count() > 0 Then
+                        For Each v In pFileKeywords
                             'UPGRADE_WARNING: Couldn't resolve default property of object v. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
                             PrintLine(mIDfile, "<keyword=" & v & ">" & vbCrLf)
                         Next v
@@ -892,8 +890,8 @@ FileNotFound:
                     FileClose(mIDfile)
                 End If
                 mInPre = False
-                FileKeywords = Nothing
-                FileKeywords = New Collection
+                pFileKeywords = Nothing
+                pFileKeywords = New Collection
                 parsePos = InStr(buf, " ")
                 SectionNum = Left(buf, parsePos - 1)
                 SectionName = Trim(Mid(buf, parsePos + 1))
@@ -1031,7 +1029,7 @@ RetryImage:
                         keyword = Mid(buf, AllCapsStart, parsePos - AllCapsStart)
                         Try
                             'UPGRADE_WARNING: Couldn't resolve default property of object FileKeywords(). Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="6A50421D-15FE-4896-8A1B-2EC21E9037B2"'
-                            dummy = FileKeywords.Item(keyword) 'Debug.Print "[" & FileKeywords(keyword) & "]";
+                            dummy = pFileKeywords.Item(keyword) 'Debug.Print "[" & FileKeywords(keyword) & "]";
                         Catch
                         End Try
                         'Try

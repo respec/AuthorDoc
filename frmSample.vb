@@ -17,7 +17,7 @@ Friend Class frmSample
         Dim lFilename As String
 
         Me.Text = aFilename
-        Select Case UCase(VB.Right(aFilename, 3))
+        Select Case IO.Path.GetExtension(aFilename).ToUpper
             Case "BMP", "GIF"
                 img.Image = System.Drawing.Image.FromFile(aFilename)
             Case Else
@@ -25,9 +25,12 @@ Friend Class frmSample
                 ' -D = delete original, -quiet = no output, -o = output filename
                 Dim lCmdline As String = "-o """ & lFilename & """ -out bmp """ & aFilename & """"
                 RunNconvert(lCmdline)
-                On Error GoTo ErrLoad
-                img.Image = System.Drawing.Image.FromFile(lFilename)
-                Kill(lFilename)
+                Try
+                    img.Image = System.Drawing.Image.FromFile(lFilename)
+                    Kill(lFilename)
+                Catch
+                    Debug.Print(Err.Description)
+                End Try
         End Select
         img.Visible = True
         txt.Visible = False
@@ -35,26 +38,20 @@ Friend Class frmSample
         Me.Show()
         Me.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(frmMain.Left) + VB6.PixelsToTwipsX(frmMain.Width))
         frmMain.Activate()
-        Exit Sub
-
-ErrLoad:
-        Debug.Print(Err.Description)
-        Resume Next
     End Sub
 	
-	Public Sub SetText(ByRef fullpath As String)
-		Dim dotpos As Integer
-		Dim Filename, ext As String
-		Filename = FilenameOnly(fullpath)
-		Me.Text = Filename
-		txt.Visible = True
-		img.Visible = False
-		dotpos = InStrRev(fullpath, ".")
-		If dotpos > 0 Then ext = Mid(fullpath, dotpos) Else ext = ""
-        frmMain.LoadTextboxFromFile(IO.Path.GetDirectoryName(fullpath), Filename, ext, txt)
-		Me.Show()
-		frmMain.Activate()
-	End Sub
+    Public Sub SetText(ByRef aFullPath As String)
+        Dim lFilename As String = FilenameOnly(aFullPath)
+        Me.Text = lFilename
+        txt.Visible = True
+        img.Visible = False
+        Dim lDotPos As Integer = InStrRev(aFullPath, ".")
+        Dim lExt As String
+        If lDotPos > 0 Then lExt = Mid(aFullPath, lDotPos) Else lExt = ""
+        frmMain.LoadTextboxFromFile(IO.Path.GetDirectoryName(aFullPath), lFilename, lExt, txt)
+        Me.Show()
+        frmMain.Activate()
+    End Sub
 	
 	'UPGRADE_WARNING: Event frmSample.Resize may fire when form is initialized. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="88B12AE1-6DE0-48A0-86F1-60C0686C026A"'
 	Private Sub frmSample_Resize(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Resize

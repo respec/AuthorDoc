@@ -33,12 +33,12 @@ Module modGlobal
     'Labels for popup context menu, set in here or in frmMain Form_Load
     Public pCaptureNew As String = "Capture New Image"
     Public pCaptureReplace As String = "Capture Replacement Image"
-    Public BrowseImage As String
-	Public ViewImage As String
-	Public SelectLink As String
-	Public DeleteTag As String
+    Public pBrowseImage As String
+    Public pViewImage As String
+    Public pSelectLink As String
+    Public pDeleteTag As String
 	
     Public pKeywords As Collection
-	Public FileKeywords As Collection
-	Public FindTimeout As Single
+    Public pFileKeywords As Collection
+    Public pFindTimeout As Single
 End Module

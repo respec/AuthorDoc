@@ -4,28 +4,28 @@ Friend Class frmOptions
 	Inherits System.Windows.Forms.Form
     'Copyright 2000-2008 by AQUA TERRA Consultants
 	
-	Private Sub Command1_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles Command1.Click
-		If IsNumeric(txtTreeIndent.Text) Then frmMain.tree1.Indentation = CSng(txtTreeIndent.Text)
-		If IsNumeric(txtFindTimeout.Text) Then FindTimeout = CSng(txtFindTimeout.Text)
-		CopyFont2RichText(txtFont, (frmMain.txtMain))
-		Me.Close()
-	End Sub
+    Private Sub Command1_Click(ByVal aEventSender As System.Object, ByVal aEventArgs As System.EventArgs) Handles Command1.Click
+        If IsNumeric(txtTreeIndent.Text) Then frmMain.tree1.Indentation = CSng(txtTreeIndent.Text)
+        If IsNumeric(txtFindTimeout.Text) Then pFindTimeout = CSng(txtFindTimeout.Text)
+        CopyFont2RichText(txtFont, (frmMain.txtMain))
+        Me.Close()
+    End Sub
+
+    Private Sub frmOptions_Load(ByVal aEventSender As System.Object, ByVal aEventArgs As System.EventArgs) Handles MyBase.Load
+        txtTreeIndent.Text = CStr(frmMain.tree1.Indentation)
+        txtFindTimeout.Text = CStr(pFindTimeout)
+
+        CopyFontFromRichText((frmMain.txtMain), txtFont)
+        With txtFont
+            .Text = .Font.Name & .Font.SizeInPoints
+            If .Font.Bold Then .Text &= "Bold"
+            If .Font.Italic Then .Text &= "Italic"
+            If .Font.Underline Then .Text &= "Underline"
+        End With
+
+    End Sub
 	
-	Private Sub frmOptions_Load(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Load
-		txtTreeIndent.Text = CStr(frmMain.tree1.Indentation)
-		txtFindTimeout.Text = CStr(FindTimeout)
-		
-		CopyFontFromRichText((frmMain.txtMain), txtFont)
-		With txtFont
-			.Text = .Font.Name & .Font.SizeInPoints
-			If .Font.Bold Then .Text = .Text & "Bold"
-			If .Font.Italic Then .Text = .Text & "Italic"
-			If .Font.Underline Then .Text = .Text & "Underline"
-		End With
-		
-	End Sub
-	
-    Private Sub txtFont_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles txtFont.Click
+    Private Sub txtFont_Click(ByVal aEventSender As System.Object, ByVal aEventArgs As System.EventArgs) Handles txtFont.Click
         Dim lFontDialog As New FontDialog
         With lFontDialog
             .Font = txtFont.Font
@@ -51,35 +51,34 @@ Friend Class frmOptions
     '	dst.FontTransparent = src.FontTransparent
     'End Sub
 	
-	Private Sub CopyFont2RichText(ByRef src As System.Windows.Forms.TextBox, ByRef dst As System.Windows.Forms.RichTextBox)
-		Dim lSelStart, lSelLength As Integer
-		'On Error Resume Next 'Some objects have only some of the font attributes
-		'  With dst.Font
-		'    .Bold = src.FontBold
-		'    .Italic = src.FontItalic
-		'    .Name = src.FontName
-		'    .Size = src.FontSize
-		'    .Underline = src.FontUnderline
-		'  End With
-		lSelStart = dst.SelectionStart
-		lSelLength = dst.SelectionLength
-		dst.SelectionStart = 0
-		dst.SelectionLength = Len(dst.RTF)
-		dst.Font = VB6.FontChangeBold(dst.SelectionFont, src.Font.Bold)
-		dst.SelectionFont = VB6.FontChangeItalic(dst.SelectionFont, src.Font.Italic)
-		dst.SelectionFont = VB6.FontChangeName(dst.SelectionFont, src.Font.Name)
-		dst.SelectionFont = VB6.FontChangeSize(dst.SelectionFont, src.Font.SizeInPoints)
-		dst.SelectionFont = VB6.FontChangeStrikeOut(dst.SelectionFont, src.Font.StrikeOut)
-		dst.SelectionFont = VB6.FontChangeUnderline(dst.SelectionFont, src.Font.Underline)
-		dst.SelectionStart = lSelStart
-		dst.SelectionLength = lSelLength
-	End Sub
+    Private Sub CopyFont2RichText(ByRef aTextBox As System.Windows.Forms.TextBox, ByRef aRichTextBox As System.Windows.Forms.RichTextBox)
+        'On Error Resume Next 'Some objects have only some of the font attributes
+        '  With dst.Font
+        '    .Bold = src.FontBold
+        '    .Italic = src.FontItalic
+        '    .Name = src.FontName
+        '    .Size = src.FontSize
+        '    .Underline = src.FontUnderline
+        '  End With
+        Dim lSelectionStart As Integer = aRichTextBox.SelectionStart
+        Dim lSelectionLength As Integer = aRichTextBox.SelectionLength
+        aRichTextBox.SelectionStart = 0
+        aRichTextBox.SelectionLength = aRichTextBox.Rtf.Length
+        aRichTextBox.Font = VB6.FontChangeBold(aRichTextBox.SelectionFont, aTextBox.Font.Bold)
+        aRichTextBox.SelectionFont = VB6.FontChangeItalic(aRichTextBox.SelectionFont, aTextBox.Font.Italic)
+        aRichTextBox.SelectionFont = VB6.FontChangeName(aRichTextBox.SelectionFont, aTextBox.Font.Name)
+        aRichTextBox.SelectionFont = VB6.FontChangeSize(aRichTextBox.SelectionFont, aTextBox.Font.SizeInPoints)
+        aRichTextBox.SelectionFont = VB6.FontChangeStrikeOut(aRichTextBox.SelectionFont, aTextBox.Font.StrikeOut)
+        aRichTextBox.SelectionFont = VB6.FontChangeUnderline(aRichTextBox.SelectionFont, aTextBox.Font.Underline)
+        aRichTextBox.SelectionStart = lSelectionStart
+        aRichTextBox.SelectionLength = lSelectionLength
+    End Sub
 	
-	Private Sub CopyFontFromRichText(ByRef src As System.Windows.Forms.RichTextBox, ByRef dst As System.Windows.Forms.TextBox)
-		dst.Font = VB6.FontChangeBold(dst.Font, src.SelectionFont.Bold)
-		dst.Font = VB6.FontChangeItalic(dst.Font, src.SelectionFont.Italic)
-		dst.Font = VB6.FontChangeName(dst.Font, src.SelectionFont.Name)
-		dst.Font = VB6.FontChangeSize(dst.Font, src.SelectionFont.SizeInPoints)
-		dst.Font = VB6.FontChangeUnderline(dst.Font, src.SelectionFont.Underline)
-	End Sub
+    Private Sub CopyFontFromRichText(ByRef aRichTextBox As System.Windows.Forms.RichTextBox, ByRef aTextBox As System.Windows.Forms.TextBox)
+        aTextBox.Font = VB6.FontChangeBold(aTextBox.Font, aRichTextBox.SelectionFont.Bold)
+        aTextBox.Font = VB6.FontChangeItalic(aTextBox.Font, aRichTextBox.SelectionFont.Italic)
+        aTextBox.Font = VB6.FontChangeName(aTextBox.Font, aRichTextBox.SelectionFont.Name)
+        aTextBox.Font = VB6.FontChangeSize(aTextBox.Font, aRichTextBox.SelectionFont.SizeInPoints)
+        aTextBox.Font = VB6.FontChangeUnderline(aTextBox.Font, aRichTextBox.SelectionFont.Underline)
+    End Sub
 End Class
