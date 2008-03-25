@@ -71,19 +71,19 @@ Friend Class frmMain
                 lSelStart = txtMain.SelectionStart
                 lSearchPos = txtMain.SelectionStart + txtMain.SelectionLength
                 lSearchPos = txtMain.Find(lSearchFor, lSearchPos, RichTextBoxFinds.None)
-                lStartNodeIndex = tree1.SelectedItem.Index
+                lStartNodeIndex = tree1.SelectedNode.Index
                 If lSearchPos < 0 And lFinding Then
                     If QuerySave() <> MsgBoxResult.Cancel Then
 NextNode:
-                        If tree1.SelectedItem Is Nothing Then
-                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
-                        ElseIf tree1.SelectedItem.Index < tree1.Nodes.Count Then
-                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(tree1.SelectedItem.Index + 1)))
+                        If tree1.SelectedNode Is Nothing Then
+                            tree1.SelectedNode = tree1.Nodes(0)
+                        ElseIf tree1.SelectedNode.Index < tree1.Nodes.Count Then
+                            tree1.SelectedNode = tree1.SelectedNode.NextVisibleNode
                         Else
-                            tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+                            tree1.SelectedNode = tree1.Nodes(0)
                         End If
                         lSearchPos = txtMain.Find(lSearchFor, 0)
-                        If lSearchPos < 0 And tree1.SelectedItem.Index <> lStartNodeIndex Then
+                        If lSearchPos < 0 And tree1.SelectedNode.Index <> lStartNodeIndex Then
                             System.Windows.Forms.Application.DoEvents()
                             If lFinding Then GoTo NextNode
                         End If
@@ -150,16 +150,16 @@ NextNode:
         Else
             Dim lFindText As String = UnEscape(txtFind.Text).ToLower
             Dim lReplaceText As String = UnEscape(txtReplace.Text)
-            Dim lStartNodeIndex As Integer = tree1.SelectedItem.Index
+            Dim lStartNodeIndex As Integer = tree1.SelectedNode.Index
             Dim lSearchedBeyondStart As Boolean = False
             If txtMain.SelectedText.ToLower = lFindText Then
 NextReplace:
                 txtMain.SelectedText = lReplaceText
             End If
             cmdFind_MouseUp(cmdFind, New System.Windows.Forms.MouseEventArgs(lButton * &H100000, 0, VB6.TwipsToPixelsX(lx), VB6.TwipsToPixelsY(lY), 0))
-            If lStartNodeIndex <> tree1.SelectedItem.Index Then lSearchedBeyondStart = True
+            If lStartNodeIndex <> tree1.SelectedNode.Index Then lSearchedBeyondStart = True
             If lShift > 0 Then
-                If Not lSearchedBeyondStart Or lStartNodeIndex <> tree1.SelectedItem.Index Then
+                If Not lSearchedBeyondStart Or lStartNodeIndex <> tree1.SelectedNode.Index Then
                     If LCase(txtMain.SelectedText) = lFindText Then GoTo NextReplace
                 End If
             End If
@@ -215,7 +215,7 @@ NextReplace:
             Me.Show()
             Me.Cursor = System.Windows.Forms.Cursors.WaitCursor
             OpenProject((cdlgOpen.FileName), tree1)
-            If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+            If tree1.Nodes.Count > 0 Then tree1.SelectedNode = tree1.Nodes(0)
             Me.Cursor = System.Windows.Forms.Cursors.Default
         End If
     End Sub
@@ -323,7 +323,7 @@ NextReplace:
             Case pDeleteTag
                 If mCloseTagPos > mOpenTagPos + 4 Then txtMain.Text = VB.Left(txtMain.Text, mOpenTagPos - 1) & Mid(txtMain.Text, mCloseTagPos + 1)
             Case pSelectLink
-                mNodeLinking = tree1.SelectedItem.Index
+                mNodeLinking = tree1.SelectedNode.Index
                 Me.Cursor = System.Windows.Forms.Cursors.UpArrow
             Case Else
                 Logger.Msg("Unrecognized menu item: " & aCommand, MsgBoxStyle.OkOnly, "AuthorDoc")
@@ -481,7 +481,7 @@ NextReplace:
                 OpenProject((cdlgOpen.FileName), tree1)
                 mnuNewSection.Enabled = True
                 mProjectChanged = False
-                If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+                If tree1.Nodes.Count > 0 Then tree1.SelectedNode = tree1.Nodes(0)
             End If
         Catch ex As Exception
             Logger.Msg("Error creating new project:" & vbCr & ex.Message)
@@ -519,20 +519,20 @@ NextReplace:
                 key = "N" & Mid(key, Len(mPath) + 2)
                 keypath = IO.Path.GetDirectoryName(Mid(key, 2))
                 If tree1.Nodes.Count = 0 Then 'This is the first node
-                    tree1.Nodes.Add(, , key, ThisName)
+                    tree1.Nodes.Add(key, ThisName)
                 ElseIf keypath = IO.Path.GetDirectoryName(NodeFile) Then  'place after selected sibling
-                    tree1.Nodes.Add(tree1.SelectedItem, ComctlLib.TreeRelationshipConstants.tvwNext, key, ThisName)
+                    tree1.Nodes.Insert(tree1.SelectedNode.Index + 1, key, ThisName)
                 Else
                     nodNum = tree1.Nodes.Count
                     found = False
                     While nodNum >= 1 And Not found 'Look for last sibling
                         If IO.Path.GetDirectoryName(NodeFile(nodNum)) = keypath Then
-                            tree1.Nodes.Add(tree1.Nodes(nodNum).key, ComctlLib.TreeRelationshipConstants.tvwNext, key, ThisName)
+                            tree1.Nodes.Insert(tree1.Nodes(nodNum).Index + 1, key, ThisName)
                             found = True
                         End If
                         nodNum = nodNum - 1
                     End While
-                    If Not found Then tree1.Nodes.Add(tree1.SelectedItem, ComctlLib.TreeRelationshipConstants.tvwChild, key, ThisName)
+                    If Not found Then tree1.SelectedNode.Nodes.Add(key, ThisName)
                 End If
                 pCurrentFilename = cdlgOpen.FileName
                 mProjectChanged = True
@@ -543,10 +543,10 @@ NextReplace:
 
     Private Function NodeFile(Optional ByRef nodNum As Integer = 0) As String
         If IsNothing(nodNum) OrElse nodNum = 0 Then
-            nodNum = tree1.SelectedItem.Index
+            nodNum = tree1.SelectedNode.Index
         End If
         If nodNum < 1 Then nodNum = 1
-        NodeFile = Mid(tree1.Nodes(nodNum).Key, 2)
+        NodeFile = Mid(tree1.Nodes(nodNum).FullPath, 2)
     End Function
 
     Public Sub mnuOpenProject_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuOpenProject.Click
@@ -582,7 +582,7 @@ NextReplace:
                     OpenProject(newFilePath, tree1)
                     mnuNewSection.Enabled = True
                     mProjectChanged = False
-                    If tree1.Nodes.Count > 0 Then tree1_NodeClick(tree1, New AxComctlLib.ITreeViewEvents_NodeClickEvent(tree1.Nodes(1)))
+                    If tree1.Nodes.Count > 0 Then tree1.SelectedNode = tree1.Nodes(0)
                     Me.Cursor = System.Windows.Forms.Cursors.Default
                 End If
             End If
@@ -777,76 +777,66 @@ NextReplace:
         mSashDragging = False
     End Sub
 
-    Private Sub Timer1_Tick(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles Timer1.Tick
-        'UPGRADE_ISSUE: Timer property Timer1.tag was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-        If IsNumeric(Timer1.Tag) Then
-            'UPGRADE_ISSUE: Timer property Timer1.tag was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-            tree1.SelectedItem = tree1.Nodes(CShort(Timer1.Tag))
-            If txtMain.Text <> WholeFileString(pCurrentFilename) Then SetFileChanged(True)
-        End If
-        Timer1.Enabled = False
-    End Sub
-
     Private Sub TimerSlowAction_Tick(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles TimerSlowAction.Tick
         TimerSlowAction.Enabled = False
         mAbortAction = True
     End Sub
 
-    Private Sub tree1_AfterLabelEdit(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_AfterLabelEditEvent) Handles tree1.AfterLabelEdit
+    Private Sub tree1_AfterLabelEdit(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.NodeLabelEditEventArgs) Handles tree1.AfterLabelEdit
         Dim OldFilePath As String
-        With tree1.SelectedItem
-            OldFilePath = mPath & "\" & Mid(.Key, 2) & pSourceExtension
+        With tree1.SelectedNode
+            OldFilePath = mPath & "\" & Mid(.FullPath, 2) & pSourceExtension
             If IO.File.Exists(OldFilePath) Then
-                Select Case MsgBox("Rename file '" & OldFilePath & "' to '" & eventArgs.newString & "?", MsgBoxStyle.YesNoCancel)
-                    Case MsgBoxResult.No : .Text = eventArgs.newString : .Key = "N" & .FullPath
-                    Case MsgBoxResult.Yes : .Text = eventArgs.newString : .Key = "N" & .FullPath
+                Select Case MsgBox("Rename file '" & OldFilePath & "' to '" & eventArgs.Label & "?", MsgBoxStyle.YesNoCancel)
+                    Case MsgBoxResult.No : .Text = eventArgs.Label ': .Key = "N" & .FullPath
+                    Case MsgBoxResult.Yes : .Text = eventArgs.Label ': .Key = "N" & .FullPath
                         'Name OldFilePath As path & "\" & .fullpath & pSourceExtension
                         Rename(OldFilePath, IO.Path.GetDirectoryName(OldFilePath) & "\" & .Text & pSourceExtension)
                     Case MsgBoxResult.Cancel
-                        eventArgs.cancel = True
+                        eventArgs.CancelEdit = True
                 End Select
             End If
         End With
     End Sub
 
-    Private Sub tree1_KeyDownEvent(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_KeyDownEvent) Handles tree1.KeyDownEvent
+    Private Sub tree1_KeyDownEvent(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.KeyEventArgs) Handles tree1.KeyDown
         Select Case eventArgs.keyCode
-            Case System.Windows.Forms.Keys.Delete : tree1.Nodes.Remove(tree1.SelectedItem.Index)
-                'Case vbKeyInsert:
-                ' Dim nod As ComctlLib.Node = tree1.Nodes.add(tree1.SelectedItem, tvwPrevious, "NewFile", "NewFile")
+            Case System.Windows.Forms.Keys.Delete : tree1.Nodes.Remove(tree1.SelectedNode)
         End Select
     End Sub
 
-    'A horrible hack to get around the tree control's penchant for changing
-    'the selected node after we have lost control
-    Private Sub DelaySetNode(ByRef nodeNum As Integer)
-        'UPGRADE_ISSUE: Timer property Timer1.tag was not upgraded. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="CC4C7EC0-C903-48FC-ACCC-81861D12DA4A"'
-        Timer1.Tag = nodeNum
-        Timer1.Enabled = True
-    End Sub
-
-    Private Sub tree1_NodeClick(ByVal eventSender As System.Object, ByVal eventArgs As AxComctlLib.ITreeViewEvents_NodeClickEvent) Handles tree1.NodeClick
+    Private Sub tree1_AfterSelect(ByVal sender As System.Object, ByVal e As System.Windows.Forms.TreeViewEventArgs) Handles tree1.AfterSelect
         Dim filename, fullpath As String
         Dim inClick As Boolean
-        If Not inClick And Not Timer1.Enabled Then
+        If Not inClick Then 'And Not Timer1.Enabled Then
             inClick = True
             If mNodeLinking > 0 Then
                 fullpath = "c:\" & IO.Path.GetDirectoryName(NodeFile(mNodeLinking))
-                filename = HTMLRelativeFilename("c:\" & Mid(eventArgs.node.Key, 2), fullpath)
+                filename = HTMLRelativeFilename(e.Node.FullPath, fullpath)
                 EditSubTag("href", filename)
-                DelaySetNode(mNodeLinking)
+
+                '                DelaySetNode(mNodeLinking)
+                tree1.SelectedNode = tree1.Nodes(mNodeLinking)
+                If txtMain.Text <> WholeFileString(pCurrentFilename) Then SetFileChanged(True)
+
                 mNodeLinking = 0
                 Me.Cursor = System.Windows.Forms.Cursors.Default
             Else
-                filename = Mid(eventArgs.node.Key, 2)
+                If e.Node Is tree1.Nodes(0) Then
+                    filename = e.Node.FullPath
+                Else
+                    filename = e.Node.FullPath.Substring(tree1.Nodes(0).FullPath.Length)
+                End If
                 If QuerySave() = MsgBoxResult.Cancel Then 'Should move focus back to old node here
-                    DelaySetNode(1)
+                    'DelaySetNode(1)
+                    tree1.SelectedNode = tree1.Nodes(0)
+                    If txtMain.Text <> WholeFileString(pCurrentFilename) Then SetFileChanged(True)
                 Else
                     LoadTextboxFromFile(mPath, filename, pSourceExtension, txtMain)
-                    If tree1.SelectedItem Is Nothing Then
-                        tree1.SelectedItem = eventArgs.node
-                    ElseIf tree1.SelectedItem.Index <> eventArgs.node.Index Then
-                        tree1.SelectedItem = eventArgs.node
+                    If tree1.SelectedNode Is Nothing Then
+                        tree1.SelectedNode = e.Node
+                    ElseIf tree1.SelectedNode.Index <> e.Node.Index Then
+                        tree1.SelectedNode = e.Node
                     End If
                 End If
             End If
@@ -858,7 +848,7 @@ NextReplace:
         Static LastAnswer As MsgBoxResult
         Dim altExt, altpath As String
         Dim thisAnswer As MsgBoxResult
-        If Not IO.File.Exists(fullpath & "\" & filename & ext) Then 'Check for files named .html or pSourceExtension
+        If Not IO.File.Exists(IO.Path.Combine(fullpath, filename & ext)) Then 'Check for files named .html or pSourceExtension
             If LCase(ext) = LCase(pSourceExtension) Then altExt = ".html" Else altExt = pSourceExtension
             altpath = fullpath & "\" & filename & altExt
             If IO.File.Exists(altpath) Then
