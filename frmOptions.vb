@@ -5,14 +5,14 @@ Friend Class frmOptions
     'Copyright 2000-2008 by AQUA TERRA Consultants
 	
     Private Sub Command1_Click(ByVal aEventSender As System.Object, ByVal aEventArgs As System.EventArgs) Handles Command1.Click
-        If IsNumeric(txtTreeIndent.Text) Then frmMain.tree1.Indentation = CSng(txtTreeIndent.Text)
-        If IsNumeric(txtFindTimeout.Text) Then pFindTimeout = CSng(txtFindTimeout.Text)
+        If IsNumeric(txtTreeIndent.Text) Then frmMain.tree1.Indent = CInt(txtTreeIndent.Text)
+        If IsNumeric(txtFindTimeout.Text) Then pFindTimeout = CInt(txtFindTimeout.Text)
         CopyFont2RichText(txtFont, (frmMain.txtMain))
         Me.Close()
     End Sub
 
     Private Sub frmOptions_Load(ByVal aEventSender As System.Object, ByVal aEventArgs As System.EventArgs) Handles MyBase.Load
-        txtTreeIndent.Text = CStr(frmMain.tree1.Indentation)
+        txtTreeIndent.Text = CStr(frmMain.tree1.Indent)
         txtFindTimeout.Text = CStr(pFindTimeout)
 
         CopyFontFromRichText((frmMain.txtMain), txtFont)

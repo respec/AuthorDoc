@@ -36,7 +36,7 @@ Module modFileIO
         End If
     End Sub
 	
-    Sub OpenProject(ByRef aFileName As String, ByRef aTreeView As AxComctlLib.AxTreeView)
+    Sub OpenProject(ByRef aFileName As String, ByRef aTreeView As Windows.Forms.TreeView)
         frmMain.Cursor = System.Windows.Forms.Cursors.WaitCursor
         aTreeView.Visible = False
         If Not IO.File.Exists(aFileName) Then
@@ -48,8 +48,8 @@ Module modFileIO
             pProjectFileName = aFileName
             pBaseName = FilenameOnly(aFileName)
             aTreeView.Nodes.Clear()
-            aTreeView.Nodes.Add(, , "N" & pBaseName, pBaseName)
-            aTreeView.Nodes(1).Expanded = True
+            aTreeView.Nodes.Add("N" & pBaseName, pBaseName)
+            aTreeView.Nodes(0).Expand()
 
             Dim lSectionName(50) As String 'Array of current section names for each level
             Dim lSectionLevel As Integer 'Level of current source file, according to indentation
@@ -62,16 +62,18 @@ Module modFileIO
                     lThisName = lThisName.TrimEnd
                     Dim lKey As String = lThisName 'unique ID for tree control
                     lSectionName(lSectionLevel) = lThisName
-                    Dim lNode As ComctlLib.Node 'Node inserted into tree control
+                    Dim lNode As Windows.Forms.TreeNode 'Node inserted into tree control
                     If lSectionLevel = 1 Then
-                        lNode = aTreeView.Nodes.Add("N" & pBaseName, ComctlLib.TreeRelationshipConstants.tvwChild, "N" & lKey, lThisName)
+                        lNode = aTreeView.Nodes.Find("N" & pBaseName, True)(0)
+                        lNode = lNode.Nodes.Add("N" & lKey, lThisName)
                     Else
                         For lLevel = lSectionLevel - 1 To 1 Step -1
                             lKey = lSectionName(lLevel) & "\" & lKey
                         Next lLevel
                         Try
-                            lNode = aTreeView.Nodes.Add("N" & Left(lKey, Len(lKey) - Len(lThisName) - 1), ComctlLib.TreeRelationshipConstants.tvwChild, "N" & lKey, lThisName)
-                            If Not lNode.Parent.Expanded Then lNode.Parent.Expanded = True
+                            lNode = aTreeView.Nodes.Find("N" & Left(lKey, Len(lKey) - Len(lThisName) - 1), True)(0)
+                            lNode.Nodes.Add("N" & lKey, lThisName)
+                            lNode.Parent.Expand()
                         Catch
                             Debug.Print("Duplicate key in tree: " & lKey)
                         End Try
@@ -82,12 +84,12 @@ Module modFileIO
         End If
         aTreeView.Visible = True
         frmMain.Cursor = System.Windows.Forms.Cursors.Default
-        If aTreeView.Nodes.Count > 0 Then aTreeView.Nodes(1).EnsureVisible()
+        If aTreeView.Nodes.Count > 0 Then aTreeView.Nodes(0).EnsureVisible()
         Exit Sub
     End Sub
 	
-    Public Sub SaveProject(ByRef aFileName As String, ByRef aTreeView As AxComctlLib.AxTreeView)
-        Dim lNode As ComctlLib.Node 'Node of the tree being written
+    Public Sub SaveProject(ByRef aFileName As String, ByRef aTreeView As Windows.Forms.TreeView)
+        Dim lNode As Windows.Forms.TreeNode 'Node of the tree being written
 
         'Mark all except first as need to be saved
         For Each lNode In aTreeView.Nodes
@@ -96,15 +98,15 @@ Module modFileIO
         aTreeView.Nodes.Item(1).Tag = False
 
         Dim lOutWriter As IO.StreamWriter = New IO.StreamWriter(aFileName)
-        lNode = aTreeView.Nodes.Item(1).Child
+        lNode = aTreeView.Nodes.Item(1)
         While Not lNode Is Nothing
             WriteProjectSection(lNode, lOutWriter)
-            lNode = lNode.Next
+            lNode = lNode.NextNode
         End While
         lOutWriter.Close()
     End Sub
 	
-    Private Sub WriteProjectSection(ByRef aNode As ComctlLib.Node, ByRef aOutWriter As IO.StreamWriter)
+    Private Sub WriteProjectSection(ByRef aNode As Windows.Forms.TreeNode, ByRef aOutWriter As IO.StreamWriter)
         If aNode.Tag Then
             If Not aNode.Parent Is Nothing Then
                 If aNode.Parent.Tag Then
@@ -115,20 +117,17 @@ Module modFileIO
             aNode.Tag = False
             Dim lThisName As String = "" 'file name of current source file, minus extension
             Dim lPosition As Integer 'position of directory delimiter '\' in node key for counting levels
-            lPosition = InStr(aNode.Key, "\")
-            While lPosition > 0 And lPosition < aNode.Key.Length
+            lPosition = InStr(aNode.FullPath, "\")
+            While lPosition > 0 And lPosition < aNode.FullPath.Length
                 lThisName &= "  "
-                lPosition = InStr(lPosition + 1, aNode.Key, "\")
+                lPosition = InStr(lPosition + 1, aNode.FullPath, "\")
             End While
 
             lThisName = lThisName & aNode.Text
             aOutWriter.WriteLine(lThisName)
-            Dim lChild As ComctlLib.Node = aNode.Child
-            For lPosition = 1 To aNode.Children
+            For Each lChild As Windows.Forms.TreeNode In aNode.Nodes
                 WriteProjectSection(lChild, aOutWriter)
-                lChild = lChild.Next
             Next
-            lChild = Nothing
         End If
     End Sub
 End Module
