@@ -40,9 +40,9 @@ Friend Class frmConvert
             RememberBaseName = pBaseName
             RememberProjectFileName = pProjectFileName
             pProjectFileName = IO.Path.GetDirectoryName(pCurrentFilename) & "\PreviewProject.txt"
-            pBaseName = FilenameOnly(pProjectFileName)
+            pBaseName = IO.Path.GetFileNameWithoutExtension(pProjectFileName)
             FileOpen(PreviewProjectFile, pProjectFileName, OpenMode.Output)
-            PrintLine(PreviewProjectFile, FilenameOnly(pCurrentFilename))
+            PrintLine(PreviewProjectFile, IO.Path.GetFileNameWithoutExtension(pCurrentFilename))
             FileClose(PreviewProjectFile)
         End If
         Convert(TargetFormat, contents, timestamps, UpNext, id, makeProject)

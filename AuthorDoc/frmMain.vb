@@ -351,7 +351,7 @@ NextReplace:
     Private Sub mnuEditProject_Click()
         If tree1.Visible Then
             If QuerySaveProject() <> MsgBoxResult.Cancel Then
-                LoadTextboxFromFile(IO.Path.GetDirectoryName(pProjectFileName), FilenameOnly(pProjectFileName), "." & FileExt(pProjectFileName), txtMain)
+                LoadTextboxFromFile(IO.Path.GetDirectoryName(pProjectFileName), IO.Path.GetFileNameWithoutExtension(pProjectFileName), "." & FileExt(pProjectFileName), txtMain)
                 tree1.Visible = False
             End If
         Else
@@ -514,7 +514,7 @@ NextReplace:
                     FileClose(f)
                 End If
 
-                ThisName = FilenameOnly(filename)
+                ThisName = IO.Path.GetFileNameWithoutExtension(filename)
                 key = VB.Left(filename, Len(filename) - Len(pSourceExtension)) 'trim extension .txt
                 key = "N" & Mid(key, Len(mPath) + 2)
                 keypath = IO.Path.GetDirectoryName(Mid(key, 2))
@@ -1325,10 +1325,10 @@ endsub:
         If lMatch Then 'move file to top of list
             For lRecentFileMove As Integer = lRecentFileIndex To 1 Step -1
                 mMnuRecent(lRecentFileMove).Tag = mMnuRecent(lRecentFileMove - 1).Tag
-                mMnuRecent(lRecentFileMove).Text = "&" & lRecentFileMove + 1 & " " & FilenameOnly(mMnuRecent(lRecentFileMove).Tag)
+                mMnuRecent(lRecentFileMove).Text = "&" & lRecentFileMove + 1 & " " & IO.Path.GetFileNameWithoutExtension(mMnuRecent(lRecentFileMove).Tag)
             Next lRecentFileMove
             mMnuRecent(0).tag = aFilePath
-            mMnuRecent(0).text = "&1 " & FilenameOnly(aFilePath)
+            mMnuRecent(0).text = "&1 " & IO.Path.GetFileNameWithoutExtension(aFilePath)
         Else 'Add file to list
             mnuRecentSeparator.Visible = True
             Dim lToolStripMenuItem As New ToolStripMenuItem
@@ -1345,7 +1345,7 @@ endsub:
                     mnuFile.DropDownItems.Remove(mMnuRecent.Item(lRecentIndex))
                     mMnuRecent.RemoveAt(lRecentIndex)
                 Else
-                    mMnuRecent(lRecentIndex).Text = "&" & lRecentIndex + 1 & " " & FilenameOnly(mMnuRecent(lRecentIndex).Tag)
+                    mMnuRecent(lRecentIndex).Text = "&" & lRecentIndex + 1 & " " & IO.Path.GetFileNameWithoutExtension(mMnuRecent(lRecentIndex).Tag)
                 End If
             Next
         End If

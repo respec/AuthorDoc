@@ -44,7 +44,7 @@ Friend Class frmCapture
 				pictCapture.Image.Save(Filename)
 				frmSample.SetImage(Filename)
 			Else
-                tempFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(Filename) & ".bmp")
+                tempFilename = IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetFileNameWithoutExtension(Filename) & ".bmp")
 				'UPGRADE_WARNING: SavePicture was upgraded to System.Drawing.Image.Save and has a new behavior. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="9B7D5ADD-D8FE-4819-A36C-6DEDAF088CC7"'
 				pictCapture.Image.Save(tempFilename)
 				frmSample.SetImage(tempFilename)

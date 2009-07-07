@@ -46,7 +46,7 @@ Module modFileIO
         End If
         If IO.File.Exists(aFileName) Then
             pProjectFileName = aFileName
-            pBaseName = FilenameOnly(aFileName)
+            pBaseName = IO.Path.GetFileNameWithoutExtension(aFileName)
             aTreeView.Nodes.Clear()
             aTreeView.Nodes.Add("N" & pBaseName, pBaseName)
             aTreeView.Nodes(0).Expand()
