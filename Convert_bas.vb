@@ -3263,7 +3263,7 @@ CheckForImage:
     '        endPos = InStrRev(TargetText, Asterisks80)
     '        If endPos > 0 Then
     '            ImageDirectory = IO.Path.GetDirectoryName(SaveDirectory & SaveFilename)
-    '            ImageFilename = FilenameOnly(SaveFilename) & ".bmp"
+    '            ImageFilename = IO.Path.GetFileNameWithoutExtension(SaveFilename) & ".bmp"
     '            TableText = Mid(TargetText, startPos + lenWholeCardHeader, endPos - startPos - lenWholeCardHeader)
     '            ImageMap = CardImage(TableText)
     '            If Len(ImageMap) > 0 Then
@@ -3305,7 +3305,7 @@ CheckForImage:
 
     '        DoLinks = True
 
-    '        SaveFileNameOnly = FilenameOnly(SaveFilename)
+    '        SaveFileNameOnly  = IO.Path.GetFileNameWithoutExtension(SaveFilename)
     '        retval = ""
     '        GrayLevel = 170
     '        txt = ReplaceString(TableText, "&gt;", ">")

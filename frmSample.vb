@@ -21,7 +21,7 @@ Friend Class frmSample
             Case "BMP", "GIF"
                 img.Image = System.Drawing.Image.FromFile(aFilename)
             Case Else
-                lFilename = IO.Path.Combine(IO.Path.GetTempPath, FilenameOnly(aFilename) & ".bmp")
+                lFilename = IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetFileNameWithoutExtension(aFilename) & ".bmp")
                 ' -D = delete original, -quiet = no output, -o = output filename
                 Dim lCmdline As String = "-o """ & lFilename & """ -out bmp """ & aFilename & """"
                 RunNconvert(lCmdline)
@@ -39,9 +39,9 @@ Friend Class frmSample
         Me.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(frmMain.Left) + VB6.PixelsToTwipsX(frmMain.Width))
         frmMain.Activate()
     End Sub
-	
+
     Public Sub SetText(ByRef aFullPath As String)
-        Dim lFilename As String = FilenameOnly(aFullPath)
+        Dim lFilename As String = IO.Path.GetFileNameWithoutExtension(aFullPath)
         Me.Text = lFilename
         txt.Visible = True
         img.Visible = False
