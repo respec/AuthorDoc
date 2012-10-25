@@ -185,21 +185,29 @@ NextReplace:
 
         Dim lSetting As Object = GetSetting(pAppName, "Defaults", "FindTimeout", CStr(2))
         If IsNumeric(lSetting) Then pFindTimeout = lSetting
-        lSetting = GetSetting(pAppName, cSectionMainWin, "Width")
-        If IsNumeric(lSetting) Then Width = VB6.TwipsToPixelsX(lSetting)
-        lSetting = GetSetting(pAppName, cSectionMainWin, "Height")
-        If IsNumeric(lSetting) Then Height = VB6.TwipsToPixelsY(lSetting)
-        lSetting = GetSetting(pAppName, cSectionMainWin, "Left")
-        If IsNumeric(lSetting) Then Left = VB6.TwipsToPixelsX(lSetting)
-        lSetting = GetSetting(pAppName, cSectionMainWin, "Top")
-        If IsNumeric(lSetting) Then Top = VB6.TwipsToPixelsY(lSetting)
-        lSetting = GetSetting(pAppName, cSectionMainWin, "TreeWidth")
-        If IsNumeric(lSetting) Then
-            sash.Left = VB6.TwipsToPixelsX(lSetting)
-            mSashDragging = True
-            sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
-            mSashDragging = False
+
+        Dim lInt As Integer
+        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Width"), lInt) Then
+            If lInt > 200 Then Width = lInt
         End If
+        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Height"), lInt) Then
+            If lInt > 200 Then Height = lInt
+        End If
+        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Left"), lInt) Then
+            If lInt > -1 AndAlso lInt < 1000 Then Left = lInt
+        End If
+        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Top"), lInt) Then
+            If lInt > -1 AndAlso lInt < 1000 Then Top = lInt
+        End If
+        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "TreeWidth"), lInt) Then
+            If lInt > -1 AndAlso lInt < Width - 100 Then
+                sash.Left = lInt
+                mSashDragging = True
+                sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
+                mSashDragging = False
+            End If
+        End If
+
         For lRecentFileIndex As Integer = cMaxRecentFiles To 1 Step -1
             lSetting = GetSetting(pAppName, cSectionRecentFiles, CStr(lRecentFileIndex), "")
             If IO.File.Exists(lSetting) Then AddRecentFile(CStr(lSetting))
@@ -250,11 +258,14 @@ NextReplace:
             SaveSetting(pAppName, "Defaults", "FormatWhileTyping", CStr(mFormatWhileTyping))
             SaveSetting(pAppName, "Defaults", "AutoParagraph", CStr(mnuAutoParagraph.Checked))
 
-            SaveSetting(pAppName, cSectionMainWin, "Width", CStr(VB6.PixelsToTwipsX(Width)))
-            SaveSetting(pAppName, cSectionMainWin, "Height", CStr(VB6.PixelsToTwipsY(Height)))
-            SaveSetting(pAppName, cSectionMainWin, "Left", CStr(VB6.PixelsToTwipsX(Left)))
-            SaveSetting(pAppName, cSectionMainWin, "Top", CStr(VB6.PixelsToTwipsY(Top)))
-            SaveSetting(pAppName, cSectionMainWin, "TreeWidth", CStr(VB6.PixelsToTwipsX(sash.Left)))
+            If Me.WindowState = FormWindowState.Normal Then
+                SaveSetting(pAppName, cSectionMainWin, "Width", CStr(Width))
+                SaveSetting(pAppName, cSectionMainWin, "Height", CStr(Height))
+                SaveSetting(pAppName, cSectionMainWin, "Left", CStr(Left))
+                SaveSetting(pAppName, cSectionMainWin, "Top", CStr(Top))
+                SaveSetting(pAppName, cSectionMainWin, "TreeWidth", CStr(sash.Left))
+            End If
+
             Dim lRecentFileIndex As Integer
             For lRecentFileIndex = mMnuRecent.Count - 1 To 1 Step -1
                 SaveSetting(pAppName, cSectionRecentFiles, CStr(lRecentFileIndex), mMnuRecent(lRecentFileIndex).Tag)
