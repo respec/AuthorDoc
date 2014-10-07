@@ -28,66 +28,62 @@
 	'It can be modified using the Windows Form Designer.
 	'Do not modify it using the code editor.
 	<System.Diagnostics.DebuggerStepThrough()> Private Sub InitializeComponent()
-		Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(frmSample))
-		Me.components = New System.ComponentModel.Container()
-		Me.ToolTip1 = New System.Windows.Forms.ToolTip(components)
-		Me.cdlgOpen = New System.Windows.Forms.OpenFileDialog
-		Me.cdlgSave = New System.Windows.Forms.SaveFileDialog
-		Me.cdlgFont = New System.Windows.Forms.FontDialog
-		Me.cdlgColor = New System.Windows.Forms.ColorDialog
-		Me.cdlgPrint = New System.Windows.Forms.PrintDialog
-		Me.img = New System.Windows.Forms.PictureBox
-		Me.txt = New System.Windows.Forms.RichTextBox
-		Me.SuspendLayout()
-		Me.ToolTip1.Active = True
-		Me.Text = "Sample"
-		Me.ClientSize = New System.Drawing.Size(292, 225)
-		Me.Location = New System.Drawing.Point(4, 27)
-		Me.Icon = CType(resources.GetObject("frmSample.Icon"), System.Drawing.Icon)
-		Me.StartPosition = System.Windows.Forms.FormStartPosition.WindowsDefaultLocation
-		Me.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-		Me.BackColor = System.Drawing.SystemColors.Control
-		Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable
-		Me.ControlBox = True
-		Me.Enabled = True
-		Me.KeyPreview = False
-		Me.MaximizeBox = True
-		Me.MinimizeBox = True
-		Me.Cursor = System.Windows.Forms.Cursors.Default
-		Me.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.ShowInTaskbar = True
-		Me.HelpButton = False
-		Me.WindowState = System.Windows.Forms.FormWindowState.Normal
-		Me.Name = "frmSample"
-		Me.img.BackColor = System.Drawing.Color.White
-		Me.img.Font = New System.Drawing.Font("Courier New", 9!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.img.Size = New System.Drawing.Size(261, 211)
-		Me.img.Location = New System.Drawing.Point(0, 0)
-		Me.img.TabIndex = 0
-		Me.img.Dock = System.Windows.Forms.DockStyle.None
-		Me.img.CausesValidation = True
-		Me.img.Enabled = True
-		Me.img.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.img.Cursor = System.Windows.Forms.Cursors.Default
-		Me.img.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.img.TabStop = True
-		Me.img.Visible = True
-		Me.img.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize
-		Me.img.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.img.Name = "img"
-		Me.txt.Size = New System.Drawing.Size(281, 191)
-		Me.txt.Location = New System.Drawing.Point(0, 0)
-		Me.txt.TabIndex = 1
-		Me.txt.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
-		Me.txt.RTF = resources.GetString("txt.TextRTF")
-		Me.txt.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.txt.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.txt.Name = "txt"
-		Me.Controls.Add(img)
-		Me.Controls.Add(txt)
-		Me.ResumeLayout(False)
-		Me.PerformLayout()
-	End Sub
+        Me.components = New System.ComponentModel.Container
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmSample))
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.cdlgOpen = New System.Windows.Forms.OpenFileDialog
+        Me.cdlgSave = New System.Windows.Forms.SaveFileDialog
+        Me.cdlgFont = New System.Windows.Forms.FontDialog
+        Me.cdlgColor = New System.Windows.Forms.ColorDialog
+        Me.cdlgPrint = New System.Windows.Forms.PrintDialog
+        Me.img = New System.Windows.Forms.PictureBox
+        Me.txt = New System.Windows.Forms.RichTextBox
+        CType(Me.img, System.ComponentModel.ISupportInitialize).BeginInit()
+        Me.SuspendLayout()
+        '
+        'img
+        '
+        Me.img.BackColor = System.Drawing.Color.White
+        Me.img.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
+        Me.img.Cursor = System.Windows.Forms.Cursors.Default
+        Me.img.Font = New System.Drawing.Font("Courier New", 9.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.img.ForeColor = System.Drawing.SystemColors.ControlText
+        Me.img.Location = New System.Drawing.Point(0, 2)
+        Me.img.Name = "img"
+        Me.img.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.img.Size = New System.Drawing.Size(261, 211)
+        Me.img.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize
+        Me.img.TabIndex = 0
+        '
+        'txt
+        '
+        Me.txt.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txt.Location = New System.Drawing.Point(0, 0)
+        Me.txt.Name = "txt"
+        Me.txt.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical
+        Me.txt.Size = New System.Drawing.Size(281, 191)
+        Me.txt.TabIndex = 1
+        Me.txt.Text = "RichTextBox1"
+        '
+        'frmSample
+        '
+        Me.AutoScaleDimensions = New System.Drawing.SizeF(7.0!, 16.0!)
+        Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
+        Me.BackColor = System.Drawing.SystemColors.Control
+        Me.ClientSize = New System.Drawing.Size(292, 225)
+        Me.Controls.Add(Me.img)
+        Me.Controls.Add(Me.txt)
+        Me.Cursor = System.Windows.Forms.Cursors.Default
+        Me.Font = New System.Drawing.Font("Arial", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Icon = CType(resources.GetObject("$this.Icon"), System.Drawing.Icon)
+        Me.Location = New System.Drawing.Point(4, 27)
+        Me.Name = "frmSample"
+        Me.RightToLeft = System.Windows.Forms.RightToLeft.No
+        Me.Text = "Sample"
+        CType(Me.img, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.ResumeLayout(False)
+        Me.PerformLayout()
+
+    End Sub
 #End Region 
 End Class

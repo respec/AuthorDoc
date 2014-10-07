@@ -14,30 +14,34 @@ Friend Class frmSample
 	Private Const SW_MINIMIZE As Short = 6 'Minimized Window
 	
     Public Sub SetImage(ByRef aFilename As String)
-        Dim lFilename As String
-
         Me.Text = aFilename
         Select Case IO.Path.GetExtension(aFilename).ToUpper
-            Case "BMP", "GIF"
-                img.Image = System.Drawing.Image.FromFile(aFilename)
-            Case Else
-                lFilename = IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetFileNameWithoutExtension(aFilename) & ".bmp")
-                ' -D = delete original, -quiet = no output, -o = output filename
-                Dim lCmdline As String = "-o """ & lFilename & """ -out bmp """ & aFilename & """"
-                RunNconvert(lCmdline)
+            Case ".BMP", ".GIF", ".PNG", ".JPG"
                 Try
-                    img.Image = System.Drawing.Image.FromFile(lFilename)
-                    Kill(lFilename)
+                    img.Image = System.Drawing.Image.FromFile(aFilename)
+                    img.Visible = True
+                    txt.Visible = False
+                    frmMain.Visible = True
+                    Me.Show()
+                    Me.Left = frmMain.Left + frmMain.Width
+                    Me.BringToFront()
+                    'Me.Width = 
+                    frmMain.Activate()
                 Catch
-                    Debug.Print(Err.Description)
+                    Me.Visible = False
                 End Try
+                'Case Else
+                '    lFilename = IO.Path.Combine(IO.Path.GetTempPath, IO.Path.GetFileNameWithoutExtension(aFilename) & ".bmp")
+                '    ' -D = delete original, -quiet = no output, -o = output filename
+                '    Dim lCmdline As String = "-o """ & lFilename & """ -out bmp """ & aFilename & """"
+                '    RunNconvert(lCmdline)
+                '    Try
+                '        img.Image = System.Drawing.Image.FromFile(lFilename)
+                '        Kill(lFilename)
+                '    Catch
+                '        Debug.Print(Err.Description)
+                '    End Try
         End Select
-        img.Visible = True
-        txt.Visible = False
-        frmMain.Visible = True
-        Me.Show()
-        Me.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(frmMain.Left) + VB6.PixelsToTwipsX(frmMain.Width))
-        frmMain.Activate()
     End Sub
 
     Public Sub SetText(ByRef aFullPath As String)
@@ -49,17 +53,13 @@ Friend Class frmSample
         Dim lExt As String
         If lDotPos > 0 Then lExt = Mid(aFullPath, lDotPos) Else lExt = ""
         frmMain.LoadTextboxFromFile(IO.Path.GetDirectoryName(aFullPath), lFilename, lExt, txt)
+        StickToMainForm()
         Me.Show()
         frmMain.Activate()
     End Sub
-	
-	'UPGRADE_WARNING: Event frmSample.Resize may fire when form is initialized. Click for more: 'ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?keyword="88B12AE1-6DE0-48A0-86F1-60C0686C026A"'
-	Private Sub frmSample_Resize(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles MyBase.Resize
-		If ClientRectangle.Width > 112 And VB6.PixelsToTwipsY(Height) > 375 Then
-			img.Width = ClientRectangle.Width
-			img.Height = ClientRectangle.Height
-			txt.Width = VB6.PixelsToTwipsX(Width) - 108
-			txt.Height = VB6.PixelsToTwipsY(Height) - 372
-		End If
-	End Sub
+
+    Public Sub StickToMainForm()
+        Me.Location = New System.Drawing.Point(frmMain.Left + frmMain.Width, frmMain.Top)
+    End Sub
+
 End Class

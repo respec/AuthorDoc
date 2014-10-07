@@ -41,4 +41,7 @@ Module modGlobal
     Public pKeywords As Collection
     Public pFileKeywords As Collection
     Public pFindTimeout As Single
+
+    Public MySampleForm As frmSample = Nothing
+
 End Module
