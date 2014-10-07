@@ -17,8 +17,7 @@
 	'Required by the Windows Form Designer
 	Private components As System.ComponentModel.IContainer
 	Public ToolTip1 As System.Windows.Forms.ToolTip
-	Public WithEvents pictCapture As System.Windows.Forms.PictureBox
-	Public WithEvents TimerDelay As System.Windows.Forms.Timer
+    Public WithEvents TimerDelay As System.Windows.Forms.Timer
 	Public WithEvents cmdCapture As System.Windows.Forms.Button
 	Public WithEvents txtDelay As System.Windows.Forms.TextBox
 	Public WithEvents optScreen As System.Windows.Forms.RadioButton
@@ -31,8 +30,7 @@
 		Dim resources As System.Resources.ResourceManager = New System.Resources.ResourceManager(GetType(frmCapture))
 		Me.components = New System.ComponentModel.Container()
 		Me.ToolTip1 = New System.Windows.Forms.ToolTip(components)
-		Me.pictCapture = New System.Windows.Forms.PictureBox
-		Me.TimerDelay = New System.Windows.Forms.Timer(components)
+        Me.TimerDelay = New System.Windows.Forms.Timer(components)
 		Me.cmdCapture = New System.Windows.Forms.Button
 		Me.txtDelay = New System.Windows.Forms.TextBox
 		Me.optScreen = New System.Windows.Forms.RadioButton
@@ -60,23 +58,7 @@
 		Me.HelpButton = False
 		Me.WindowState = System.Windows.Forms.FormWindowState.Normal
 		Me.Name = "frmCapture"
-		Me.pictCapture.Size = New System.Drawing.Size(31, 21)
-		Me.pictCapture.Location = New System.Drawing.Point(110, 10)
-		Me.pictCapture.TabIndex = 5
-		Me.pictCapture.Visible = False
-		Me.pictCapture.Font = New System.Drawing.Font("Arial", 8!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-		Me.pictCapture.Dock = System.Windows.Forms.DockStyle.None
-		Me.pictCapture.BackColor = System.Drawing.SystemColors.Control
-		Me.pictCapture.CausesValidation = True
-		Me.pictCapture.Enabled = True
-		Me.pictCapture.ForeColor = System.Drawing.SystemColors.ControlText
-		Me.pictCapture.Cursor = System.Windows.Forms.Cursors.Default
-		Me.pictCapture.RightToLeft = System.Windows.Forms.RightToLeft.No
-		Me.pictCapture.TabStop = True
-		Me.pictCapture.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize
-		Me.pictCapture.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D
-		Me.pictCapture.Name = "pictCapture"
-		Me.TimerDelay.Enabled = False
+        Me.TimerDelay.Enabled = False
 		Me.TimerDelay.Interval = 1
 		Me.cmdCapture.TextAlign = System.Drawing.ContentAlignment.MiddleCenter
 		Me.cmdCapture.Text = "Capture"
@@ -168,8 +150,7 @@
 		Me.lblDelay.AutoSize = False
 		Me.lblDelay.BorderStyle = System.Windows.Forms.BorderStyle.None
 		Me.lblDelay.Name = "lblDelay"
-		Me.Controls.Add(pictCapture)
-		Me.Controls.Add(cmdCapture)
+        Me.Controls.Add(cmdCapture)
 		Me.Controls.Add(txtDelay)
 		Me.Controls.Add(optScreen)
 		Me.Controls.Add(optWindow)
