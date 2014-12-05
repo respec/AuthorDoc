@@ -2,8 +2,9 @@ Option Strict Off
 Option Explicit On
 
 Imports VB = Microsoft.VisualBasic
-Imports MapWinUtility
 Imports atcUtility
+Imports MapWinUtility
+Imports MapWinUtility.Strings
 
 Friend Class frmMain
 	Inherits System.Windows.Forms.Form

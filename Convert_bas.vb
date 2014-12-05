@@ -3,6 +3,7 @@ Option Explicit On
 
 Imports atcUtility
 Imports MapWinUtility
+Imports MapWinUtility.Strings
 Imports Microsoft.Office.Interop.Word
 Imports System.Text
 
