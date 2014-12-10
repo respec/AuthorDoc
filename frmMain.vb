@@ -1,4 +1,4 @@
-Option Strict Off
+﻿Option Strict Off
 Option Explicit On
 
 Imports VB = Microsoft.VisualBasic
@@ -7,7 +7,7 @@ Imports MapWinUtility
 Imports MapWinUtility.Strings
 
 Friend Class frmMain
-	Inherits System.Windows.Forms.Form
+    Inherits System.Windows.Forms.Form
     'Copyright 2000-2008 by AQUA TERRA Consultants
 
     Private mMnuRecent As New ArrayList
@@ -24,6 +24,7 @@ Friend Class frmMain
     Private mViewFormatting As Boolean
     Private mFormatWhileTyping As Boolean
     Private mAbortAction As Boolean
+    Private WithEvents TimerSlowAction As System.Windows.Forms.Timer
 
     Private mTagName As String
     Private mOpenTagPos, mCloseTagPos As Integer 'current tag being edited
@@ -41,6 +42,8 @@ Friend Class frmMain
     Friend WithEvents mnuViewImage As System.Windows.Forms.ToolStripMenuItem
 
     Friend WithEvents mnuSelectLink As System.Windows.Forms.ToolStripMenuItem
+
+    Dim pSample As frmSample
 
     Private Sub cmdFind_KeyPress(ByVal aEventSender As System.Object, _
                                  ByVal aEventArgs As System.Windows.Forms.KeyPressEventArgs) Handles cmdFind.KeyPress
@@ -67,7 +70,7 @@ Friend Class frmMain
         Dim lSearchPos, lSelStart, lStartNodeIndex As Integer
         If lButton = VB6.MouseButtonConstants.RightButton Then
             fraFind.Visible = False
-            frmMain_Resize(Me, New System.EventArgs())
+            'frmMain_Resize(Me, New System.EventArgs())
         ElseIf cmdFind.Text = "Stop" Then
             lFinding = False
         Else
@@ -155,7 +158,7 @@ NextNode:
 
         If lButton = VB6.MouseButtonConstants.RightButton Then
             fraFind.Visible = False
-            frmMain_Resize(Me, New System.EventArgs())
+            'frmMain_Resize(Me, New System.EventArgs())
         Else
             Dim lFindText As String = UnEscape(txtFind.Text).ToLower
             Dim lReplaceText As String = UnEscape(txtReplace.Text)
@@ -207,14 +210,14 @@ NextReplace:
         If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Top"), lInt) Then
             If lInt > -1 AndAlso lInt < 1000 Then Top = lInt
         End If
-        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "TreeWidth"), lInt) Then
-            If lInt > -1 AndAlso lInt < Width - 100 Then
-                sash.Left = lInt
-                mSashDragging = True
-                sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
-                mSashDragging = False
-            End If
-        End If
+        'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "TreeWidth"), lInt) Then
+        '    If lInt > -1 AndAlso lInt < Width - 100 Then
+        '        sash.Left = lInt
+        '        mSashDragging = True
+        '        sash_MouseMove(sash, New System.Windows.Forms.MouseEventArgs(1 * &H100000, 0, 0, 0, 0))
+        '        mSashDragging = False
+        '    End If
+        'End If
 
         For lRecentFileIndex As Integer = cMaxRecentFiles To 1 Step -1
             lSetting = GetSetting(pAppName, cSectionRecentFiles, CStr(lRecentFileIndex), "")
@@ -236,20 +239,12 @@ NextReplace:
         End If
     End Sub
 
-    Private Sub frmMain_Resize(ByVal aEventSender As System.Object, _
-                               ByVal aEventArgs As System.EventArgs) Handles MyBase.Resize
-        If VB6.PixelsToTwipsY(Height) > 800 Then
-            sash.Height = VB6.TwipsToPixelsY(VB6.PixelsToTwipsY(Height) - 753) 'menu height
-        End If
-        tree1.Height = sash.Height
-
-        txtMain.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(sash.Left) + VB6.PixelsToTwipsX(sash.Width))
-        Dim lNewWidth As Integer = VB6.PixelsToTwipsX(Width) - VB6.PixelsToTwipsX(txtMain.Left) - 100
-        If lNewWidth > 0 Then
-            txtMain.Width = VB6.TwipsToPixelsX(lNewWidth)
-        End If
-        frmSample.StickToMainForm()
-    End Sub
+    'Private Sub frmMain_Resize(ByVal aEventSender As System.Object, _
+    '                           ByVal aEventArgs As System.EventArgs) Handles MyBase.Resize
+    '    If pSample IsNot Nothing Then
+    '        pSample.StickToMainForm()
+    '    End If
+    'End Sub
 
     Private Sub frmMain_FormClosing(ByVal aSender As Object, _
                                     ByVal aE As System.Windows.Forms.FormClosingEventArgs) Handles Me.FormClosing
@@ -272,7 +267,7 @@ NextReplace:
                 SaveSetting(pAppName, cSectionMainWin, "Height", CStr(Height))
                 SaveSetting(pAppName, cSectionMainWin, "Left", CStr(Left))
                 SaveSetting(pAppName, cSectionMainWin, "Top", CStr(Top))
-                SaveSetting(pAppName, cSectionMainWin, "TreeWidth", CStr(sash.Left))
+                'SaveSetting(pAppName, cSectionMainWin, "TreeWidth", CStr(sash.Left))
             End If
 
             Dim lRecentFileIndex As Integer
@@ -296,7 +291,7 @@ NextReplace:
         Dim lShift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
         If lButton = VB6.MouseButtonConstants.RightButton Or lShift = System.Windows.Forms.Keys.ShiftKey Then
             fraFind.Visible = False
-            frmMain_Resize(Me, New System.EventArgs())
+            'frmMain_Resize(Me, New System.EventArgs())
         End If
     End Sub
 
@@ -392,7 +387,7 @@ NextReplace:
             cmdFind_MouseUp(cmdFind, New System.Windows.Forms.MouseEventArgs(VB6.MouseButtonConstants.LeftButton * &H100000, 0, 0, 0, 0))
         Else
             fraFind.Visible = True
-            frmMain_Resize(Me, New System.EventArgs())
+            'frmMain_Resize(Me, New System.EventArgs())
         End If
     End Sub
 
@@ -400,7 +395,7 @@ NextReplace:
         '    Case 6 'Control-F = find
         If Not fraFind.Visible Then
             fraFind.Visible = True
-            frmMain_Resize(Me, New System.EventArgs())
+            'frmMain_Resize(Me, New System.EventArgs())
         End If
         Dim SelEnd, selStart, txtLen As Integer
         If Len(txtMain.SelectedText) < 1 Then
@@ -687,7 +682,12 @@ NextReplace:
         If mnuTextImage.Checked Then
             testTextImage()
         Else
-            frmSample.Visible = False
+            If pSample IsNot Nothing Then
+                Try
+                    pSample.Visible = False
+                Catch
+                End Try
+            End If
         End If
     End Sub
 
@@ -766,38 +766,8 @@ NextReplace:
         End With
     End Sub
 
-    Private Sub sash_MouseDown(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseDown
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-        Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-        Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        mSashDragging = True
-    End Sub
-
-    Private Sub sash_MouseMove(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseMove
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-        Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-        Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        Dim newLeftWidth As Integer
-        If mSashDragging And (VB6.PixelsToTwipsX(sash.Left) + x) > 100 And (VB6.PixelsToTwipsX(sash.Left) + x < VB6.PixelsToTwipsX(Width) - 100) Then
-            sash.Left = VB6.TwipsToPixelsX(VB6.PixelsToTwipsX(sash.Left) + x)
-            newLeftWidth = VB6.PixelsToTwipsX(sash.Left)
-            If newLeftWidth > 1000 Then tree1.Width = VB6.TwipsToPixelsX(newLeftWidth)
-            frmMain_Resize(Me, New System.EventArgs())
-        End If
-    End Sub
-
-    Private Sub sash_MouseUp(ByVal eventSender As System.Object, ByVal eventArgs As System.Windows.Forms.MouseEventArgs) Handles sash.MouseUp
-        Dim Button As Integer = eventArgs.Button \ &H100000
-        Dim Shift As Integer = System.Windows.Forms.Control.ModifierKeys \ &H10000
-        Dim x As Single = VB6.PixelsToTwipsX(eventArgs.X)
-        Dim y As Single = VB6.PixelsToTwipsY(eventArgs.Y)
-        mSashDragging = False
-    End Sub
-
     Private Sub TimerSlowAction_Tick(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles TimerSlowAction.Tick
-        TimerSlowAction.Enabled = False
+        TimerSlowAction.Stop()
         mAbortAction = True
     End Sub
 
@@ -976,7 +946,11 @@ endsub:
         selStart = txtBox.SelectionStart
         SelLength = txtBox.SelectionLength
         mAbortAction = False
-        TimerSlowAction.Enabled = True
+        If TimerSlowAction Is Nothing Then
+            TimerSlowAction = New System.Windows.Forms.Timer
+            TimerSlowAction.Interval = 2000
+        End If
+        TimerSlowAction.Start()
         txt = txtBox.Text
 
         'clear formatting
@@ -989,7 +963,7 @@ endsub:
 
         maxch = Len(txt)
 
-        While nextch < maxch And Not mAbortAction
+        While nextch < maxch AndAlso Not mAbortAction
             nextch = InStr(nextch + 1, txt, "<")
             If nextch = 0 Then
                 nextch = maxch
@@ -1013,7 +987,7 @@ endsub:
         End If
         txtBox.SelectionStart = selStart
         txtBox.SelectionLength = SelLength
-        TimerSlowAction.Enabled = False
+        TimerSlowAction.Stop()
         txtBox.Visible = True
         txtBox.Focus()
         Me.Cursor = System.Windows.Forms.Cursors.Default
@@ -1176,9 +1150,14 @@ endsub:
                 Select Case mTagName
                     Case "img"
                         filename = SubTagValue("src")
-                        filename = ReplaceString(filename, "/", "\")
+                        filename = filename.Replace("/", "\")
                         PathName = AbsolutePath(filename, IO.Path.GetDirectoryName(IO.Path.GetDirectoryName(CurDir()) & "\" & NodeFile()))
-                        If FileExists(PathName) Then frmSample.SetImage(PathName)
+                        If FileExists(PathName) Then
+                            If pSample Is Nothing OrElse pSample.IsDisposed Then
+                                pSample = New frmSample
+                            End If
+                            pSample.SetImage(PathName)
+                        End If
                         If lRightButton Then
                             mnuCaptureReplace = New System.Windows.Forms.ToolStripMenuItem(pCaptureReplace)
                             mnuCaptureNew = New System.Windows.Forms.ToolStripMenuItem(pCaptureNew)
@@ -1195,14 +1174,17 @@ endsub:
                         hashPos = InStr(filename, "#")
                         If hashPos > 0 Then filename = VB.Left(filename, hashPos - 1)
                         If Len(filename) > 0 Then
-                            filename = ReplaceString(filename, "/", "\")
-                            If VB.Left(filename, 1) = "\" Then
+                            filename = filename.Replace("/", "\")
+                            If filename.StartsWith("\") Then
                                 PathName = mPath & filename
                             Else
                                 PathName = IO.Path.GetDirectoryName(mPath & "\" & NodeFile()) & "\" & filename
                             End If
                             If IO.File.Exists(PathName) Then
-                                frmSample.SetText(PathName)
+                                If pSample Is Nothing OrElse pSample.IsDisposed Then
+                                    pSample = New frmSample
+                                End If
+                                pSample.SetText(PathName)
                             ElseIf IO.File.Exists(PathName & pSourceExtension) Then
                                 frmSample.SetText(PathName & pSourceExtension)
                             End If
