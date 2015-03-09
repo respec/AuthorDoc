@@ -67,7 +67,8 @@ Friend Class frmMain
         Dim lY As Single = VB6.PixelsToTwipsY(aEventArgs.Y)
         Static lFinding As Boolean
         Dim lSearchThrough, lSearchFor As String
-        Dim lSearchPos, lSelStart, lStartNodeIndex As Integer
+        Dim lSearchPos, lSelStart As Integer
+        Dim lFoundNodeText As New Generic.List(Of String)
         If lButton = VB6.MouseButtonConstants.RightButton Then
             fraFind.Visible = False
             'frmMain_Resize(Me, New System.EventArgs())
@@ -82,22 +83,25 @@ Friend Class frmMain
                 lSearchFor = UnEscape(txtFind.Text)
                 lSelStart = txtMain.SelectionStart
                 lSearchPos = txtMain.SelectionStart + txtMain.SelectionLength
-                lSearchPos = txtMain.Find(lSearchFor, lSearchPos, RichTextBoxFinds.None)
-                lStartNodeIndex = tree1.SelectedNode.Index
+                lSearchPos = txtMain.Find(lSearchFor, lSearchPos, RichTextBoxFinds.None)                
                 If lSearchPos < 0 And lFinding Then
                     If QuerySave() <> MsgBoxResult.Cancel Then
 NextNode:
                         If tree1.SelectedNode Is Nothing Then
                             tree1.SelectedNode = tree1.Nodes(0)
-                        ElseIf tree1.SelectedNode.Index < tree1.Nodes.Count Then
-                            tree1.SelectedNode = tree1.SelectedNode.NextVisibleNode
                         Else
-                            tree1.SelectedNode = tree1.Nodes(0)
+                            tree1.SelectedNode = tree1.SelectedNode.NextVisibleNode
+                            If tree1.SelectedNode Is Nothing Then
+                                tree1.SelectedNode = tree1.Nodes(0)
+                            End If
                         End If
                         lSearchPos = txtMain.Find(lSearchFor, 0)
-                        If lSearchPos < 0 And tree1.SelectedNode.Index <> lStartNodeIndex Then
+                        If lSearchPos < 0 AndAlso tree1.SelectedNode IsNot Nothing AndAlso Not lFoundNodeText.Contains(tree1.SelectedNode.Text) Then
                             System.Windows.Forms.Application.DoEvents()
-                            If lFinding Then GoTo NextNode
+                            If lFinding Then
+                                lFoundNodeText.Add(tree1.SelectedNode.Text)
+                                GoTo NextNode
+                            End If
                         End If
                     End If
                 End If
