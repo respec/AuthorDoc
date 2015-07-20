@@ -564,7 +564,8 @@ NextReplace:
         If aNode Is Nothing Then
             aNode = tree1.SelectedNode
         End If
-        Return aNode.FullPath
+        Dim lPath As String = aNode.FullPath()
+        Return lPath.Substring(lPath.IndexOf("\") + 1)
     End Function
 
     Public Sub mnuOpenProject_Click(ByVal eventSender As System.Object, ByVal eventArgs As System.EventArgs) Handles mnuOpenProject.Click
@@ -743,10 +744,11 @@ NextReplace:
 
     Private Sub InsertTag(ByRef aTag As String)
         Dim startTag, endtag As String
-        Dim startPos, endPos As Integer
+        Dim startPos As Integer
+        'Dim endPos As Integer
         With txtMain
             startPos = .SelectionStart
-            endPos = startPos + .SelectionLength
+            'endPos = startPos + .SelectionLength
 
             Select Case LCase(aTag)
                 Case "keyword", "indexword"
@@ -761,11 +763,13 @@ NextReplace:
                 .SelectedText = startTag & endtag
                 .SelectionStart = startPos + Len(startTag)
             Else
-                .SelectionStart = endPos
-                .SelectedText = endtag
-                .SelectionStart = startPos
-                .SelectedText = startTag
-                .SelectionStart = endPos + Len(startTag & endtag)
+                '.SelectionStart = endPos
+                '.SelectionLength = 0
+                '.SelectedText = endtag
+                '.SelectionStart = startPos
+                '.SelectedText = startTag
+                '.SelectionStart = endPos + Len(startTag & endtag)
+                .SelectedText = startTag & .SelectedText & endtag
             End If
         End With
     End Sub
@@ -932,11 +936,13 @@ endsub:
         txtBox.SelectionStart = startPos
         txtBox.SelectionLength = endPos - startPos
         Select Case aCommand
-            Case "bold" : txtBox.Font = VB6.FontChangeBold(txtBox.SelectionFont, True)
-            Case "italic" : txtBox.SelectionFont = VB6.FontChangeItalic(txtBox.SelectionFont, True)
-            Case "underline" : txtBox.SelectionFont = VB6.FontChangeUnderline(txtBox.SelectionFont, True)
+            Case "bold" : txtBox.SelectionFont = New Font(txtBox.SelectionFont, FontStyle.Bold)
+            Case "italic" : txtBox.SelectionFont = New Font(txtBox.SelectionFont, FontStyle.Italic)
+            Case "underline" : txtBox.SelectionFont = New Font(txtBox.SelectionFont, FontStyle.Underline)
             Case "bullet" : txtBox.SelectionBullet = True
-            Case Else : txtBox.SelectionFont = VB6.FontChangeName(txtBox.SelectionFont, aCommand)
+            Case Else
+                txtBox.SelectionFont = New Font(aCommand, txtBox.SelectionFont.Size)
+                'MsgBox("Unimplemented font format: " & aCommand) ' txtBox.SelectionFont = VB6.FontChangeName(txtBox.SelectionFont, aCommand)
         End Select
     End Sub
 
@@ -960,9 +966,8 @@ endsub:
         'clear formatting
         txtBox.SelectionStart = 0
         txtBox.SelectionLength = Len(txt)
-        txtBox.Font = VB6.FontChangeBold(txtBox.SelectionFont, False)
-        txtBox.SelectionFont = VB6.FontChangeItalic(txtBox.SelectionFont, False)
-        txtBox.SelectionFont = VB6.FontChangeUnderline(txtBox.SelectionFont, False)
+        txtBox.Font = New Font(txtBox.Font, FontStyle.Regular) ' = VB6.FontChangeBold(txtBox.SelectionFont, False)
+        txtBox.SelectionFont = txtBox.Font
         'txtBox.SelBullet = False
 
         maxch = Len(txt)
