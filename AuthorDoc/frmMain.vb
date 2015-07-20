@@ -745,10 +745,8 @@ NextReplace:
     Private Sub InsertTag(ByRef aTag As String)
         Dim startTag, endtag As String
         Dim startPos As Integer
-        'Dim endPos As Integer
         With txtMain
             startPos = .SelectionStart
-            'endPos = startPos + .SelectionLength
 
             Select Case LCase(aTag)
                 Case "keyword", "indexword"
@@ -763,12 +761,6 @@ NextReplace:
                 .SelectedText = startTag & endtag
                 .SelectionStart = startPos + Len(startTag)
             Else
-                '.SelectionStart = endPos
-                '.SelectionLength = 0
-                '.SelectedText = endtag
-                '.SelectionStart = startPos
-                '.SelectedText = startTag
-                '.SelectionStart = endPos + Len(startTag & endtag)
                 .SelectedText = startTag & .SelectedText & endtag
             End If
         End With
