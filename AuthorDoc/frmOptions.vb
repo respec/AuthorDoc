@@ -64,21 +64,13 @@ Friend Class frmOptions
         Dim lSelectionLength As Integer = aRichTextBox.SelectionLength
         aRichTextBox.SelectionStart = 0
         aRichTextBox.SelectionLength = aRichTextBox.Rtf.Length
-        aRichTextBox.Font = VB6.FontChangeBold(aRichTextBox.SelectionFont, aTextBox.Font.Bold)
-        aRichTextBox.SelectionFont = VB6.FontChangeItalic(aRichTextBox.SelectionFont, aTextBox.Font.Italic)
-        aRichTextBox.SelectionFont = VB6.FontChangeName(aRichTextBox.SelectionFont, aTextBox.Font.Name)
-        aRichTextBox.SelectionFont = VB6.FontChangeSize(aRichTextBox.SelectionFont, aTextBox.Font.SizeInPoints)
-        aRichTextBox.SelectionFont = VB6.FontChangeStrikeOut(aRichTextBox.SelectionFont, aTextBox.Font.StrikeOut)
-        aRichTextBox.SelectionFont = VB6.FontChangeUnderline(aRichTextBox.SelectionFont, aTextBox.Font.Underline)
+        aRichTextBox.Font = aTextBox.Font
+        aRichTextBox.SelectionFont = aTextBox.Font
         aRichTextBox.SelectionStart = lSelectionStart
         aRichTextBox.SelectionLength = lSelectionLength
     End Sub
 	
     Private Sub CopyFontFromRichText(ByRef aRichTextBox As System.Windows.Forms.RichTextBox, ByRef aTextBox As System.Windows.Forms.TextBox)
-        aTextBox.Font = VB6.FontChangeBold(aTextBox.Font, aRichTextBox.SelectionFont.Bold)
-        aTextBox.Font = VB6.FontChangeItalic(aTextBox.Font, aRichTextBox.SelectionFont.Italic)
-        aTextBox.Font = VB6.FontChangeName(aTextBox.Font, aRichTextBox.SelectionFont.Name)
-        aTextBox.Font = VB6.FontChangeSize(aTextBox.Font, aRichTextBox.SelectionFont.SizeInPoints)
-        aTextBox.Font = VB6.FontChangeUnderline(aTextBox.Font, aRichTextBox.SelectionFont.Underline)
+        aTextBox.Font = aRichTextBox.SelectionFont
     End Sub
 End Class
