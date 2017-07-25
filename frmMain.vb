@@ -201,19 +201,19 @@ NextReplace:
         Dim lSetting As Object = GetSetting(pAppName, "Defaults", "FindTimeout", CStr(2))
         If IsNumeric(lSetting) Then pFindTimeout = lSetting
 
-        Dim lInt As Integer
-        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Width"), lInt) Then
-            If lInt > 200 Then Width = lInt
-        End If
-        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Height"), lInt) Then
-            If lInt > 200 Then Height = lInt
-        End If
-        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Left"), lInt) Then
-            If lInt > -1 AndAlso lInt < 1000 Then Left = lInt
-        End If
-        If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Top"), lInt) Then
-            If lInt > -1 AndAlso lInt < 1000 Then Top = lInt
-        End If
+        'Dim lInt As Integer
+        'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Width"), lInt) Then
+        '    If lInt > 200 Then Width = lInt
+        'End If
+        'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Height"), lInt) Then
+        '    If lInt > 200 Then Height = lInt
+        'End If
+        'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Left"), lInt) Then
+        '    If lInt > -1 AndAlso lInt < 1000 Then Left = lInt
+        'End If
+        'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "Top"), lInt) Then
+        '    If lInt > -1 AndAlso lInt < 1000 Then Top = lInt
+        'End If
         'If Integer.TryParse(GetSetting(pAppName, cSectionMainWin, "TreeWidth"), lInt) Then
         '    If lInt > -1 AndAlso lInt < Width - 100 Then
         '        sash.Left = lInt
@@ -230,8 +230,12 @@ NextReplace:
 
         mnuFormatting.Checked = mViewFormatting
         mnuFormatWhileTyping.Checked = mFormatWhileTyping
-        cdlgOpen.FileName = mPath & "\" & pBaseName & pSourceExtension
-        cdlgSave.FileName = mPath & "\" & pBaseName & pSourceExtension
+        Dim lfilename As String = mPath & "\" & pBaseName
+        If Not lfilename.Contains(pSourceExtension) Then
+            lfilename &= pSourceExtension
+        End If
+        cdlgOpen.FileName = lfilename
+        cdlgSave.FileName = lfilename
         cdlgImageOpen.FileName = mPath
         If IO.Directory.Exists(mPath) Then ChDir(mPath)
         If IO.File.Exists(cdlgOpen.FileName) Then
@@ -240,6 +244,8 @@ NextReplace:
             OpenProject((cdlgOpen.FileName), tree1)
             If tree1.Nodes.Count > 0 Then tree1.SelectedNode = tree1.Nodes(0)
             Me.Cursor = System.Windows.Forms.Cursors.Default
+        Else
+            Me.Show()
         End If
     End Sub
 
